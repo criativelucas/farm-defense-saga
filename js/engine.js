@@ -1,0 +1,93 @@
+// ---------- core helpers shared by every file
+const $=id=>document.getElementById(id);
+const W=384,H=216,MAXM=10,LIFE_X=26;
+const cv=$('c'),x=cv.getContext('2d'),gl=$('glow'),gx=gl.getContext('2d');
+const rnd=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>v<a?a:v>b?b:v,pick=a=>a[Math.random()*a.length|0];
+const hs=(a,b)=>{let h=Math.imul(a|0,374761393)^Math.imul(b|0,668265263);h=Math.imul(h^(h>>>13),1274126177);return((h^(h>>>16))>>>0)/4294967295};
+const mkCanvas=(w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return c};
+
+// Gameplay randomness (map, waves, events, rewards). Seeded in the daily challenge so every player gets the same journey.
+let RNG=Math.random;
+function seedRng(seed){let a=seed>>>0;RNG=()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const rr=(a,b)=>a+RNG()*(b-a),rpick=a=>a[RNG()*a.length|0];
+const rshuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=RNG()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+
+const store={
+  get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
+  del(k){try{localStorage.removeItem(k)}catch(e){}}
+};
+
+// ---------- pixel helpers (C = current context, OV = flat color override for flashes and outlines)
+let C=x,OV=null;
+function r(px,py,w,h,c){C.fillStyle=OV||c;C.fillRect(Math.round(px),Math.round(py),w,h)}
+function blob(cx,cy,rx,ry,dark,mid,lite,seed){
+  for(let dy=-ry;dy<=ry;dy++)for(let dx=-rx;dx<=rx;dx++){
+    const d=dx*dx/(rx*rx)+dy*dy/(ry*ry),n=hs(dx+seed*31,dy+seed);
+    if(d>1.15-n*.4)continue;
+    const l=(-dx-dy*1.3)/(rx+ry)+n*.35;
+    r(cx+dx,cy+dy,1,1,l>.4?lite:l>-.15?mid:dark);
+  }
+}
+function ring(cx,cy,rad,c){const n=Math.max(8,rad*6|0);for(let i=0;i<n;i++){const a=i/n*Math.PI*2;r(cx+Math.cos(a)*rad,cy+Math.sin(a)*rad,1,1,c)}}
+function disc(cx,cy,rad,c){for(let dy=-rad;dy<=rad;dy++){const w=Math.round(Math.sqrt(rad*rad-dy*dy));r(cx-w,cy+dy,w*2+1,1,c)}}
+function mount(w,base,amp,f,seed,c){for(let i=0;i<w;i++){const h=Math.sin(i*f+seed)*amp+Math.sin(i*f*2.7+seed*3)*amp*.4+Math.sin(i*.2+seed)*1.5;r(i,base-h,1,H,c)}}
+function palm(px,py,c){for(let i=0;i<22;i++)r(px+Math.sin(i*.15)*3,py-i,2,1,c);
+  for(let a=0;a<5;a++){const an=-Math.PI*.9+a*Math.PI*.45;for(let j=0;j<10;j++)r(px+Math.cos(an)*j,py-22+Math.sin(an)*j+j*j*.06,2,1,c)}}
+
+// ---------- audio: blips + a small generated score in the Phrygian dominant scale
+let AC=null,MASTER=null,MUSG=null,muted=false;
+function initAudio(){
+  if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();MASTER=AC.createGain();MASTER.gain.value=muted?0:.9;MASTER.connect(AC.destination);
+    MUSG=AC.createGain();MUSG.gain.value=.55;MUSG.connect(MASTER)}catch(e){AC=null}}
+  else if(AC.state==='suspended')AC.resume();
+}
+function setMuted(m){muted=m;if(MASTER)MASTER.gain.value=m?0:.9}
+const lastS={};
+const SND={jump:[320,640,.08,'square',.04],slam:[200,40,.2,'sawtooth',.09],hit:[520,300,.04,'square',.025],kill:[600,1200,.09,'triangle',.06],
+  coin:[900,1600,.06,'square',.03],plant:[300,900,.18,'triangle',.07],beam:[1300,180,.28,'sawtooth',.05],hurt:[160,60,.3,'square',.08],
+  super:[200,1400,.35,'triangle',.08],no:[220,140,.14,'square',.05],wave:[220,440,.4,'triangle',.06],horn:[180,240,.6,'sawtooth',.08],card:[600,900,.06,'triangle',.05],
+  stone:[140,70,.2,'square',.07],wind:[400,200,.3,'sine',.05],heal:[500,1000,.3,'sine',.05],ach:[700,1400,.4,'triangle',.07]};
+function sfx(n){if(!AC||muted)return;const now=AC.currentTime;if(lastS[n]&&now-lastS[n]<.035)return;lastS[n]=now;
+  const P=SND[n],o=AC.createOscillator(),g=AC.createGain();o.type=P[3];
+  o.frequency.setValueAtTime(P[0],now);o.frequency.exponentialRampToValueAtTime(P[1],now+P[2]);
+  g.gain.setValueAtTime(P[4],now);g.gain.exponentialRampToValueAtTime(.0001,now+P[2]);
+  o.connect(g).connect(MASTER);o.start(now);o.stop(now+P[2]+.02)}
+
+const MUS={mode:'calm',next:0,step:0};
+const SCALE=[0,1,4,5,7,8,10];
+const deg=d=>{const o=Math.floor(d/7);return SCALE[((d%7)+7)%7]+12*o};
+const hz=s=>146.83*Math.pow(2,s/12);
+function tone(f,t,d,type,g){const o=AC.createOscillator(),v=AC.createGain();o.type=type;o.frequency.value=f;
+  v.gain.setValueAtTime(.0001,t);v.gain.exponentialRampToValueAtTime(g,t+Math.min(.08,d*.3));v.gain.exponentialRampToValueAtTime(.0001,t+d);
+  o.connect(v).connect(MUSG);o.start(t);o.stop(t+d+.05)}
+let NOISE=null;
+function drum(t,g,f){if(!NOISE){NOISE=AC.createBuffer(1,AC.sampleRate*.3|0,AC.sampleRate);const d=NOISE.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length)}
+  const s=AC.createBufferSource(),bp=AC.createBiquadFilter(),v=AC.createGain();s.buffer=NOISE;bp.type='bandpass';bp.frequency.value=f;v.gain.value=g;s.connect(bp).connect(v).connect(MUSG);s.start(t)}
+const PROG=[0,5,3,4];
+function musicTick(){
+  if(!AC||muted||AC.state!=='running')return;
+  const boss=MUS.mode==='boss',spb=60/(boss?120:84)/2;
+  if(MUS.next<AC.currentTime)MUS.next=AC.currentTime+.05;
+  while(MUS.next<AC.currentTime+.25){
+    const s=MUS.step,t=MUS.next,root=PROG[(s>>4)%4];
+    if(s%16===0)[0,2,4].forEach(i=>tone(hz(deg(root+i)),t,spb*16,'triangle',.016));
+    if(s%4===0)tone(hz(deg(root)-12),t,spb*3,'sine',boss?.07:.045);
+    const arp=[0,2,4,7,4,2,1,2][s%8];if(s%2===0||boss)tone(hz(deg(root+arp)+12),t,spb*.9,'square',boss?.011:.007);
+    if(!boss&&s%32===24)tone(hz(deg(root+4)+24),t,spb*6,'sine',.014);
+    if(boss){if(s%4===0)drum(t,.5,120);if(s%8===6)drum(t,.35,220);if(s%2===1)drum(t,.06,3000)}else if(s%8===0)drum(t,.1,140);
+    MUS.step++;MUS.next+=spb;
+  }
+}
+setInterval(musicTick,50);
+
+// ---------- input
+const keys=new Set(),hit=new Set();
+const GAME=new Set(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space','KeyW','KeyA','KeyS','KeyD','KeyN','KeyM','Digit1','Digit2','Digit3','Digit4','KeyX','KeyJ','KeyQ','KeyE','KeyR']);
+addEventListener('keydown',e=>{if(GAME.has(e.code)&&!(e.target.closest&&e.target.closest('#menu')))e.preventDefault();if(!e.repeat)hit.add(e.code);keys.add(e.code);initAudio()});
+addEventListener('keyup',e=>keys.delete(e.code));
+addEventListener('blur',()=>keys.clear());
+const dn=(...c)=>c.some(k=>keys.has(k))?1:0, pr=(...c)=>c.some(k=>hit.has(k));
+document.querySelectorAll('#touch button').forEach(b=>{const k=b.dataset.k;
+  b.addEventListener('pointerdown',e=>{e.preventDefault();keys.add(k);hit.add(k);initAudio()});
+  ['pointerup','pointercancel','pointerleave'].forEach(t=>b.addEventListener(t,()=>keys.delete(k)))});
