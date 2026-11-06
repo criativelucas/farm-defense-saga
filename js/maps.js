@@ -125,7 +125,7 @@ function gy(px){for(const s of MAP.seg)if(px>=s[0]&&px<s[1])return s[2];return M
 const inWater=px=>!!MAP.water&&px>=MAP.water[0]&&px<MAP.water[1];
 const inSea=px=>!!MAP.sea&&S&&!S.seaOpen&&px>=MAP.sea[0]&&px<MAP.sea[1];
 function buildMap(id){
-  MAPID=id;MAP=MAPS[id];
+  MAPID=id;MAP=MAPS[id];MUS.world=id;
   const lw=f=>Math.ceil(W+(MAP.ww-W)*f);
   SKY=mkCanvas(W,H);FAR=mkCanvas(lw(PAR[0]),H);MID=mkCanvas(lw(PAR[1]),H);NEAR=mkCanvas(lw(PAR[2]),H);GROUND=mkCanvas(MAP.ww,H);
   C=SKY.getContext('2d');MAP.sky();

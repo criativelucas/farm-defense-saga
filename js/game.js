@@ -143,7 +143,8 @@ function updPlayer(dt){
   if(p.dash>0){p.dash-=dt;p.vx=p.face*240;if(Math.random()<.6)S.parts.push({x:p.x-p.face*4,y:p.y-1,vx:-p.face*30,vy:-20,g:100,life:.4,max:.4,c:'#8a5a3a',s:2})}
   else if(!p.slam){p.vx+=((R-L)*spd-p.vx)*Math.min(1,dt*14);if(L!==R)p.face=R?1:-1}
   if(p.stun<=0&&pr('ArrowUp','KeyW','Space')&&p.on){p.vy=-240;p.on=false;p.sq=.7;p.jumped=1;sfx('jump');burst(p.x,p.y,4,['#c9a99a'],30,0,.3)}
-  if(p.stun<=0&&pr('ArrowDown','KeyS')&&!p.on&&!p.slam){p.slam=true;p.vy=420;p.vx=0;p.sq=.75}
+  if(p.stun<=0&&pr('ArrowDown','KeyS')&&!p.on&&!p.slam&&S.noSlam){pop(p.x,p.y-24,'sem pisão nesta fase','#c9a99a')}
+  else if(p.stun<=0&&pr('ArrowDown','KeyS')&&!p.on&&!p.slam){p.slam=true;p.vy=420;p.vx=0;p.sq=.75}
   p.vy=Math.min(p.vy+560*dt,p.slam?520:400);
   const py=p.y,ox=p.x;p.x=clamp(p.x+p.vx*dt,6,MAP.ww-6);p.y+=p.vy*dt;p.moved+=Math.abs(p.x-ox);
   let floor=gy(p.x);
@@ -463,7 +464,7 @@ function update(dt){
   S.drops=S.drops.filter(d=>!d.got&&d.t<13);
   if(S.comboT>0){S.comboT-=dt;if(S.comboT<=0)S.combo=0}
   S.lifeHit=Math.max(0,S.lifeHit-dt);
-  let nt=S.levelNight===true?.55+S.wi*.05:S.levelNight===false?S.wi*.04:(MAP.nightBase||0)+S.wi*.13;if(relic('lampada'))nt*=.6;nt=Math.min(.85,nt);
+  let nt=S.trevas?.82:S.levelNight===true?.55+S.wi*.05:S.levelNight===false?S.wi*.04:(MAP.nightBase||0)+S.wi*.13;if(relic('lampada'))nt*=.6;nt=Math.min(.85,nt);
   S.night+=(nt-S.night)*Math.min(1,dt*.6);
   tutCheck();
   if(S.state==='wave'&&!S.q.length&&!S.en.length)endWave();
@@ -478,7 +479,7 @@ function hitProj(p,e){
 }
 function updFx(dt){
   for(const p of S.parts){p.vy+=p.g*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;if(p.sway)p.x+=Math.sin(p.life*4+p.vx)*.45}
-  S.parts=S.parts.filter(p=>p.life>0);
+  S.parts=S.parts.filter(p=>p.life>0);if(CFG.lite&&S.parts.length>120)S.parts.splice(0,S.parts.length-120);
   for(const p of S.pops)p.t+=dt;S.pops=S.pops.filter(p=>p.t<.9);
   for(const f of S.fx){f.t+=dt;if(f.k==='ring')f.r+=(f.max-f.r)*Math.min(1,dt*10);if(f.k==='bird'){f.x+=f.vx*dt;f.y+=f.vy*dt}if(f.k==='shock')f.r=f.max*Math.min(1,f.t/.5)}
   S.fx=S.fx.filter(f=>f.k==='ring'?f.t<.45:f.k==='shock'?f.t<.5:f.t<f.max);

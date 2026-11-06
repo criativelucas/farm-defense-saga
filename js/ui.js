@@ -214,7 +214,7 @@ function showDeck(){
   const lvl=RUN.mode==='level',mn=Math.min(8,RUN.coll.length+cel.length);
   const render=()=>{const n=sel.size,ok=n>=mn&&n<=max;
     menu(`<div class="mbox">${lvl?`<div class="row" style="justify-content:space-between;width:100%"><button class="btn ghost" id="backmap">‹ Mapa</button><small class="eyebrow">Fase ${LEVELS[RUN.level].id} · ${LEVELS[RUN.level].night?'Noite':'Dia'}</small><span></span></div>`:`<small class="eyebrow">${ACTS[RUN.act].name} · ${ACTS[RUN.act].title}</small>`}<h2>${lvl?'Escolha suas sementes':'Monte sua bolsa de sementes'}</h2>
-      <p>Escolha de ${mn} a ${max} cartas. Na batalha você segura ${RUN.handSize} na mão; jogou uma, compra a próxima.</p>
+      ${lvl?wavePreviewHTML():''}<p>Escolha de ${mn} a ${max} cartas. Na batalha você segura ${RUN.handSize} na mão; jogou uma, compra a próxima.</p>
       <div class="sec"><h3>Suas cartas · ${n} na bolsa</h3><div class="grid">${RUN.coll.map(c=>cardHTML(c,sel.has(c.uid)?'on':'')).join('')}</div></div>
       ${cel.length?`<div class="sec"><h3>Celeiro · cartas consagradas de colheitas anteriores</h3><div class="grid">${cel.map(c=>cardHTML(c,sel.has(c.uid)?'on':'')).join('')}</div></div>`:''}
       <div class="row"><span class="help">${ok?'Bolsa pronta.':n<mn?'Faltam '+(mn-n)+' cartas.':'Tire '+(n-max)+' carta'+(n-max>1?'s':'')+'.'}</span>

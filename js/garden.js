@@ -1,6 +1,10 @@
 // ---------- the Garden: a little backyard where you see every plant (like a zen garden)
 const GW=480,GH=270;
 const GSPOTS=(()=>{const a=[];[{y:132,s:.72,dx:70},{y:178,s:.86,dx:86},{y:232,s:1,dx:104}].forEach(rw=>{for(let i=0;i<4;i++)a.push({x:240+(i-1.5)*rw.dx,y:rw.y,s:rw.s})});return a})();
+let gRain=0,gNextEv=600,gPests=[];
+function gEvents(){const G=META.garden;gRain=Math.max(0,gRain-1);gNextEv--;
+  if(gNextEv<=0){gNextEv=500+(Math.random()*400|0);if(Math.random()<.5){gRain=120;let n=0;G.pots.forEach(p=>{if(p&&!p.watered&&p.stage<3){p.watered=true;p.t0=Date.now();n++}});saveMeta();toast('Chuva serôdia no jardim',n?n+' vaso(s) regado(s)':'Tudo já estava regado')}
+    else{const opts=G.pots.map((p,i)=>p?i:-1).filter(i=>i>=0&&!gPests.some(q=>q.i===i));if(opts.length){gPests.push({i:pick(opts)});toast('Uma praguinha no jardim!','Clique no vaso para espantar e ganhar 5 moedas')}}}}
 let gTool=null,gHover=-1,gLoop=null,gT=0,gParts=[],gSnail={x:60,d:1},gInfo='';
 function potPrice(){return 150+META.garden.potsN*40}
 function gPlant(k,stage,t){// drawn at the pot's soil line, local pixels
@@ -45,6 +49,9 @@ function drawGarden(){
   gSnail.x+=gSnail.d*.12;if(gSnail.x>GW-30||gSnail.x<30)gSnail.d*=-1;const sx=gSnail.x,sy=258;
   r(sx-5,sy,10,3,'#c8b090');disc(sx-gSnail.d,sy-3,4,'#b07a40');disc(sx-gSnail.d,sy-3,2,'#e0a060');r(sx+gSnail.d*5,sy-4,1,4,'#c8b090');
   for(let i=0;i<3;i++){const bx=(hs(i,40)*GW+gT*(10+i*4))%GW,by=110+hs(i,41)*80+Math.sin(gT*2+i)*10,w=(gT*20|0)%2;r(bx-2,by-w,2,2,['#ff8ac0','#ffe36a','#8ad0ff'][i]);r(bx+1,by-w,2,2,['#ff8ac0','#ffe36a','#8ad0ff'][i]);r(bx,by,1,2,'#2a2030')}
+  gEvents();
+  if(gRain>0)for(let i=0;i<10;i++)r((hs(i,gT*100|0)*GW),(hs(i+3,gT*100|0)*GH),1,4,'#bfe8ff');
+  gPests.forEach(p=>{const sp=GSPOTS[p.i];if(!sp)return;const px=sp.x+Math.sin(gT*5+p.i)*6,py=sp.y-24*sp.s;r(px-2,py,5,3,'#2a2838');r(px-3,py,2,2,'#ff3d3d');r(px-1,py-2+((gT*20|0)%2),3,2,'#d2ebff')});
   gParts=gParts.filter(p=>(p.t-=.05)>0);for(const p of gParts){p.x+=p.vx;p.y+=p.vy;p.vy+=p.g;r(p.x,p.y,p.s||1,p.s||1,p.c)}
   C=x;
 }
@@ -56,6 +63,7 @@ function gDescribe(i){const G=META.garden,p=G.pots[i];if(i<0)return'';if(i>=G.po
   if(!p.watered)return P.name+' · '+['broto','muda','jovem'][p.stage]+' · precisa de água';
   return P.name+' · '+['broto','muda','jovem'][p.stage]+' · crescendo, falta '+Math.max(0,P.stage-(Date.now()-p.t0)/1000|0)+'s'}
 function gAct(i){const G=META.garden;if(i<0)return;
+  const pi=gPests.findIndex(p=>p.i===i);if(pi>=0){gPests.splice(pi,1);META.coins+=5;saveMeta();sfx('hit');toast('Praguinha espantada','+5 moedas');gardenBar();return}
   if(i>=G.potsN){if(i!==G.potsN){toast('Compre os espaços em ordem');return}const pr2=potPrice();if(META.coins<pr2){sfx('no');toast('Faltam moedas','Um vaso custa '+pr2);return}
     META.coins-=pr2;G.potsN++;G.pots.push(null);saveMeta();sfx('coin');toast('Vaso novo','-'+pr2+' moedas');gardenBar();return}
   const p=G.pots[i],sp=GSPOTS[i],burstAt=(n,c,up)=>{for(let k=0;k<n;k++)gParts.push({x:sp.x+rnd(-10,10)*sp.s,y:sp.y-20*sp.s,vx:rnd(-1,1),vy:up?rnd(-2,-1):rnd(-.5,.5),g:up?.08:.15,t:rnd(.6,1.2),c:pick(c),s:2})};

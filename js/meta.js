@@ -8,7 +8,11 @@ const WORLDS=[
   {id:'getsemani',name:'Getsêmani',map:'getsemani',act:2,boss:'leviata',arena:'abismo',x:262,y:54,w:112,top:['#1e3a3a','#2a5a4a','#4a8a6a']}
 ];
 const UNLOCK_ORDER=['roma','oliveira','chuva','sarca','figueira','jerico','lirio','talentos','tamareira','semeador','amendoeira','mostarda','profecia','regar','videira','oliveira','roma','sarca','lirio','figueira','tamareira','amendoeira','mostarda'];
-const LEVELS=[];WORLDS.forEach((w,wi)=>{for(let l=0;l<4;l++)LEVELS.push({id:(wi+1)+'-'+(l+1),wi,l,n:wi*4+l,night:l%2===1,boss:l===3?w.boss:null})});
+const RULES={poucas:{name:'Mão curta',desc:'Só 3 cartas na mão'},sempisao:{name:'Sem pisão',desc:'O pisão não funciona'},trevas:{name:'Noite total',desc:'Escuridão quase completa'}};
+const RULE_AT={5:'poucas',9:'sempisao',13:'trevas',17:'poucas',21:'sempisao'};
+const LEVELS=[];WORLDS.forEach((w,wi)=>{for(let l=0;l<4;l++){const n=wi*4+l;LEVELS.push({id:(wi+1)+'-'+(l+1),wi,l,n,night:l%2===1||RULE_AT[n]==='trevas',boss:l===3?w.boss:null,rule:RULE_AT[n]||null})}});
+const starsOf=id=>(META.stars||{})[id]||0;
+const starStr=n=>'★'.repeat(n)+'☆'.repeat(3-n);
 const levelOpen=n=>n===0||!!META.done[LEVELS[n-1].id];
 const gardenOpen=()=>!!META.done['1-4'];
 const jornadaOpen=()=>!!META.done['2-4'];
@@ -24,6 +28,7 @@ function hubIconTo(cvs,k){const g=cvs.getContext('2d');g.clearRect(0,0,32,32);C=
   if(k==='jornada'){NICONS.chefe()}
   if(k==='arvore'){r(15,14,3,16,'#7a4a2e');blob(16,11,12,8,'#2a7a3a','#5fc060','#b0f090',77);[[8,10],[22,9],[14,6],[19,15],[10,15]].forEach(([a,b],i)=>r(a,b,2,2,['#ff4f7b','#c58cff','#f7c948','#5af0ff','#ffa64a'][i]))}
   if(k==='codex'){ICONS.profecia()}
+  if(k==='config'){disc(16,16,10,'#9aa0b0');disc(16,16,4,'#3a2a2a');for(let i=0;i<8;i++){const a=i/8*Math.PI*2;r(15+Math.cos(a)*11,15+Math.sin(a)*11,3,3,'#9aa0b0')}}
   if(k==='intro'){disc(16,16,11,'#2a5bd7');disc(16,16,9,'#4a8af0');r(15,9,3,3,'#fff');r(15,14,3,9,'#fff')}
   if(k==='conquistas'){disc(16,14,8,'#f7c948');disc(16,14,6,'#ffe08a');r(11,21,4,8,'#e0284a');r(17,21,4,8,'#2a5bd7');r(15,11,2,6,'#c9921a')}
   C=x}
@@ -42,11 +47,12 @@ function showHub(){
       ${tile('jornada','Jornada',jornadaOpen()?'Modo desafio em 3 atos':'Libera ao vencer Jericó 2-4',!jornadaOpen())}
       ${tile('codex','Códex','Cartas, inimigos, relíquias')}
       ${tile('intro','Como jogar','Tutorial ilustrado')}
+      ${tile('config','Configurações','Som, modo leve, progresso')}
       ${tile('conquistas','Conquistas',Object.keys(META.ach).length+'/'+Object.keys(ACH).length)}
     </div>
     <p class="keys">← → andar · ↑ pular · ↓ no ar: pisão · X golpe · Q cerca · E espantalho · R lama · 1 a 4 cartas (ou arraste) · Enter chama a onda · M som</p></div>`);
   $('menu').querySelectorAll('canvas[data-hubicon]').forEach(c=>hubIconTo(c,c.dataset.hubicon));paintCoins();
-  $('menu').querySelectorAll('[data-hub]').forEach(b=>b.onclick=()=>{initAudio();sfx('card');({aventura:showWorld,jardim:showGarden,arvore:showTree,intro:()=>showIntro(0),loja:()=>showShop2('ferramentas'),personagem:showLavrador,jornada:showJornada,codex:()=>showCodex('cartas'),conquistas:showAchs})[b.dataset.hub]()});
+  $('menu').querySelectorAll('[data-hub]').forEach(b=>b.onclick=()=>{initAudio();sfx('card');({aventura:showWorld,jardim:showGarden,arvore:showTree,intro:()=>showIntro(0),config:showConfig,loja:()=>showShop2('ferramentas'),personagem:showLavrador,jornada:showJornada,codex:()=>showCodex('cartas'),conquistas:showAchs})[b.dataset.hub]()});
 }
 GO.title=showHub;GO.hub=showHub;
 function showJornada(){
@@ -105,7 +111,7 @@ function showWorld(sel){
 </div>
     <div class="lvpanel"><h3>${w.name}</h3><div class="lvrow">${lv.map(l=>{const open=levelOpen(l.n),done=META.done[l.id],unl=UNLOCK_ORDER[l.n];
       return `<button type="button" class="lvl ${l.night?'night':'day'} ${done?'done':''}" data-l="${l.n}" ${open?'':'disabled'}><canvas width="16" height="16" data-sky="${l.night?1:0}"></canvas>
-        <b>${l.id}</b><small>${l.night?'Noite':'Dia'}${l.boss?' · '+EN[l.boss].name:''}</small><small class="rw">${done?'✓ vencida':open?(unl&&!META.unlocked.includes(unl)?'Nova carta: '+CARDS[unl].name:'Moedas'):'bloqueada'}</small></button>`}).join('')}</div></div></div>`);
+        <b>${l.id}</b><small>${l.night?'Noite':'Dia'}${l.boss?' · '+EN[l.boss].name:''}${l.rule?' · '+RULES[l.rule].name:''}</small><span class="stars">${done?starStr(starsOf(l.id)):''}</span><small class="rw">${done?'vencida':open?(unl&&!META.unlocked.includes(unl)?'Nova carta: '+CARDS[unl].name:'Moedas'):'bloqueada'}</small></button>`}).join('')}</div></div></div>`);
   paintCoins();
   $('menu').querySelectorAll('canvas[data-sky]').forEach(c=>{const g=c.getContext('2d');C=g;if(c.dataset.sky==='1'){disc(8,8,6,'#f8f0d8');disc(10,6,5,'#2a3060')}else{disc(8,8,5,'#ffd34a');for(let i=0;i<8;i++){const a=i/8*Math.PI*2;r(8+Math.cos(a)*7,8+Math.sin(a)*7,1,1,'#ffd34a')}}C=x});
   $('menu').querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>{sfx('card');showWorld(+b.dataset.w)});
@@ -130,17 +136,18 @@ function levelNode(){
   RNG=Math.random;
   return{type:L.boss?'chefe':'batalha',map:w.arena&&L.boss?w.arena:w.map,waves,night:L.night,level:L.id};
 }
-function startLevelBattle(){META.lastDeck=RUN.deck.map(c=>c.k);saveMeta();hideMenu();clearInterval(wmapTimer);startBattle(levelNode())}
+function startLevelBattle(){META.lastDeck=RUN.deck.map(c=>c.k);saveMeta();const L=LEVELS[RUN.level];if(L.rule==='poucas')RUN.handSize=3;hideMenu();clearInterval(wmapTimer);const node=levelNode();startBattle(node);
+  if(L.rule==='sempisao')S.noSlam=true;if(L.rule==='trevas')S.trevas=true;if(L.rule)banner('Regra da fase',RULES[L.rule].name+': '+RULES[L.rule].desc)}
 function levelWon(){
   const L=LEVELS[RUN.level],first=!META.done[L.id],treeBonus=1+(META.garden.tree.lvl||0)*.05;
   const reward=Math.round((first?60+L.n*20:30+L.n*5)*treeBonus),picked=Math.round(S.coins*treeBonus);
-  META.coins+=reward+picked;META.done[L.id]=1;
+  META.coins+=reward+picked;META.done[L.id]=1;const stars=RUN.hp>=18?3:RUN.hp>=10?2:1;META.stars=META.stars||{};const newBest=stars>(META.stars[L.id]||0);META.stars[L.id]=Math.max(stars,META.stars[L.id]||0);
   let card=null;const unl=UNLOCK_ORDER[L.n];if(first&&unl&&!META.unlocked.includes(unl)){META.unlocked.push(unl);card=mk(unl)}
   saveMeta();MUS.mode='calm';
   const news=[];if(L.id==='1-4')news.push('O Jardim foi liberado! Plante, regue e venda. Junte moedas para a semente da Árvore da Vida.');
   if(L.id==='2-4')news.push('O modo Jornada foi liberado no menu.');
   const last=RUN.level===LEVELS.length-1;
-  menu(`<div class="mbox"><small class="eyebrow">${WORLDS[L.wi].name} · ${L.id} · ${L.night?'Noite':'Dia'}</small><h2>Fase vencida!</h2>
+  menu(`<div class="mbox"><small class="eyebrow">${WORLDS[L.wi].name} · ${L.id} · ${L.night?'Noite':'Dia'}</small><h2>Fase vencida!</h2><p class="bigstars">${starStr(stars)}</p><p class="help">${stars<3?'3 estrelas: termine com 18 de Vida ou mais.':'Perfeito!'}${newBest&&!first?' Novo recorde!':''}</p>
     <p>+${reward} moedas pela fase · +${picked} moedas recolhidas${treeBonus>1?' (Árvore da Vida +'+Math.round((treeBonus-1)*100)+'%)':''}</p>${coinsTag()}
     ${card?`<div class="sec"><h3>Nova carta liberada</h3><div class="grid g3">${cardHTML(card)}</div></div>`:''}
     ${news.map(t=>`<p class="epi">${t}</p>`).join('')}
@@ -177,7 +184,7 @@ function showLavrador(){
 // ---------- shop
 const UPGRADES={hearts:{name:'Coração extra',prices:[200,500,1000],desc:'+1 coração em toda batalha.'},bag:{name:'Bolsa maior',prices:[300,800],desc:'+1 carta na bolsa.'},mana:{name:'Maná inicial',prices:[250,600],desc:'+2 de maná no começo das batalhas.'}};
 const GPLANTS={trigo:{name:'Trigo',price:20,stage:40,sell:50,col:'#e8c86a'},uva:{name:'Uva',price:50,stage:90,sell:130,col:'#9b4be0'},roma:{name:'Romã',price:120,stage:180,sell:320,col:'#e0284a'},oliva:{name:'Oliva',price:300,stage:360,sell:850,col:'#b8cf9a'}};
-const TREE_SEED_PRICE=3000;
+const TREE_SEED_PRICE=2000;
 function shopIconTo(cvs,k){const g=cvs.getContext('2d');g.clearRect(0,0,32,32);C=g;
   if(k==='hearts'){[[9,8,6],[17,8,6],[7,10,18],[7,12,18],[9,14,14],[11,16,10],[13,18,6],[15,20,2]].forEach(([a,b,w])=>r(a,b,w,2,'#ff4f7b'));r(10,10,3,2,'#ffb0c8')}
   if(k==='bag'){r(8,10,16,18,'#c9a99a');r(8,10,16,3,'#e8dcc0');r(11,6,10,4,'#a88a7a');r(14,16,4,6,'#5fe08a')}
@@ -221,3 +228,19 @@ const TREE_REWARDS=[null,{coins:150,txt:'150 moedas'},{items:{cerca:4},txt:'4 ce
   {coins:500,txt:'500 moedas'},{items:{espantalho:3,lama:4},txt:'3 espantalhos e 4 poças de lama'},{rare:1,txt:'outra carta consagrada'},{weapon:'arado',txt:'o Arado'},{coins:1500,txt:'1500 moedas'},{final:1,txt:'as folhas para a cura das nações: +50% de moedas'}];
 const treeNeed=lv=>100+lv*80;
 function potAdvance(p){const P=GPLANTS[p.k],now=Date.now();while(p.watered&&p.stage<3&&now-p.t0>=P.stage*1000){p.t0+=P.stage*1000;p.stage++;p.watered=p.stage<3?false:true}}
+
+// ---------- settings
+function showConfig(){let armed=false;
+  const render=()=>{menu(`<div class="mbox"><div class="topbar"><button class="btn ghost" data-go="hub">‹ Menu</button><h2>Configurações</h2><span></span></div>
+    <div class="cfg"><label>Música <input type="range" id="cmus" min="0" max="1" step="0.05" value="${CFG.mus}"></label>
+    <label>Efeitos <input type="range" id="csfx" min="0" max="1" step="0.05" value="${CFG.sfx}"></label>
+    <label class="chk"><input type="checkbox" id="clite" ${CFG.lite?'checked':''}> Modo leve <small>sem brilho, neblina e distorção; para aparelhos mais fracos</small></label>
+    <label class="chk"><input type="checkbox" id="cmute" ${muted?'checked':''}> Silenciar tudo (M)</label></div>
+    <div class="sec"><h3>Progresso</h3><p class="help">Apaga fases, moedas, jardim, árvore, cartas e conquistas deste navegador.</p>
+    <button class="btn ${armed?'act':'ghost'}" id="creset">${armed?'Tem certeza? Clique de novo para apagar tudo':'Reiniciar progresso'}</button></div></div>`);
+    $('cmus').oninput=e=>{CFG.mus=+e.target.value;saveCfg()};$('csfx').oninput=e=>{CFG.sfx=+e.target.value;saveCfg();sfx('coin')};
+    $('clite').onchange=e=>{CFG.lite=e.target.checked;saveCfg()};$('cmute').onchange=e=>{initAudio();setMuted(e.target.checked)};
+    $('creset').onclick=()=>{if(!armed){armed=true;return render()}['fds-meta','fds-run','jardim-do-fruto-celeiro'].forEach(k=>store.del(k));location.reload()}};render()}
+// ---------- show which works of the flesh come, on the seed screen
+function wavePreviewHTML(){if(!RUN||RUN.mode!=='level')return'';const node=levelNode(),cnt={};node.waves.forEach(w=>w.list.forEach(([k])=>{if(!EN[k].hide)cnt[k]=(cnt[k]||0)+1}));
+  return `<div class="sec"><h3>Vêm nesta fase</h3><div class="foes">${Object.entries(cnt).map(([k,n])=>`<span class="foe" title="${EN[k].desc}${EN[k].weak?' Fraco contra '+CARDS[EN[k].weak].name+'.':''}"><canvas width="48" height="48" data-enemy="${k}"></canvas><b>${EN[k].name}</b><small>×${n}${EN[k].weak?' · '+CARDS[EN[k].weak].name:''}</small></span>`).join('')}</div></div>`}

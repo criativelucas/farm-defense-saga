@@ -36,10 +36,12 @@ function palm(px,py,c){for(let i=0;i<22;i++)r(px+Math.sin(i*.15)*3,py-i,2,1,c);
   for(let a=0;a<5;a++){const an=-Math.PI*.9+a*Math.PI*.45;for(let j=0;j<10;j++)r(px+Math.cos(an)*j,py-22+Math.sin(an)*j+j*j*.06,2,1,c)}}
 
 // ---------- audio: blips + a small generated score in the Phrygian dominant scale
-let AC=null,MASTER=null,MUSG=null,muted=false;
+let AC=null,MASTER=null,MUSG=null,SFXG=null,muted=false;
+const CFG=Object.assign({mus:.55,sfx:.9,lite:false},store.get('fds-cfg',{}));
+function saveCfg(){store.set('fds-cfg',CFG);if(MUSG)MUSG.gain.value=CFG.mus;if(SFXG)SFXG.gain.value=CFG.sfx;document.body.classList.toggle('lite',CFG.lite)}
 function initAudio(){
   if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();MASTER=AC.createGain();MASTER.gain.value=muted?0:.9;MASTER.connect(AC.destination);
-    MUSG=AC.createGain();MUSG.gain.value=.55;MUSG.connect(MASTER)}catch(e){AC=null}}
+    MUSG=AC.createGain();MUSG.gain.value=CFG.mus;MUSG.connect(MASTER);SFXG=AC.createGain();SFXG.gain.value=CFG.sfx;SFXG.connect(MASTER)}catch(e){AC=null}}
   else if(AC.state==='suspended')AC.resume();
 }
 function setMuted(m){muted=m;if(MASTER)MASTER.gain.value=m?0:.9}
@@ -52,12 +54,13 @@ function sfx(n){if(!AC||muted)return;const now=AC.currentTime;if(lastS[n]&&now-l
   const P=SND[n],o=AC.createOscillator(),g=AC.createGain();o.type=P[3];
   o.frequency.setValueAtTime(P[0],now);o.frequency.exponentialRampToValueAtTime(P[1],now+P[2]);
   g.gain.setValueAtTime(P[4],now);g.gain.exponentialRampToValueAtTime(.0001,now+P[2]);
-  o.connect(g).connect(MASTER);o.start(now);o.stop(now+P[2]+.02)}
+  o.connect(g).connect(SFXG||MASTER);o.start(now);o.stop(now+P[2]+.02)}
 
-const MUS={mode:'calm',next:0,step:0};
+const MUS={mode:'calm',next:0,step:0,world:'eden'};
+const MSTYLE={eden:{t:84,tr:0},jerico:{t:96,tr:2},mar:{t:90,tr:-2},sinai:{t:78,tr:-5},babel:{t:104,tr:3},getsemani:{t:66,tr:-7},abismo:{t:70,tr:-9},tumulo:{t:72,tr:5}};
 const SCALE=[0,1,4,5,7,8,10];
 const deg=d=>{const o=Math.floor(d/7);return SCALE[((d%7)+7)%7]+12*o};
-const hz=s=>146.83*Math.pow(2,s/12);
+const hz=s=>146.83*Math.pow(2,(s+((MSTYLE[MUS.world]||{tr:0}).tr))/12);
 function tone(f,t,d,type,g){const o=AC.createOscillator(),v=AC.createGain();o.type=type;o.frequency.value=f;
   v.gain.setValueAtTime(.0001,t);v.gain.exponentialRampToValueAtTime(g,t+Math.min(.08,d*.3));v.gain.exponentialRampToValueAtTime(.0001,t+d);
   o.connect(v).connect(MUSG);o.start(t);o.stop(t+d+.05)}
@@ -67,7 +70,7 @@ function drum(t,g,f){if(!NOISE){NOISE=AC.createBuffer(1,AC.sampleRate*.3|0,AC.sa
 const PROG=[0,5,3,4];
 function musicTick(){
   if(!AC||muted||AC.state!=='running')return;
-  const boss=MUS.mode==='boss',spb=60/(boss?120:84)/2;
+  const boss=MUS.mode==='boss',ms=MSTYLE[MUS.world]||MSTYLE.eden,spb=60/(boss?120:ms.t)/2;
   if(MUS.next<AC.currentTime)MUS.next=AC.currentTime+.05;
   while(MUS.next<AC.currentTime+.25){
     const s=MUS.step,t=MUS.next,root=PROG[(s>>4)%4];
@@ -91,3 +94,5 @@ const dn=(...c)=>c.some(k=>keys.has(k))?1:0, pr=(...c)=>c.some(k=>hit.has(k));
 document.querySelectorAll('#touch button').forEach(b=>{const k=b.dataset.k;
   b.addEventListener('pointerdown',e=>{e.preventDefault();keys.add(k);hit.add(k);initAudio()});
   ['pointerup','pointercancel','pointerleave'].forEach(t=>b.addEventListener(t,()=>keys.delete(k)))});
+
+document.body.classList.toggle('lite',CFG.lite);

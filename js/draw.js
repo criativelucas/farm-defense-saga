@@ -311,8 +311,8 @@ function draw(){
   if(MAP.storm&&S.bolt>0){x.fillStyle=`rgba(220,220,255,${S.bolt*.6})`;x.fillRect(0,0,W,H);let lx=290,ly=26;
     for(let i=0;i<8;i++){const nx=lx+rnd(-6,6);x.fillStyle='#fffbe0';x.fillRect(Math.round(Math.min(lx,nx)),ly,Math.abs(nx-lx)+1,1);x.fillRect(Math.round(nx),ly,1,5);lx=nx;ly+=5}}
   drawRays();
-  x.drawImage(FAR,-Math.round(S.cam*PAR[0]),0);fog(128,.16,.3);
-  x.drawImage(MID,-Math.round(S.cam*PAR[1]),0);fog(150,.12,.6);
+  x.drawImage(FAR,-Math.round(S.cam*PAR[0]),0);if(!CFG.lite)fog(128,.16,.3);
+  x.drawImage(MID,-Math.round(S.cam*PAR[1]),0);if(!CFG.lite)fog(150,.12,.6);
   x.drawImage(NEAR,-Math.round(S.cam*PAR[2]),0);
   for(let i=0;i<18;i++){const fx=(hs(i,5)*W+S.t*(6+hs(i,6)*8))%W,fy=60+hs(i,7)*90+Math.sin(S.t*1.5+i)*6;if(Math.sin(S.t*3+i*2)>-.2)r(fx,fy,1,1,'#fff4a0')}
   x.save();x.translate(-cam,0);
@@ -350,7 +350,7 @@ function draw(){
   if(S.night>.01){dx.globalCompositeOperation='source-over';dx.clearRect(0,0,W,H);dx.fillStyle=`rgba(${MAP.night},${S.night})`;dx.fillRect(0,0,W,H);
     dx.globalCompositeOperation='destination-out';for(const L of LIGHTS)glowBlob(dx,{x:L.x-cam,y:L.y,r:L.r*1.3,c:'#000',a:L.a},1.8);
     dx.globalCompositeOperation='source-over';x.drawImage(dc,0,0)}
-  for(const f of S.fx)if(f.k==='shock'){const cx=f.x-cam,cy=f.y,R=f.r;x.save();x.beginPath();x.arc(cx,cy,R+7,0,Math.PI*2);x.arc(cx,cy,Math.max(0,R-7),0,Math.PI*2,true);x.clip();
+  for(const f of S.fx)if(f.k==='shock'&&!CFG.lite){const cx=f.x-cam,cy=f.y,R=f.r;x.save();x.beginPath();x.arc(cx,cy,R+7,0,Math.PI*2);x.arc(cx,cy,Math.max(0,R-7),0,Math.PI*2,true);x.clip();
     x.translate(cx,cy);x.scale(1.07,1.07);x.translate(-cx,-cy);x.drawImage(cv,0,0);x.restore();x.globalAlpha=.45*(1-f.t/.5);ring(cx,cy,R,'#ffffff');x.globalAlpha=1}
   if(S.sand>.01){x.fillStyle=`rgba(190,130,70,${S.sand*.42})`;x.fillRect(0,0,W,H)}
   drawOverlays();
@@ -369,7 +369,7 @@ function draw(){
   if(S.lifeHit>0){x.fillStyle=`rgba(255,40,80,${S.lifeHit*.3})`;x.fillRect(0,0,W,H)}
   if(S.flash.a>0){x.save();x.globalCompositeOperation='lighter';x.fillStyle=`rgba(${S.flash.c},${S.flash.a})`;x.fillRect(0,0,W,H);x.restore()}
   x.drawImage(VIG,0,0);
-  gx.clearRect(0,0,W,H);gx.save();view(gx);gx.globalCompositeOperation='lighter';
+  gx.clearRect(0,0,W,H);if(CFG.lite)return;gx.save();view(gx);gx.globalCompositeOperation='lighter';
   for(const L of LIGHTS)glowBlob(gx,{...L,x:L.x-cam});
   gx.translate(-cam,0);C=gx;
   gx.globalAlpha=.32;for(const e of S.en){if(e.dive>0)continue;OV=EN[e.k].glow;enemyBody(e)}OV=null;gx.globalAlpha=1;
