@@ -522,6 +522,68 @@ body.big #menu{font-size:max(12px,1.85cqw)}body.big .hud{font-size:max(12px,2.3c
 .garden .gbar{gap:.35em}.gtool.shopb{min-width:5em;align-content:center}.gtool.shopb b{font-size:.95em}
 .gbar.seeds{min-height:3em;background:#2a1a10}.gbar.seeds small{color:#c9a99a;align-self:center}
 .garden .gscene{aspect-ratio:480/300}.garden .gtool i{font-size:.9em}
+
+/* ---- choose your seeds ---- */
+#menu:has(.choose){background:linear-gradient(90deg,#140a1ccc 0 52%,transparent 64%);padding:1.2% 1.5%}
+.choose{display:grid;grid-template-columns:minmax(0,54%) 1fr;grid-template-rows:auto 1fr;gap:.5em .8em;height:100%;font-size:max(9px,1.25cqw)}
+.bank{grid-column:1/-1;justify-self:start;display:flex;gap:.3em;align-items:center;border:14px solid transparent;border-image:var(--f-slot) 5 fill / 14px repeat;filter:drop-shadow(0 5px 0 #0007);max-width:100%;overflow-x:auto}
+.bmana{display:grid;justify-items:center;min-width:3.4em}.bmana canvas{width:2.6em;height:2.6em;image-rendering:pixelated}.bmana b{color:#fff;background:#1a0c06;padding:0 .5em;font-size:1.1em}
+.bslot{display:block;width:4.2em;aspect-ratio:72/100;background:#1a0c06aa;box-shadow:inset 0 0 0 2px #6a3a1a;padding:0;border:0}
+.bslot.full{cursor:pointer;background:none;box-shadow:none;filter:drop-shadow(0 3px 0 #0008)}.bslot.full:hover{transform:translateY(2px)}
+.bslot canvas,.cpick canvas{width:100%;height:auto;display:block;image-rendering:auto}
+.cpanel{display:grid;grid-template-rows:auto 1fr auto auto;gap:.4em;border:28px solid transparent;border-image:var(--f-slot) 5 fill / 28px repeat;filter:drop-shadow(0 8px 0 #0007);min-height:0;--ink:#fbe9d0}
+.cpanel h2{justify-self:center;margin:-.2em 0 0;border:14px solid transparent;border-image:var(--f-plaque) 8 fill / 14px repeat;padding:0 .8em;color:#ffd23a;font-size:1.3em;text-shadow:2px 0 0 #3a1a08,-2px 0 0 #3a1a08,0 2px 0 #3a1a08,0 -2px 0 #3a1a08}
+.cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(4.2em,1fr));gap:.45em;align-content:start;overflow:auto;padding:.2em}
+.cpick{padding:0;border:0;background:none;cursor:pointer;filter:drop-shadow(0 3px 0 #0008);transition:transform .1s}.cpick:hover:not(.used){transform:translateY(-3px) scale(1.05)}
+.cpick.used{filter:grayscale(1) brightness(.4);cursor:pointer}.cpick.lock{display:block;aspect-ratio:72/100;background:#2a160c;box-shadow:inset 0 0 0 2px #4a2a14;cursor:default}
+.cinfo{margin:0;color:#ffe9b0;font-size:.85em;min-height:2.4em;line-height:1.25}
+.btn.plantar{justify-self:center;font-size:1.4em;padding:.1em 1.6em .2em!important}
+.cside{display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-end;gap:.4em}
+
+.road{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,15em),1fr));gap:.4em;width:100%;text-align:left}
+.rstep{display:grid;grid-template-columns:2.6em 1fr;gap:.4em;align-items:start;border:8px solid transparent;border-image:var(--f-slot) 5 fill / 8px repeat;color:#fbe9d0;font-size:.85em;opacity:.75}
+.rstep.got{opacity:1;border-image:var(--f-slotOn) 5 fill / 8px repeat}.rstep b{color:#ffd23a}.rstep span{display:grid;gap:.1em}.rstep i{font-style:normal}
+.rk-card{color:#9ff7b8}.rk-pest{color:#ff9a9a}.rk-bag{color:#ffe08a}.rk-sys{color:#9ad8ff}.rk-shop{color:#ffc080}.rk-mode{color:#d8b0ff}
+
+/* ---- quitanda (shop) ---- */
+#menu:has(.quitanda){padding:0;background:none;display:block}
+.quitanda{position:absolute;inset:0;font-size:max(9px,1.35cqw)}
+.quitanda #qbg{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
+.qsign{position:absolute;left:52%;top:2%;transform:translateX(-50%);border:18px solid transparent;border-image:var(--f-plaque) 8 fill / 18px repeat;padding:0 1.2em;color:#ffd23a;font-weight:700;font-size:1.9em;white-space:nowrap;
+  text-shadow:2px 0 0 #3a1a08,-2px 0 0 #3a1a08,0 2px 0 #3a1a08,0 -2px 0 #3a1a08,0 5px 0 #3a1a08;filter:drop-shadow(0 6px 0 #0006)}
+.qboaz{position:absolute;left:2%;bottom:6%;width:25%}.qboaz canvas{width:100%;image-rendering:pixelated;display:block}
+.qbubble{position:absolute;left:58%;bottom:84%;width:120%;min-height:3em;background:#fffdf4;color:#2a1408;border-radius:1.2em;padding:.6em .9em;box-shadow:0 0 0 3px #2a1408,0 6px 0 #0005;line-height:1.3;font-size:.95em}
+.qbubble::after{content:"";position:absolute;left:12%;bottom:-.9em;border:.6em solid transparent;border-top-color:#fffdf4;filter:drop-shadow(0 3px 0 #2a1408)}
+.qshelf{position:absolute;left:38%;right:3%;top:28%;height:47%;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:1fr 1fr;gap:4% 2%}
+.qitem{position:relative;display:grid;justify-items:center;align-content:end;gap:.1em;font:inherit;background:none;border:0;cursor:pointer;color:#fff3d0;padding:0 0 .2em;transition:transform .12s}
+.qitem canvas{width:5em;height:5em;image-rendering:pixelated;filter:drop-shadow(0 4px 0 #0007)}.qitem small{font-size:.8em;text-shadow:0 1px 0 #000;line-height:1.1;text-align:center;max-width:9em}
+.qitem .tag{background:#ffe04a;color:#2a1408;font-weight:700;padding:0 .5em;box-shadow:0 0 0 2px #2a1408,2px 3px 0 #0006;transform:rotate(-3deg);font-size:.9em}
+.qitem:hover:not(:disabled){transform:translateY(-4px) scale(1.06)}.qitem.poor .tag{background:#d8b8a8;color:#6a3a2a}.qitem.owned{opacity:.6;cursor:default}.qitem.owned .tag{background:#9fe070}
+.qitem.rare canvas{animation:rareglow 2.4s ease-in-out infinite}.qempty{grid-column:1/-1;align-self:center;text-align:center;color:#fff3d0}
+.qarrow{position:absolute;bottom:22%;font:inherit;font-weight:700;font-size:2.2em;color:#fff;border:12px solid transparent;border-image:var(--f-btnRed) 4 fill / 12px repeat;background:none;padding:0 .3em;cursor:pointer;filter:drop-shadow(0 4px 0 #0007)}
+.qarrow.prev{left:37%}.qarrow.next{right:2%}.qarrow:disabled{filter:grayscale(1) brightness(.7);cursor:default}
+.qfoot{position:absolute;left:1.5%;right:1.5%;bottom:2%;display:flex;justify-content:space-between;align-items:center;gap:1em}.qpage{color:#fff;text-shadow:0 2px 0 #000;font-size:.85em;background:#0006;padding:.1em .6em}
+
+/* ---- farm hub: barn with plank menu, props on the ground ---- */
+#menu:has(.farmhub){padding:0;display:block}
+.farmhub{position:absolute;inset:0;font-size:max(10px,1.4cqw)}
+.farmhub .logo{position:absolute;left:3%;top:3%;width:36%}.farmhub .logo img{width:100%;height:auto;filter:drop-shadow(0 8px 0 #0006);animation:logobob 4s ease-in-out infinite}
+.welcome{position:absolute;left:5%;top:66%;display:grid;justify-items:start;gap:.15em;border:16px solid transparent;border-image:var(--f-plaque) 8 fill / 16px repeat;padding:0 .6em;color:#fff3d0;text-shadow:0 2px 0 #3a1a08;filter:drop-shadow(0 6px 0 #0006)}
+.welcome b{font-size:.8em;color:#ffd23a}.welcome span{font-size:1.2em;font-weight:700}.welcome .coins{font-size:.8em;margin-top:.2em}
+.barn{position:absolute;right:3%;bottom:0;width:44%;aspect-ratio:1}.barn canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;filter:drop-shadow(-6px 8px 0 #0005)}
+.planks{position:absolute;left:12%;right:12%;top:36%;bottom:28%;display:flex;flex-direction:column;justify-content:space-evenly;gap:.3em}
+.plank2{display:grid;justify-items:center;font:inherit;border-style:solid;border-color:transparent;border-width:8px 16px;border-image:var(--f-plank) 4 8 fill / 8px 16px repeat;background:none;cursor:pointer;padding:0 .4em;transform:rotate(var(--tilt,-1deg));transition:transform .12s;filter:drop-shadow(0 5px 0 #0007)}
+.plank2:nth-child(2){--tilt:1.2deg}.plank2:nth-child(3){--tilt:-.6deg}.plank2:nth-child(4){--tilt:.8deg}
+.plank2 b{font-size:2em;line-height:1;color:#3a2010;text-shadow:0 2px 0 #f0d8a8,0 -1px 0 #1a0c06;letter-spacing:.04em;text-transform:uppercase}
+.plank2 small{font-size:.75em;color:#fff3d0;background:#3a2010;padding:0 .5em;margin-top:.1em}
+.plank2:hover:not(:disabled){transform:rotate(0) scale(1.05)}.plank2.locked{filter:grayscale(.8) brightness(.75) drop-shadow(0 5px 0 #0007);cursor:not-allowed}
+.props{position:absolute;left:2%;bottom:2%;width:52%;display:flex;flex-wrap:wrap;gap:.3em;align-items:flex-end}
+.prop{position:relative;display:grid;justify-items:center;font:inherit;background:none;border:0;cursor:pointer;padding:0;transition:transform .12s}
+.prop canvas{width:4.2em;height:4.2em;image-rendering:pixelated;filter:drop-shadow(0 4px 0 #0007)}
+.prop span{margin-top:-.4em;font-size:.78em;font-weight:700;color:#fff3d0;text-shadow:0 2px 0 #000,0 0 4px #000}
+.prop i{position:absolute;right:0;top:0;font-style:normal;background:#e0284a;color:#fff;font-weight:700;border-radius:999px;min-width:1.4em;text-align:center;box-shadow:0 0 0 2px #fff}
+.prop:hover{transform:translateY(-4px) rotate(-3deg)}
+@media (max-width:640px){.farmhub .logo{width:60%}.barn{width:60%}.welcome{top:38%}.props{width:96%}}
 /* Touch controls */
 #touch{position:absolute;inset:auto 0 22% 0;display:none;justify-content:space-between;padding:0 2%;pointer-events:none}
 #touch div{display:flex;gap:.5em;pointer-events:auto}

@@ -38,6 +38,23 @@ function drawVfx(){if(!S||!S.vfx)return;
     else if(v.k==='holy'){const w=6*(1-Math.abs(u*2-1)*.6),gy0=gy(v.x);ditherDisc(v.x,gy0,w*1.4,'#fff3b0',1-u);
       for(let y=0;y<gy0;y+=.5)if(((y*2|0)+(v.t*30|0))%3)r(v.x-w/2+Math.sin(y*.3+v.t*9)*.5,y,w,.5,u<.8?'#fff6c8':'#f7c948');
       for(let i=0;i<4;i++){const sy=((v.t*90+i*40)%gy0);r(v.x+Math.sin(i*2+v.t*5)*w,sy,.5,1,'#ffffff')}}
+    else if(v.k==='onoma')drawOnoma(v);
     else if(v.k==='splash'){if(u<.5){r(v.x-1,v.y-1-u*6,.5,.5,'#bfe8ff');r(v.x+1,v.y-1.5-u*5,.5,.5,'#bfe8ff')}r(v.x-1-u*3,v.y-.5,.5+u*6,.5,'#9ad0ff')}
     else if(v.k==='leaf'){const f=(v.t*6+v.ph|0)%2;if(v.land&&v.max-v.t<1&&(v.t*10|0)%2)continue;r(v.x,v.y,f?1.5:1,f?.5:1,v.c);r(v.x+(f?1:.5),v.y-.5,.5,.5,shade(v.c,-.25))}}
 }
+
+// ---------- comic onomatopoeia: a word that hops into the air when the gardener hits, stomps or knocks a pest out
+const ONOMA={hit:['POW!','PÁ!','TOC!','PLAFT!','VAPT!','PEI!'],slam:['TUM!','BUM!','CATAPLOFT!','PUM!'],kill:['PLOFT!','CRÁS!','ZÁS!','PUF!'],big:['KABUM!','CABRUM!','BOOM!']};
+function onoma(px,py,kind,chance=1){if(!S||Math.random()>chance)return;if((S.onoT||0)>S.t)return;S.onoT=S.t+.45;
+  (S.vfx||(S.vfx=[])).push({k:'onoma',x:px+rnd(-4,4),y:py,t:0,max:.9,w:pick(ONOMA[kind]||ONOMA.hit),seed:Math.random()*99|0,kind,big:kind==='slam'||kind==='big'})}
+// a loose word, no balloon: thick dark outline, warm gradient letters, a hop up and a tilt
+const ONO_COL={hit:['#fff6b0','#ffb820'],slam:['#ffe08a','#ff6a1a'],kill:['#ffffff','#ff8ab0'],big:['#fff6b0','#ff4a1a']};
+function drawOnoma(v){const u=v.t/v.max,pop=u<.16?easeBack(u/.16):1,hop=Math.sin(Math.min(1,u*2.2)*Math.PI)*7+u*6,sc=(v.big?1.35:1)*pop;if(u>.78&&(v.t*20|0)%2)return;
+  const col=ONO_COL[v.kind]||ONO_COL.hit,fs=v.big?11:9;
+  x.save();x.translate(v.x,v.y-10-hop);x.scale(sc,sc);x.rotate(((v.seed%2)?1:-1)*.14);
+  x.font=`700 ${fs}px "Pixelify Sans", monospace`;x.textAlign='center';x.textBaseline='middle';x.lineJoin='round';
+  x.lineWidth=4;x.strokeStyle='#2a0c06';x.strokeText(v.w,.6,1.2);x.lineWidth=3;x.strokeStyle='#1a0806';x.strokeText(v.w,0,0);
+  const g=x.createLinearGradient(0,-fs/2,0,fs/2);g.addColorStop(0,col[0]);g.addColorStop(1,col[1]);x.fillStyle=g;x.fillText(v.w,0,0);
+  x.fillStyle='#ffffffaa';x.fillRect(-x.measureText(v.w).width/2+1,-fs/2+1.5,1.5,1);
+  if(u<.5)for(let k=0;k<3;k++){const a=v.seed+k*2.1,d=fs*(.9+u*1.5);r(Math.cos(a)*d,Math.sin(a)*d*.6,1,1,col[0])}
+  x.textBaseline='alphabetic';x.restore()}

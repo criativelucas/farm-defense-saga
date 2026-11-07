@@ -120,7 +120,7 @@ function kill(e){
   if(META.stats.kills>=490)unlockAch('setenta');
 }
 function deathFx(e){
-  S.fx.push({k:'corpse',e:{...e},t:0,max:.3});vfx('puff',e.x,ecy(e),{n:5});vfx('spark',e.x,ecy(e),{n:6});
+  S.fx.push({k:'corpse',e:{...e},t:0,max:.3});onoma(e.x,ecy(e)-4,EN[e.k].boss||EN[e.k].elite?'big':'kill',EN[e.k].boss||EN[e.k].elite?1:.18);vfx('puff',e.x,ecy(e),{n:5});vfx('spark',e.x,ecy(e),{n:6});
   const X=e.x,Y=ecy(e),P=(n,c,o)=>{for(let i=0;i<n;i++){const a=rnd(0,Math.PI*2),v=rnd(o.sp*.3,o.sp);
     S.parts.push({x:X+rnd(-3,3),y:Y+rnd(-3,3),vx:Math.cos(a)*v,vy:Math.sin(a)*v+(o.up||0),g:o.g,life:rnd(o.l*.5,o.l),max:o.l,c:pick(c),s:o.s||1,sway:o.sway,a:o.a})}};
   switch(e.k){
@@ -165,7 +165,7 @@ function updPlayer(dt){
   p.look=(p.look||0)+(p.face*20-(p.look||0))*Math.min(1,dt*1.6);// look a little ahead of where the gardener faces
   S.cam+=(clamp(p.x-W*.42+p.look,0,MAP.ww-W)-S.cam)*Math.min(1,dt*5);
 }
-function doSlam(){mission('slam',1);
+function doSlam(){mission('slam',1);onoma(S.p.x,S.p.y-10,'slam',.8);
   const p=S.p,harvest=S.basket>=5;shake(harvest?9:5);S.stop=.06;sfx('slam');flash(harvest?.4:.22,harvest?'255,220,120':'255,255,255');
   const davi=isChar('davi'),rad=(davi?42:30)*(harvest?1.8:1);
   if(harvest){S.basket=0;banner('Pisão de colheita','O cesto transbordou');burst(p.x,p.y-6,30,['#ffd34a','#ff4f7b','#9b4be0','#5fe08a'],140,250,.8,2)}
@@ -397,7 +397,7 @@ function nearestTreeSlot(){let best=-1,bd=90;MAP.slots.forEach((s,i)=>{if(!S.tw[
 function playerAttack(){const p=S.p;if(p.stun>0||p.atkCD>0)return;if(tutStep===4)tutNext();const w=WEAPONS[META.weapon||'enxada'];p.atkCD=w.cd;p.swing=.22;sfx('hit');
   if(w.dash){p.dash=.22;p.dashHit=new Set();sfx('wind');return}
   for(const e of S.en){if(e.dive>0)continue;const d=EN[e.k],ddx=(e.x-p.x)*p.face,ddy=ecy(e)-(p.y-8);
-    if(ddx>-(w.wide?10:4)&&ddx<w.rng+d.w/2&&Math.abs(ddy)<(w.wide?26:14)+d.h/2){damage(e,w.dmg*(isChar('davi')?1.5:1));if(!d.boss)e.x+=p.face*(w.push||8);burst(e.x,ecy(e),5,['#ffffff','#e8dcc0'],60,200,.3)}}
+    if(ddx>-(w.wide?10:4)&&ddx<w.rng+d.w/2&&Math.abs(ddy)<(w.wide?26:14)+d.h/2){damage(e,w.dmg*(isChar('davi')?1.5:1));onoma(e.x,ecy(e)-6,'hit',.45);if(!d.boss)e.x+=p.face*(w.push||8);burst(e.x,ecy(e),5,['#ffffff','#e8dcc0'],60,200,.3)}}
   S.fx.push({k:'swing',x:p.x,y:p.y-8,f:p.face,r:w.rng,t:0,max:.2,wide:w.wide})}
 function hurtPlayer(n,src){const p=S.p;if(p.inv>0||p.faint>0)return;p.hp-=n;p.inv=1.2;p.vx=(src&&src.x>p.x?-1:1)*140;p.vy=-120;p.on=false;
   shake(6);flash(.25,'255,40,40');sfx('hurt');pop(p.x,p.y-26,'-'+n+' coração','#ff4f4f',9);

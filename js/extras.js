@@ -94,3 +94,19 @@ function talentsHTML(){return `<div class="sec"><h3>Talentos · ${starsFree()} �
 function bindTalents(rerender){$('menu').querySelectorAll('[data-tal]').forEach(b=>b.onclick=()=>{const k=b.dataset.tal;if(tl(k)>=TAL_MAX||starsFree()<TAL_COST)return;META.talents=META.talents||{};META.talents[k]=tl(k)+1;saveMeta();sfx('ach');rerender()})}
 const CARD_LV_PRICE=[200,450,800];
 const cardLv=k=>(META.cardLv&&META.cardLv[k])||0;
+
+// ---------- the road: one place that says what each win opens (cards, bag space, pests, systems, shop shelves, modes)
+const SHOP_AT={ferramentas:0,cartas:2,barreiras:3,jardim:4,arvore:4,melhorias:5};
+const SHOP_NAME={ferramentas:'Ferramentas',cartas:'Cartas',barreiras:'Barreiras',jardim:'Jardim',arvore:'Árvore da Vida',melhorias:'Melhorias'};
+const winsN=()=>Object.keys(META.done).length;
+const shopOpen=k=>winsN()>=SHOP_AT[k];
+function unlocksAfter(n){const L=[],lv=LEVELS[n];if(!lv)return L;
+  const card=UNLOCK_ORDER[n];if(card)L.push(['card','Carta: '+CARDS[card].name]);
+  if(n+1<LEVELS.length){const b0=levelBag(n)[1],b1=levelBag(n+1)[1];if(b1>b0)L.push(['bag','+1 espaço na bolsa ('+b1+' cartas)']);
+    levelPool(n+1).filter(k=>!levelPool(n).includes(k)).forEach(k=>L.push(['pest','Praga nova: '+EN[k].name]))}
+  for(const k in SYS_AT)if(SYS_AT[k]===n+1)L.push(['sys','Novidade: '+SYS_TXT[k][0]]);
+  for(const k in SHOP_AT)if(SHOP_AT[k]===n+1)L.push(['shop','Quitanda: '+SHOP_NAME[k]]);
+  if(lv.id==='1-4')L.push(['mode','Estufa do jardim']);if(lv.id==='2-4')L.push(['mode','Modo Jornada']);if(lv.l===3)L.push(['mode','Modo infinito: '+WORLDS[lv.wi].name]);
+  return L}
+function roadHTML(){return `<p class="help">O que cada fase vencida libera. Você já venceu ${winsN()} de ${LEVELS.length}.</p><div class="road">${LEVELS.map(l=>{const done=META.done[l.id],U=unlocksAfter(l.n);
+  return `<div class="rstep ${done?'got':''}"><b>${l.id}</b><span>${U.map(([k,t])=>`<i class="rk-${k}">${!done&&k==='card'?'Carta nova':t}</i>`).join('')||'<i>Moedas</i>'}</span></div>`}).join('')}</div>`}

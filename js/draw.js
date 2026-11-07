@@ -134,7 +134,9 @@ const LC={videira:'#a05ae8',roma:'#ff4f7b',oliveira:'#d8f0a8',sarca:'#ff8a2a',mo
 let LIGHTS=[];
 const easeBack=g=>1+2.70158*Math.pow(g-1,3)+1.70158*Math.pow(g-1,2);
 const HOMEY={tree:118,tabernacle:158,pillar:120,rahab:146,altar:150,rock:150,tomb:150};
-function view(ctx){ctx.translate(S.sx,S.sy);if(S.zoom>1.005){const fx=S.zoomTo.x-S.cam,fy=S.zoomTo.y;ctx.translate(fx,fy);ctx.scale(S.zoom,S.zoom);ctx.translate(-fx,-fy)}}
+// the world is drawn VY units higher than the screen, so the hand of cards at the bottom covers dirt, not the ground you play on
+const VY=-26;
+function view(ctx){ctx.translate(S.sx,S.sy+VY);if(S.zoom>1.005){const fx=S.zoomTo.x-S.cam,fy=S.zoomTo.y;ctx.translate(fx,fy);ctx.scale(S.zoom,S.zoom);ctx.translate(-fx,-fy)}}
 function buildLights(){
   const L=[],P=S.p;
   MAP.slots.forEach((s,i)=>{const t=S.tw[i];if(!t||t.grow<=.35||t.joio)return;const big=t.kinds[0]==='mostarda'&&t.age>=2,th=Math.max(...t.kinds.map(k=>TREE[k].h*TREE[k].b*(t.szv||.55)));
@@ -166,8 +168,8 @@ function fog(y,a,spd){for(let k=0;k<3;k++){const span=W+260,bx=((k*200-S.cam*spd
   x.fillStyle=g;x.fillRect(-130,-130,260,260);x.restore()}}
 function drawWater(){
   if(!MAP.water)return;const[a,b]=MAP.water,y=gy(a),sx=Math.round(a-S.cam),w=b-a;if(sx>W||sx+w<0)return;
-  x.save();x.setTransform(RS,0,0,RS,0,0);
-  for(let j=0;j<16;j++){const off=Math.round(Math.sin(S.t*3+j*.9)*(1+j*.08));x.globalAlpha=.6-j*.03;x.drawImage(cv,sx*RS,((y-1-j*1.2)|0)*RS,w*RS,RS,sx+off,y+1+j,w,1)}
+  x.save();x.setTransform(RS,0,0,RS,0,0);x.translate(0,VY);
+  for(let j=0;j<16;j++){const off=Math.round(Math.sin(S.t*3+j*.9)*(1+j*.08));x.globalAlpha=.6-j*.03;x.drawImage(cv,sx*RS,(((y-1-j*1.2)|0)+VY)*RS,w*RS,RS,sx+off,y+1+j,w,1)}
   x.globalAlpha=1;x.fillStyle='rgba(40,110,180,.28)';x.fillRect(sx,y+1,w,16);
   for(let i=0;i<4;i++)r(sx+((hs(i,91)*w+S.t*(8+i*3))%w),y+2+i*3,3,1,'#bfe8ff');
   r(sx,y,w,1,'#7ac0f0');x.restore();
@@ -251,7 +253,7 @@ function draw(){
   dl(x,NEAR,lay(PAR[2]),0);
   if(!MAP.day)for(let i=0;i<18;i++){const fx=(hs(i,5)*W+S.t*(6+hs(i,6)*8))%W,fy=60+hs(i,7)*90+Math.sin(S.t*1.5+i)*6;if(Math.sin(S.t*3+i*2)>-.2)r(fx,fy,1,1,'#fff4a0')}
   x.save();x.translate(-cam,0);
-  dl(x,GROUND,0,0);
+  dl(x,GROUND,0,0);r(cam-2,H,W+6,-VY+2,shade(MAP.pal.fill,-.4));
   const gc=S.wet>.3?'#8affb0':MAP.pal.top1;
   for(const t of MAP.tufts){if(t.x<cam-4||t.x>cam+W+4)continue;const l=Math.sin(S.t*2.2+t.x*.07)>.25?1:0;r(t.x,t.y-t.h,1,t.h,gc);r(t.x+l,t.y-t.h-1,1,1,gc)}
   for(const v of MAP.vines)for(let i=0;i<v.len;i++){const px=v.x+Math.sin(S.t*1.3+v.x+i*.3)*i*.08;r(px,v.y+i,1,1,'#2f9a5a');if(i%3===1)r(px+1,v.y+i,1,1,gc)}
@@ -284,13 +286,13 @@ function draw(){
   x.restore();
   drawWater();
   if(S.night>.01){dx.globalCompositeOperation='source-over';dx.clearRect(0,0,W+1,H);dx.fillStyle=`rgba(${MAP.night},${S.night})`;dx.fillRect(0,0,W+1,H);
-    dx.globalCompositeOperation='destination-out';for(const L of LIGHTS)glowBlob(dx,{x:L.x-cam,y:L.y,r:L.r*1.3,c:'#000',a:L.a},1.8);
-    dx.globalCompositeOperation='source-over';dl(x,dc,0,0)}
+    dx.globalCompositeOperation='destination-out';for(const L of LIGHTS)glowBlob(dx,{x:L.x-cam,y:L.y+VY,r:L.r*1.3,c:'#000',a:L.a},1.8);
+    dx.globalCompositeOperation='source-over';dl(x,dc,0,-VY)}
   for(const f of S.fx)if(f.k==='shock'&&!CFG.lite){const cx=f.x-cam,cy=f.y,R=f.r;x.save();x.beginPath();x.arc(cx,cy,R+7,0,Math.PI*2);x.arc(cx,cy,Math.max(0,R-7),0,Math.PI*2,true);x.clip();
-    x.translate(cx,cy);x.scale(1.07,1.07);x.translate(-cx,-cy);x.drawImage(cv,0,0,W+1,H);x.restore();x.globalAlpha=.45*(1-f.t/.5);ring(cx,cy,R,'#ffffff');x.globalAlpha=1}
-  if(S.sand>.01){x.fillStyle=`rgba(190,130,70,${S.sand*.42})`;x.fillRect(0,0,W+1,H)}
+    x.translate(cx,cy);x.scale(1.07,1.07);x.translate(-cx,-cy);x.drawImage(cv,0,-VY,W+1,H);x.restore();x.globalAlpha=.45*(1-f.t/.5);ring(cx,cy,R,'#ffffff');x.globalAlpha=1}
+  if(S.sand>.01){x.fillStyle=`rgba(190,130,70,${S.sand*.42})`;x.fillRect(0,-VY,W+1,H)}
   drawOverlays();
-  drawFG();
+  x.translate(0,-VY);drawFG();
   x.restore();
   if(S.comboShow>0){const a=Math.min(1,S.comboShow*2),sc=1+Math.max(0,S.comboShow-.75)*2;x.globalAlpha=a;x.save();x.translate(W/2,92);x.scale(sc,sc);
     x.font='700 26px "Pixelify Sans", monospace';x.fillStyle='#6a2a1a';x.fillText('x'+S.comboN,0,3);x.fillStyle='#f7c948';x.fillText('x'+S.comboN,0,0);
@@ -382,7 +384,7 @@ function drawIntent(e){const it=intentOf(e);if(!it)return;const d=EN[e.k],X=e.x,
 function drawOverlays(){
   if(S.flood>0){const lv=Math.min(1,(6-S.flood)*2,S.flood*2),top=H-10-lv*70;x.globalAlpha=.5;x.fillStyle='#2a6aa8';x.fillRect(0,top,W,H-top);x.globalAlpha=1;
     for(let i=0;i<W;i+=4)r(i,top+Math.sin(S.t*3+i*.1)*1.5,3,1,'#bfe8ff')}
-  if(S.babelOn>0){x.fillStyle='rgba(120,60,140,.14)';x.fillRect(0,0,W,H);x.font='8px "Pixelify Sans", monospace';x.fillStyle='#e0c0ff88';
+  if(S.babelOn>0){x.fillStyle='rgba(120,60,140,.14)';x.fillRect(0,-VY,W,H);x.font='8px "Pixelify Sans", monospace';x.fillStyle='#e0c0ff88';
     for(let i=0;i<10;i++)x.fillText('ʘΔλΣЖᚠᚦ'[(i+(S.t*3|0))%7],(hs(i,5)*W+S.t*10)%W,40+hs(i,6)*120)}
   if(MAPID==='getsemani'&&S.state==='wave'){}
 }

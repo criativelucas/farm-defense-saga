@@ -24,6 +24,9 @@
   make('plaque',32,20,(w,h,g)=>{r(0,0,w,h,'#b8834e');for(let j=4;j<h-4;j+=2)for(let i=6;i<w-6;i++)if(hs(i,j)>.55)r(i,j,1,1,'#a87444');
     rings(w,h,['#2a1808','#e0b07a','#c08a52','#7a5030']);nip(w,h,g,2);r(1,1,1,1,'#2a1808');r(w-2,1,1,1,'#2a1808');r(1,h-2,1,1,'#2a1808');r(w-2,h-2,1,1,'#2a1808');
     for(const X of[5,w-6]){r(X,h/2-3,1,1,'#f0f0ff');r(X-1,h/2-2,3,1,'#c8c8d8');r(X-2,h/2-1,5,2,'#e0e0f0');r(X-1,h/2+1,3,1,'#8a8aa0');r(X,h/2+2,1,1,'#6a6a80')}});
+  // weathered plank for the barn menu: light boards, grain lines, a nail at each end
+  make('plank',32,14,(w,h,g)=>{r(0,0,w,h,'#d8b07a');for(let j=3;j<h-2;j+=3)for(let i=2;i<w-2;i++)if(hs(i,j+50)>.35)r(i,j,1,1,'#c09460');
+    rings(w,h,['#2a1808','#f0d4a0','#d8b07a']);r(2,h-3,w-4,1,'#a87a48');for(const X of[4,w-5]){r(X,h/2-1,2,2,'#5a5a6a');r(X,h/2-1,1,1,'#c8c8d8')}});
   // pill buttons: 16x16, slice 4
   const pill=(n,hi,mid,lo)=>make(n,16,16,(w,h,g)=>{r(0,0,w,h,mid);rings(w,h,['#24100a']);r(1,1,w-2,2,hi);r(1,h-4,w-2,3,lo);nip(w,h,g,2);r(1,1,1,1,'#24100a');r(w-2,1,1,1,'#24100a');r(1,h-2,1,1,'#24100a');r(w-2,h-2,1,1,'#24100a')});
   pill('btn','#fff0a0','#f8b830','#c0661a');pill('btnDark','#9a6448','#6a3e2a','#3a2018');pill('btnRed','#ff9a7a','#d0502a','#7a2410');

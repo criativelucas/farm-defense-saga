@@ -23,7 +23,7 @@ function onCardClick(i){const c=S.hand[i];if(!c)return;const I=info(c);
   playCard(i)}
 // drag a card from the hand onto a slot (or anywhere for blessings)
 let drag=null;
-function slotFromClient(cx,cy){const rc=$('stage').getBoundingClientRect(),wx=(cx-rc.left)/rc.width*W+S.cam,wy=(cy-rc.top)/rc.height*H;
+function slotFromClient(cx,cy){const rc=$('stage').getBoundingClientRect(),wx=(cx-rc.left)/rc.width*W+S.cam,wy=(cy-rc.top)/rc.height*H-VY;
   let best=-1,bd=20;MAP.slots.forEach((s,i)=>{const d=Math.hypot(s.x-wx,s.y-8-wy);if(d<bd){bd=d;best=i}});return best}
 function startDrag(e,i,b){if(e.button>0||!S.hand[i])return;drag={i,b,x0:e.clientX,y0:e.clientY,moved:false,ghost:null};try{b.setPointerCapture(e.pointerId)}catch(_){}}
 addEventListener('pointermove',e=>{if(!drag)return;
@@ -39,7 +39,7 @@ addEventListener('pointerup',e=>{if(!drag)return;const d=drag;drag=null;if(d.gho
   else{const rc=$('stage').getBoundingClientRect();if(e.clientY<rc.top+rc.height*.72)playCard(d.i)}});
 cv.parentElement.addEventListener('pointerdown',e=>{
   if(!S||S.sel<0||(S.state!=='prep'&&S.state!=='wave')||e.target.closest('button,#menu'))return;
-  const rc=$('stage').getBoundingClientRect(),wx=(e.clientX-rc.left)/rc.width*W+S.cam,wy=(e.clientY-rc.top)/rc.height*H;
+  const rc=$('stage').getBoundingClientRect(),wx=(e.clientX-rc.left)/rc.width*W+S.cam,wy=(e.clientY-rc.top)/rc.height*H-VY;
   let best=-1,bd=16;MAP.slots.forEach((s,i)=>{const d=Math.hypot(s.x-wx,s.y-8-wy);if(d<bd){bd=d;best=i}});
   if(best>=0)playCard(S.sel,best);
 });
@@ -49,7 +49,7 @@ function flyCard(i,c,tx,ty){
     const I=info(c),el=document.createElement('div');el.className='hc fly t-'+I.type;
     el.innerHTML=`<canvas width="32" height="32"></canvas><b>${I.name}</b>`;iconTo(el.querySelector('canvas'),c);
     el.style.left=(b.left-st.left)+'px';el.style.top=(b.top-st.top)+'px';el.style.width=b.width+'px';stage.append(el);
-    const k=st.width/W,ddx=tx*k-(b.left-st.left)-b.width/2,ddy=ty*k-(b.top-st.top)-b.height/2;
+    const k=st.width/W,ddx=tx*k-(b.left-st.left)-b.width/2,ddy=(ty+VY)*k-(b.top-st.top)-b.height/2;
     el.animate([{transform:'translate(0,0) rotate(0deg) scale(1)'},{transform:`translate(${ddx*.45}px,${ddy*.45-st.height*.18}px) rotate(200deg) scale(.7)`},
       {transform:`translate(${ddx}px,${ddy}px) rotate(380deg) scale(.12)`,opacity:.6}],{duration:420,easing:'cubic-bezier(.4,0,.8,.6)'}).onfinish=()=>el.remove();
   }catch(e){}
@@ -209,7 +209,35 @@ function genAct(){
 function saveRun(){if(RUN&&RUN.mode==='level')return;store.set('fds-run',{RUN,UID})}
 
 // ---------- deck builder (start of each act)
+// ---------- choosing seeds before a level, like Plants vs. Zombies: the bank on top, your cards below, the level waiting on the right
+function showChoose(){
+  const n=RUN.level,[mn,max]=levelBag(n),node=levelNode();
+  blankBattle(node.map,node.night===false);S.cam=MAP.ww-W;
+  const cnt={};node.waves.forEach(w=>w.list.forEach(([k])=>{if(!EN[k].hide)cnt[k]=(cnt[k]||0)+1}));
+  Object.entries(cnt).forEach(([k,c])=>{for(let j=0;j<Math.min(c,3);j++){const d=EN[k],x0=MAP.ww-rnd(20,150),e={k,born:-9,x:x0,y:gy(x0),hp:1,max:1,t:rnd(0,9),flash:0,slow:0,frz:0,base:rnd(80,110),st:9};
+    if(d.fly===1)e.y=gy(x0)-20;if(d.fly===2)e.y=e.base;S.en.push(e)}});
+  S.en.sort((a,b)=>a.y-b.y);
+  const sel=RUN.deck.slice(0,max),locked=UNLOCK_ORDER.filter(k=>k&&!META.unlocked.includes(k)).length;
+  const render=()=>{const ok=sel.length>=Math.min(mn,RUN.coll.length);
+    menu(`<div class="choose"><div class="bank"><div class="bmana"><canvas width="32" height="32" id="bmana"></canvas><b>${6+2*((META.upg&&META.upg.mana)||0)+tl('mana')}</b></div>
+      ${Array.from({length:max},(_,i)=>sel[i]?`<button type="button" class="bslot full" data-out="${i}" title="Tirar ${info(sel[i]).name}"><canvas width="${MINI_W*CK}" height="${MINI_H*CK}" data-mini="${sel[i].uid}"></canvas></button>`:`<span class="bslot"></span>`).join('')}</div>
+      <div class="cpanel"><h2>Escolha suas sementes</h2>
+        <div class="cgrid">${RUN.coll.map(c=>{const on=sel.includes(c);return`<button type="button" class="cpick ${on?'used':''}" data-in="${c.uid}" title="${info(c).name}: ${info(c).desc}"><canvas width="${MINI_W*CK}" height="${MINI_H*CK}" data-mini="${c.uid}"></canvas></button>`}).join('')}
+          ${Array.from({length:Math.max(0,Math.min(locked,24-RUN.coll.length))},()=>'<span class="cpick lock"></span>').join('')}</div>
+        <p class="cinfo" id="cinfo">${LEVELS[n].id} · ${LEVELS[n].night?'Noite':'Dia'} · escolha de ${Math.min(mn,RUN.coll.length)} a ${max} cartas. A bolsa cresce conforme você avança.</p>
+        <button class="btn plantar" id="go" ${ok?'':'disabled'}>Plantar!</button></div>
+      <div class="cside"><button class="btn ghost" id="backmap">‹ Mapa</button><button class="btn ghost" id="cshop">Quitanda</button><button class="btn ghost" id="ccodex">Códex</button></div></div>`);
+    S.state='choose';
+    const all=[...RUN.coll];$('menu').querySelectorAll('canvas[data-mini]').forEach(cv2=>{const c=all.find(k=>String(k.uid)===cv2.dataset.mini);if(c)cv2.getContext('2d').drawImage(cardCanvas(c,true),0,0)});
+    {const g=hdCtx($('bmana'),32,32);C=g;disc(16,16,11,'#6a24a8');disc(16,16,9,'#9b4be0');disc(13,12,3,'#e2b0ff');C=x}
+    $('menu').querySelectorAll('[data-in]').forEach(b=>{b.onmouseenter=()=>{const c=all.find(k=>String(k.uid)===b.dataset.in);$('cinfo').textContent=info(c).name+': '+info(c).desc};
+      b.onclick=()=>{const c=all.find(k=>String(k.uid)===b.dataset.in),i=sel.indexOf(c);if(i>=0)sel.splice(i,1);else if(sel.length<max)sel.push(c);else{sfx('no');return}sfx('card');render()}});
+    $('menu').querySelectorAll('[data-out]').forEach(b=>b.onclick=()=>{sel.splice(+b.dataset.out,1);sfx('card');render()});
+    $('go').onclick=()=>{RUN.deck=[...sel];RUN.needDeck=false;startLevelBattle()};
+    $('backmap').onclick=()=>showWorld();$('cshop').onclick=()=>showShop2('ferramentas');$('ccodex').onclick=()=>showCodex('cartas')};
+  render()}
 function showDeck(){
+  if(RUN.mode==='level')return showChoose();
   RUN.needDeck=true;saveRun();
   const cel=META.celeiro.map(o=>o.hyb?mk('hyb',{hyb:o.hyb,rare:true,cel:true}):mk(o.k,{rare:true,cel:true}));
   const lvl=RUN.mode==='level',bag=lvl?levelBag(RUN.level):[8,deckMax()],max=bag[1],sel=new Set(RUN.deck.slice(-max).map(c=>c.uid));
@@ -398,7 +426,8 @@ function foeIntro(k){const d=EN[k],el=$('foeintro');S.intro=k;sfx('horn');
 function closeFoeIntro(){$('foeintro').hidden=true;S.intro=null;if(S.introQ&&S.introQ.length)foeIntro(S.introQ.shift())}
 const cardKnown=k=>META.unlocked.includes(k)||!!META.seen.c[k]||!!(CARDS[k].own&&META.chars[CARDS[k].own]);
 function showCodex(tab){
-  const tabs={cartas:'Frutos e cartas',vizinhas:'Vizinhanças',inimigos:'Obras da carne',reliquias:'Relíquias',personagens:'Personagens'};let body='',cards=[];
+  const tabs={caminho:'Caminho',cartas:'Frutos e cartas',vizinhas:'Vizinhanças',inimigos:'Obras da carne',reliquias:'Relíquias',personagens:'Personagens'};let body='',cards=[];
+  if(tab==='caminho')body=roadHTML();
   if(tab==='cartas'){cards=Object.keys(CARDS).map(k=>mk(k,cardKnown(k)?{}:{locked:true}));body=`<p class="help">${cards.filter(c=>!c.locked).length} de ${cards.length} cartas descobertas. Vença fases para encontrar as outras.</p><div class="grid">${cards.map(c=>{const I=info(c);return`<div class="cx">${cardHTML(c)}<i>${c.locked?'???':I.ref}</i></div>`}).join('')}</div>`}
   if(tab==='vizinhas')body=`<p class="help">Árvores a até 72 passos de distância se ligam por ramos. Frutos diferentes juntos: +10% de dano. Perto de uma Videira: +25% (João 15:5). A Discórdia corta ramos ao passar por baixo.</p><div class="grid">${PAIRS.map(p=>`<div class="entry"><b>${p.name}</b><small>${CARDS[p.a].name} + ${CARDS[p.b].name}: ${p.desc}</small><i>${p.ref}</i></div>`).join('')}</div>`;
   if(tab==='inimigos')body=`<div class="grid cxg">${Object.entries(EN).filter(([,d])=>!d.hide).map(([k,d])=>META.seen.e[k]?`<div class="entry"><canvas width="48" height="48" data-enemy="${k}"></canvas><div><b>${d.name}</b><small>${d.desc}</small>${d.weak?`<small>Fraca contra: ${CARDS[d.weak].name}</small>`:''}<i>${d.ref||VICE_REF}</i></div></div>`:`<div class="entry unk"><canvas width="48" height="48" data-enemy="${k}"></canvas><div><b>???</b><small>Ainda não apareceu no seu jardim.</small></div></div>`).join('')}</div>`;
@@ -424,6 +453,7 @@ function frame(now){
     if(S.paused&&live()){draw();updHUD();hit.clear();requestAnimationFrame(frame);return}
     const dt=rdt*(S.slow>0?.28:1)*(live()?S.speed||1:1);S.slow=Math.max(0,S.slow-rdt);S.t+=dt;
     if(S.state==='title'){S.cam=(Math.sin(S.t*.035-1.2)*.5+.5)*(MAP.ww-W);for(const t of S.tw)if(t)t.t+=dt}
+    if(S.state==='choose')for(const e of S.en)e.t+=dt*.6;
     S.zoom+=((S.slow>0?1.7:1)-S.zoom)*Math.min(1,rdt*4);
     if(pr('KeyM'))setMuted(!muted);
     if(S.state==='prep'||S.state==='wave'){if(S.dialog){if(pr('Enter','Space','KeyX'))dialogNext()}else if(S.intro){if(pr('Enter','Space','KeyX'))closeFoeIntro()}else if(S.stop>0)S.stop-=rdt;else update(dt)}
