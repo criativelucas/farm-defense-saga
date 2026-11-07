@@ -108,7 +108,7 @@ function kill(e){
   const v=isChar('rute')?2:1;
   for(let i=0;i<Math.ceil(d.rew/5);i++)S.drops.push({x:e.x,y:ecy(e),vx:rnd(-50,50),vy:rnd(-120,-60),v,t:0,g:300});
   if(Math.random()<.4||d.boss||d.elite)S.drops.push({x:e.x,y:ecy(e),vx:rnd(-40,40),vy:rnd(-140,-80),v:d.boss?25:d.elite?12:Math.random()<.2?3:1,t:0,g:300,coin:1});
-  S.combo++;S.comboT=1.3;if(S.combo>=3){S.comboShow=1;S.comboN=S.combo}if(S.combo>=25)unlockAch('combo');
+  S.combo++;S.maxCombo=Math.max(S.maxCombo||0,S.combo);S.kills=(S.kills||0)+1;S.comboT=1.3;if(S.combo>=3){S.comboShow=1;S.comboN=S.combo}if(S.combo>=25)unlockAch('combo');
   shake(d.boss?12:d.hp>20?4:1.5);sfx('kill');
   if(d.split){for(let j=0;j<2;j++){const n=spawn('contendinha',e.x+(j?5:-5));n.y=e.y;n.hp=n.max=EN.contendinha.hp*(1+RUN.act*.45)}S.total+=2}
   if(d.hp>20&&!d.boss){S.stop=Math.max(S.stop,.05);flash(.2)}
@@ -451,7 +451,7 @@ function update(dt){
       t.joio=true;e.corrupted=1;pop(s.x,s.y-30,'virou joio! dê um pisão','#d8d860',9);burst(s.x,s.y-10,12,['#6a6a2a','#d8d860'],40,100,.6)});
     if(!d.fly&&(inWater(e.x)||inSea(e.x))&&Math.random()<dt*8)S.parts.push({x:e.x+rnd(-3,3),y:(inSea(e.x)?MAP.sea[2]:e.y)-1,vx:rnd(-15,15),vy:rnd(-45,-20),g:220,life:.4,max:.4,c:'#9ad0ff',s:1});
     if(e.slow>0&&Math.random()<dt*6)S.parts.push({x:e.x,y:ecy(e)+2,vx:0,vy:10,g:200,life:.4,max:.4,c:'#d9c24a',s:1});
-    if(e.x<LIFE_X&&e.hp>0){e.hp=0;S.done++;RUN.hp-=d.dmg;S.lifeHit=.4;shake(7);sfx('hurt');flash(.25,'255,40,80');pop(LIFE_X+8,130,'-'+d.dmg,'#ff4f7b',11);burst(LIFE_X,150,14,['#ff4f7b','#ffe36a'],80,200,.6)}
+    if(e.x<LIFE_X&&e.hp>0){e.hp=0;S.done++;RUN.hp-=d.dmg;S.leaks=S.leaks||{};S.leaks[e.k]=(S.leaks[e.k]||0)+d.dmg;S.lifeHit=.4;shake(7);sfx('hurt');flash(.25,'255,40,80');pop(LIFE_X+8,130,'-'+d.dmg,'#ff4f7b',11);burst(LIFE_X,150,14,['#ff4f7b','#ffe36a'],80,200,.6)}
   }
   S.en=S.en.filter(e=>e.hp>0);
   if(RUN.hp<=0){RUN.hp=0;showOver();return}

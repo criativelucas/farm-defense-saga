@@ -148,22 +148,56 @@ function levelWon(){
   saveMeta();MUS.mode='calm';
   const news=[];if(L.id==='1-4')news.push('O Jardim foi liberado! Plante, regue e venda. Junte moedas para a semente da Árvore da Vida.');
   if(L.id==='2-4')news.push('O modo Jornada foi liberado no menu.');
-  const last=RUN.level===LEVELS.length-1;
-  menu(`<div class="mbox"><small class="eyebrow">${WORLDS[L.wi].name} · ${L.id} · ${L.night?'Noite':'Dia'}</small><h2>Fase vencida!</h2><p class="bigstars">${starStr(stars)}</p><p class="help">${stars<3?'3 estrelas: termine com 18 de Vida ou mais.':'Perfeito!'}${newBest&&!first?' Novo recorde!':''}</p>
-    <p>+${reward} moedas pela fase · +${picked} moedas recolhidas${treeBonus>1?' (Árvore da Vida +'+Math.round((treeBonus-1)*100)+'%)':''}</p>${coinsTag()}
-    ${card?`<div class="sec"><h3>Nova carta liberada</h3><div class="grid g3">${cardHTML(card)}</div></div>`:''}
-    ${news.map(t=>`<p class="epi">${t}</p>`).join('')}
-    <div class="row"><button class="btn ghost" id="tomap">Mapa</button>${last?`<button class="btn" id="fim">Ir ao último jardim</button>`:`<button class="btn" id="next">Próxima fase</button>`}</div></div>`,card?[card]:[]);
-  paintCoins();
+  const last=RUN.level===LEVELS.length-1,total=reward+picked;
+  endScreen({win:true,eyebrow:`${WORLDS[L.wi].name} · ${L.id} · ${L.night?'Noite':'Dia'}`,title:'Vitória!',stars,
+    hint:stars<3?'3 estrelas: termine com 18 de Vida ou mais.':newBest&&!first?'Perfeito! Novo recorde!':'Perfeito!',
+    coins:total,coinNote:`${reward} da fase + ${picked} recolhidas${treeBonus>1?' · Árvore da Vida +'+Math.round((treeBonus-1)*100)+'%':''}`,card,news,
+    buttons:`<button class="btn ghost" id="tomap">Mapa</button>${last?`<button class="btn" id="fim">Ir ao último jardim</button>`:`<button class="btn" id="next">Próxima fase ›</button>`}`});
   $('tomap').onclick=()=>showWorld();
   if($('next'))$('next').onclick=()=>{const n=RUN.level+1;selWorld=LEVELS[n].wi;startLevel(n)};
   if($('fim'))$('fim').onclick=()=>startEpilogue();
 }
 function levelLost(){
   const picked=Math.round(S.coins*.5);META.coins+=picked;saveMeta();MUS.mode='calm';
-  menu(`<div class="mbox"><small class="eyebrow">${LEVELS[RUN.level].id}</small><h2>O jardim secou</h2><p>Você guardou ${picked} moedas. Tente de novo com outras sementes, ou passe na loja.</p>
-    <div class="row"><button class="btn ghost" id="tomap">Mapa</button><button class="btn ghost" id="toshop">Loja</button><button class="btn" id="again">Tentar de novo</button></div></div>`);
+  const worst=Object.entries(S.leaks||{}).sort((a,b)=>b[1]-a[1])[0],w=worst&&EN[worst[0]];
+  endScreen({win:false,eyebrow:LEVELS[RUN.level].id,title:'O jardim secou',stars:0,coins:picked,coinNote:'metade das moedas recolhidas',
+    hint:w?`${w.name} passou mais vezes.${w.weak?' Dica: '+CARDS[w.weak].name+' vence '+w.name+'.':''}`:'Tente outras sementes, ou passe na loja.',
+    buttons:`<button class="btn ghost" id="tomap">Mapa</button><button class="btn ghost" id="toshop">Loja</button><button class="btn" id="again">Tentar de novo</button>`});
   $('tomap').onclick=()=>showWorld();$('toshop').onclick=()=>showShop2('ferramentas');$('again').onclick=()=>startLevel(RUN.level);
+}
+// ---------- end of level: stars light one by one, coins count up, a new card flips over. A click skips the show.
+function starPx(cvs,on){const g=hdCtx(cvs,15,15);C=g;
+  const rows=['.......#.......','......###......','......###......','.....#####.....','###############','.#############.','..###########..','...#########...','...#########...','..####...####..','..###.....###..','.##.........##.'];
+  rows.forEach((row,y)=>{for(let i=0;i<15;i++)if(row[i]==='#')r(i,y+1,1,1,on?(y<4||i<5?'#fff3a0':y>8?'#c98a10':'#f7c948'):'#4a3020')});
+  if(on){r(6,3,1,2,'#ffffff');r(3,5,2,1,'#ffffff')}C=x}
+function endScreen(o){
+  ['story','tut','foeintro'].forEach(id=>$(id).hidden=true);
+  const st=S,secs=st.t|0,stat=(l,v)=>`<div class="stat"><b>${l}</b><span>${v}</span></div>`;
+  menu(`<div class="mbox endscr ${o.win?'won':'lost'}"><small class="eyebrow">${o.eyebrow}</small><h2>${o.title}</h2>
+    ${o.win?`<div class="vstars">${[0,1,2].map(i=>`<canvas width="60" height="60" data-vs="${i}"></canvas>`).join('')}</div>`:`<div class="wilt"><canvas width="60" height="60" id="wiltc"></canvas></div>`}
+    <p class="help">${o.hint}</p>
+    <div class="sheet vstats">${stat('Pragas vencidas',st.kills||0)}${stat('Maior combo','x'+(st.maxCombo||0))}${stat('Vida do jardim',Math.max(0,RUN.hp)+' / '+RUN.maxhp)}${stat('Árvores plantadas',st.tw.filter(Boolean).length)}${stat('Tempo',(secs/60|0)+':'+String(secs%60).padStart(2,'0'))}</div>
+    <div class="vcoins"><canvas width="12" height="12" class="coin"></canvas><b id="vcoin">+0</b><small>${o.coinNote}</small></div>
+    ${o.card?`<div class="vcard"><h3>Nova carta!</h3><div class="flip" id="vflip"><div class="fb"><canvas width="${CARD_W*CK}" height="${CARD_H*CK}" id="vback"></canvas></div><div class="ff">${cardHTML(o.card)}</div></div></div>`:''}
+    ${(o.news||[]).map(t=>`<p class="epi late">${t}</p>`).join('')}
+    <div class="row late">${o.buttons}</div></div>`,o.card?[o.card]:[]);
+  paintCoins();if(o.card)$('vback').getContext('2d').drawImage(cardBack(),0,0);
+  const box=$('menu').querySelector('.endscr'),T=[],at=(ms,fn)=>T.push(setTimeout(()=>{if(box.isConnected)fn()},ms));
+  $('menu').querySelectorAll('canvas[data-vs]').forEach(c=>starPx(c,false));
+  if(!o.win){const g=hdCtx($('wiltc'),30,30);C=g;r(14,12,3,16,'#6a4a2e');r(9,26,13,2,'#4a3020');blob(15,10,9,6,'#5a4a20','#7a6a30','#9a8a40',3);r(6,14,2,3,'#7a6a30');r(23,15,2,4,'#7a6a30');C=x;sfx('no')}
+  const show=k=>{const c=box.querySelector(`[data-vs="${k}"]`);if(!c)return;starPx(c,true);c.classList.add('lit');sfx('ach');
+    const rc=c.getBoundingClientRect(),sr=$('stage').getBoundingClientRect(),wx=(rc.left+rc.width/2-sr.left)/sr.width*W+S.cam,wy=(rc.top+rc.height/2-sr.top)/sr.height*H;
+    burst(wx,wy,22,['#ffe36a','#fff6c0','#ff9a3c'],120,60,.8,1)};
+  let k=0,n=0;const steps=Math.min(30,o.coins),count=()=>{n++;$('vcoin').textContent='+'+Math.round(o.coins*n/steps);if(n%3===0)sfx('coin');if(n<steps)at(28,count)};
+  for(let i=0;i<(o.stars||0);i++)at(450+i*450,()=>show(i));
+  const tCoins=500+(o.stars||0)*450;if(o.coins>0)at(tCoins,count);else $('vcoin').textContent='+0';
+  const tCard=tCoins+steps*28+300;if(o.card)at(tCard,()=>{$('vflip').classList.add('on');sfx('super')});
+  at(o.card?tCard+600:tCoins+steps*28+150,()=>box.classList.add('done'));
+  if(o.win)for(let i=0;i<40;i++)S.parts.push({x:S.cam+rnd(0,W),y:rnd(-30,-4),vx:rnd(-20,20),vy:rnd(20,50),g:20,life:5,max:5,c:pick(['#ffe36a','#ff8ab0','#9ff7b8','#7ac0ff','#ffffff']),s:1,sway:1});
+  // click anywhere on the panel to skip to the end
+  box.addEventListener('pointerdown',ev=>{if(box.classList.contains('done')||ev.target.closest('button'))return;T.forEach(clearTimeout);
+    for(let i=0;i<(o.stars||0);i++){const c=box.querySelector(`[data-vs="${i}"]`);starPx(c,true);c.classList.add('lit')}
+    $('vcoin').textContent='+'+o.coins;if(o.card)$('vflip').classList.add('on');box.classList.add('done')});
 }
 
 // ---------- the gardener: character and tool

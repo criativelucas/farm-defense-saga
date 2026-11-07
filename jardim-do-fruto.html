@@ -462,6 +462,23 @@ body.lite #glow{display:none}
 .title .keys{grid-column:1/-1;justify-self:center;text-align:center;color:#fff3d0;text-shadow:0 2px 0 #000;background:#0006;padding:.2em .8em;font-size:.72em}
 .title .coins{font-size:1em}
 @media (max-width:640px){.title{grid-template-columns:1fr}.sign{justify-self:stretch}.sign::before,.sign::after{display:none}.logo{justify-items:center;text-align:center}}
+
+/* ---- end of level screen ---- */
+.endscr h2{font-size:1.9em}.endscr.won h2{animation:vpop .5s cubic-bezier(.2,1.6,.4,1)}
+@keyframes vpop{from{transform:scale(.3) rotate(-6deg);opacity:0}}
+.vstars{display:flex;gap:.6em;align-items:flex-end}.vstars canvas{width:4.2em;height:4.2em;image-rendering:pixelated;filter:drop-shadow(0 4px 0 #0005)}
+.vstars canvas:nth-child(2){width:5.2em;height:5.2em}
+.vstars canvas.lit{animation:starpop .45s cubic-bezier(.2,1.8,.4,1)}@keyframes starpop{0%{transform:scale(2.2) rotate(-30deg);opacity:0}100%{transform:none}}
+.wilt canvas{width:6em;height:6em;image-rendering:pixelated}
+.vstats{width:min(100%,24em)}.vstats .stat{grid-template-columns:1fr auto}
+.vcoins{display:flex;align-items:center;gap:.4em;font-size:1.5em;font-weight:700;color:#9a5a08}.vcoins canvas{width:1.2em;height:1.2em;image-rendering:pixelated}.vcoins small{font-size:.5em;color:#7a5434;font-weight:400}
+.vcard{display:grid;justify-items:center;gap:.3em}.vcard h3{margin:0;color:#6a1a10}
+.flip{position:relative;width:9em;aspect-ratio:120/168;perspective:600px}
+.flip>div{position:absolute;inset:0;backface-visibility:hidden;transition:transform .6s cubic-bezier(.3,1.4,.5,1)}
+.flip .fb canvas{width:100%;height:100%;image-rendering:auto;filter:drop-shadow(0 5px 0 #0007)}
+.flip .ff{transform:rotateY(180deg)}.flip.on .fb{transform:rotateY(-180deg)}.flip.on .ff{transform:rotateY(0)}
+.endscr .late{opacity:0;transform:translateY(8px);transition:.3s;pointer-events:none}.endscr.done .late{opacity:1;transform:none;pointer-events:auto}
+.endscr:not(.done){cursor:pointer}
 /* Touch controls */
 #touch{position:absolute;inset:auto 0 22% 0;display:none;justify-content:space-between;padding:0 2%;pointer-events:none}
 #touch div{display:flex;gap:.5em;pointer-events:auto}
