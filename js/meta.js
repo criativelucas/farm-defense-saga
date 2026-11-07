@@ -20,7 +20,7 @@ const jornadaOpen=()=>!!META.done['2-4'];
 // ---------- hub (main menu)
 function coinsTag(){return `<span class="coins"><canvas width="12" height="12" class="coin"></canvas>${META.coins} moedas</span>`}
 function paintCoins(){document.querySelectorAll('canvas.coin').forEach(c=>{const g=c.getContext('2d');C=g;g.clearRect(0,0,12,12);disc(6,6,5,'#c9921a');disc(6,6,4,'#f7c948');r(4,3,2,2,'#fff6c0');r(6,4,1,5,'#c9921a');C=x})}
-function hubIconTo(cvs,k){const g=cvs.getContext('2d');g.clearRect(0,0,cvs.width,cvs.height);C=g;
+function hubIconTo(cvs,k){const g=hdCtx(cvs,32,32);C=g;
   if(k==='aventura'){disc(16,18,11,'#3a6a3a');disc(16,16,10,'#4faa50');r(10,22,12,6,'#6a5a6a');blob(16,10,7,5,'#2a7a3a','#5fc060','#b0f090',5);r(15,12,2,8,'#7a4a2e')}
   if(k==='jardim'){r(4,22,24,8,'#5a3a20');for(let i=0;i<4;i++){r(6+i*6,16,1,6,'#5fe08a');r(5+i*6,15,3,2,['#e0284a','#9b4be0','#f7c948','#ff8ac0'][i])}r(3,20,26,2,'#8a5a2a')}
   if(k==='loja'){r(5,12,22,16,'#8a5236');r(5,12,22,2,'#b07a40');for(let i=0;i<5;i++)r(4+i*5,6,5,6,i%2?'#e0284a':'#f4f0e0');r(12,18,8,10,'#3a2010');disc(25,25,3,'#f7c948')}

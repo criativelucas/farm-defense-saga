@@ -179,7 +179,7 @@ function showChars(){
     $('go').onclick=()=>{initAudio();newRun(ch,as,false,0)};
   };render();
 }
-function charIconTo(cvs,k){const g=cvs.getContext('2d');g.clearRect(0,0,32,40);const keep=RUN;RUN={char:k};C=g;
+function charIconTo(cvs,k){const g=hdCtx(cvs,32,40);const keep=RUN;RUN={char:k};C=g;
   try{drawGardener({face:1,x:14,y:36,vx:0,vy:0,on:true,sq:1,anim:0,slam:false,stun:0})}finally{C=x;RUN=keep}}
 
 // ---------- starting a journey

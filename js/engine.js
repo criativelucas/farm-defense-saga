@@ -8,6 +8,8 @@ const mkCanvas=(w,h)=>{const c=document.createElement('canvas');c.width=w;c.heig
 // The world is 384x216 units but drawn at RS device pixels per unit, so foliage, ground and text get finer detail.
 // An HD canvas carries its scale in __k; the pixel helpers read it from the context they draw on.
 function mkHD(w,h,k=RS){const c=mkCanvas(Math.ceil(w*k),Math.ceil(h*k)),g=c.getContext('2d');g.scale(k,k);g.imageSmoothingEnabled=false;g.__k=k;c.__k=k;return c}
+// small UI canvases (portraits, icons) get 4 device pixels per unit so half-unit sprites stay sharp
+function hdCtx(cvs,w,h,k=4){if(cvs.width!==w*k){cvs.width=w*k;cvs.height=h*k}const g=cvs.getContext('2d');g.setTransform(k,0,0,k,0,0);g.__k=k;g.imageSmoothingEnabled=false;g.clearRect(0,0,w,h);return g}
 const dl=(g,c,dx,dy)=>g.drawImage(c,dx,dy,c.width/(c.__k||1),c.height/(c.__k||1));
 
 // Gameplay randomness (map, waves, events, rewards). Seeded in the daily challenge so every player gets the same journey.
