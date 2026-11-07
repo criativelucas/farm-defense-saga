@@ -633,3 +633,12 @@ body.big #menu{font-size:max(12px,1.85cqw)}body.big .hud{font-size:max(12px,2.3c
 #cardtip canvas{width:100%;height:auto;display:block}
 @media (pointer:coarse){#cardtip{display:none}}
 .cinfo .goalt{color:#ffcb3a}
+
+/* ---- mini-games: a wall of framed tiles, trophies in the corner ---- */
+.trophies{font-family:var(--title);color:#ffcb3a;text-shadow:0 2px 0 #2a1206;font-size:1.2em}
+.minis{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,12em),1fr));gap:1em;width:100%}
+.mtile{position:relative;display:grid;justify-items:center;gap:.2em;font:inherit;color:#fbe9d0;border:10px solid transparent;border-image:var(--f-slot) 5 fill / 10px repeat;background:none;padding:.2em;cursor:pointer;filter:drop-shadow(0 5px 0 #0006);transition:transform .12s}
+.mtile canvas{width:100%;height:auto;image-rendering:pixelated;box-shadow:0 0 0 2px #1a0c06}.mtile b{font-family:var(--title);font-weight:400;font-size:1.15em;color:#ffcb3a;text-shadow:0 2px 0 #2a1206}.mtile small{font-size:.75em;color:#e0c8a0}
+.mtile:hover:not(:disabled){transform:translateY(-3px)}.mtile.locked{filter:grayscale(.9) brightness(.5);cursor:not-allowed}
+.mtile.got{border-image:var(--f-slotOn) 5 fill / 10px repeat}.mtile .trophy{position:absolute;left:-.3em;top:-.4em;font-style:normal;font-size:1.6em;filter:drop-shadow(0 2px 0 #0008)}
+.foxes .gscene{aspect-ratio:480/300}

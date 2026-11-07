@@ -9,7 +9,7 @@ const GOAL_AT={2:'ovelhas',6:'esteira',10:'colheita',14:'seca',18:'vigilia',22:'
 LEVELS.forEach(l=>{l.goal=GOAL_AT[l.n]||null});
 const HARVEST_GOAL=15,VIGIL_TIME=90;
 
-function goalStart(){const L=RUN.mode==='level'&&!RUN.endless?LEVELS[RUN.level]:null,g=L&&L.goal;S.goal=g||null;if(!g)return;const G=GOALS[g];
+function goalStart(){const L=RUN.mode==='level'&&!RUN.endless&&!RUN.mini?LEVELS[RUN.level]:null,g=L&&L.goal;S.goal=g||null;if(!g)return;const G=GOALS[g];
   banner('Objetivo · '+G.ref,G.name);toast(G.name,G.desc);
   if(g==='esteira'){S.hand=[null,null,null,null,null];S.draw=[];S.convT=1;RUN.handSize=5;renderHand()}
   if(g==='ovelhas'){const mid=MAP.ww*.45;S.sheep=[0,1,2].map(k=>{const x0=mid+(k-1)*34;return{x:x0,home:x0,hp:6,max:6,t:rnd(0,9),face:1,hurt:0}})}

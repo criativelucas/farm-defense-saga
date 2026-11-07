@@ -65,8 +65,20 @@ async function goals(label){
       return g+':'+(ok?'ok':'falhou')})()`);
     check(label+': objetivo '+r,errors.length===before&&/:ok$/.test(r||''),errors.slice(before).join(' | ').slice(0,200))}}
 
+// every mini-game: the menu, the fox game for a few seconds, and each battle twist with its own check
+async function minis(label){let before=errors.length;
+  await js(`(async()=>{['1-1','1-2','1-3','1-4','2-1','2-2','2-3','2-4','3-1','3-2'].forEach(i=>META.done[i]=1);showMinis();${settle}showFoxes();await new Promise(r=>setTimeout(r,1500));return 1})()`);
+  check(label+': minijogos menu + raposinhas',errors.length===before,errors.slice(before).join(' | ').slice(0,200));
+  for(const k of ['chuva','escuro','funda','ultima','voltas']){before=errors.length;
+    const r=await js(`(async()=>{startMini('${k}');S.dialog=null;tutStep=-1;const m0=S.mana;let shot=0;
+      for(let i=0;i<300;i++){if(S.intro)closeFoeIntro();S.dialog=null;if(S.state==='prep')callWave();if(S.state!=='wave')break;
+        if('${k}'==='funda'&&i%20===0){S.p.atkCD=0;playerAttack();shot=Math.max(shot,S.proj.length)}update(.033);updFx(.033);if(i%30===0)draw()}
+      const ok={chuva:Array.isArray(S.rcards),escuro:S.mini==='escuro'&&typeof darkVisible(S.en[0]||{x:0})==='boolean',funda:shot>0&&S.hand.length===0,ultima:S.mini==='ultima',voltas:S.voltT<80}['${k}'];
+      miniOver(true);${settle}return '${k}:'+(ok?'ok':'falhou')})()`);
+    check(label+': minijogo '+r,errors.length===before&&/:ok$/.test(r||''),errors.slice(before).join(' | ').slice(0,200))}}
+
 console.log('— new player');await load(true,false);await loopAndScene('new');
-console.log('— player with progress');await js(`Object.assign(META,{intro:1,tut:1,coins:5000});['1-1','1-2','1-3','1-4','2-1','2-4'].forEach(i=>META.done[i]=1);saveMeta();1`);await everyScreen('progress');await battles('progress');await goals('progress');
+console.log('— player with progress');await js(`Object.assign(META,{intro:1,tut:1,coins:5000});['1-1','1-2','1-3','1-4','2-1','2-4'].forEach(i=>META.done[i]=1);saveMeta();1`);await everyScreen('progress');await battles('progress');await goals('progress');await minis('progress');
 console.log('— embed with gamepad blocked');await load(false,true);await loopAndScene('blocked-pad');
 const fails=checks.filter(c=>!c[1]);console.log(`\n${checks.length-fails.length}/${checks.length} checks passed`+(errors.length?`; ${errors.length} error(s) logged:`:''));
 errors.forEach(e=>console.log('  · '+String(e).split('\n').slice(0,3).join(' / ')));

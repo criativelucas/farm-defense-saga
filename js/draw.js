@@ -1,5 +1,6 @@
 // ---------- sprites: enemies and bosses
 function drawEnemy(e){
+  if(S.mini==='escuro'&&!darkVisible(e))return;
   const d=EN[e.k];
   if(e.dive>0){for(let i=0;i<4;i++)r(e.x-16+i*10+Math.sin(S.t*6+i)*2,e.y-3-((S.t*20+i*7)%6),2,1,'#bfe8ff');return}
   if(S.t-(e.born??-9)>.3){OV=INK;for(const[ox,oy]of[[-.5,0],[.5,0],[0,-.5],[0,.5]]){x.translate(ox,oy);enemyBody(e);x.translate(-ox,-oy)}}
@@ -260,7 +261,7 @@ function draw(){
   const gc=S.wet>.3?'#8affb0':MAP.pal.top1;
   for(const t of MAP.tufts){if(t.x<cam-4||t.x>cam+W+4)continue;const l=Math.sin(S.t*2.2+t.x*.07)>.25?1:0;r(t.x,t.y-t.h,1,t.h,gc);r(t.x+l,t.y-t.h-1,1,1,gc)}
   for(const v of MAP.vines)for(let i=0;i<v.len;i++){const px=v.x+Math.sin(S.t*1.3+v.x+i*.3)*i*.08;r(px,v.y+i,1,1,'#2f9a5a');if(i%3===1)r(px+1,v.y+i,1,1,gc)}
-  drawProps();drawPuddles();drawHomeDyn();drawLinks();drawStoryWorld();drawGoal();drawBarriers();
+  drawProps();drawPuddles();drawHomeDyn();drawLinks();drawStoryWorld();drawGoal();drawMini();drawBarriers();
   MAP.slots.forEach((s,i)=>{const t=S.tw[i];drawSoil(s);
     if(!t){r(s.x,s.y-6,1,3,'#5fe08a');r(s.x-1,s.y-6,1,1,'#5fe08a');r(s.x+1,s.y-5,1,1,'#5fe08a');if(S.sel>=0&&live&&(S.t*4|0)%2)ring(s.x,s.y-6,6,'#f7c948')}
     if(live&&Math.abs(s.x-P.x)<12&&Math.abs(s.y-P.y)<3){const b=(S.t*4|0)%2;r(s.x-8,s.y-4-b,2,1,'#f7c948');r(s.x+6,s.y-4-b,2,1,'#f7c948');
@@ -281,7 +282,7 @@ function draw(){
   drawSea();drawDragPreview();
   if(S.state!=='title')drawGardener(P);
   drawProj();drawBeams();drawDrops();drawFruitDrops();drawParts();drawVfx();
-  for(const e of S.en)if(!(e.dive>0))drawIntent(e);
+  for(const e of S.en)if(!(e.dive>0)&&!(S.mini==='escuro'&&!darkVisible(e)))drawIntent(e);
   x.textAlign='center';
   for(const p of S.pops){const k=p.size>8?1+Math.max(0,.14-p.t)*5:1;x.globalAlpha=Math.min(1,(1-p.t/.9)*2);x.save();x.translate(p.x,p.y-p.t*22);x.scale(k,k);
     // floating numbers and words get a solid dark outline so they read over any background
@@ -314,7 +315,7 @@ function draw(){
   gx.clearRect(0,0,W+1,H);if(CFG.lite)return;gx.save();view(gx);gx.globalCompositeOperation='lighter';
   for(const L of LIGHTS)glowBlob(gx,{...L,x:L.x-cam});
   gx.translate(-cam,0);C=gx;
-  gx.globalAlpha=.32;for(const e of S.en){if(e.dive>0)continue;OV=EN[e.k].glow;enemyBody(e)}OV=null;gx.globalAlpha=1;
+  gx.globalAlpha=.32;for(const e of S.en){if(e.dive>0||S.mini==='escuro'&&!darkVisible(e))continue;OV=EN[e.k].glow;enemyBody(e)}OV=null;gx.globalAlpha=1;
   drawProj();drawDrops();
   for(const p of S.parts){gx.globalAlpha=Math.min(1,p.life/p.max*1.5)*(p.a??1);r(p.x,p.y,p.s,p.s,p.c)}gx.globalAlpha=1;
   for(const f of S.fx){if(f.k==='beam'){const a=1-f.t/f.max,w=f.w*a;gx.globalAlpha=a;r(f.x-w,0,w*2,gy(f.x),'#ff4f7b');gx.globalAlpha=1}

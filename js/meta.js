@@ -48,12 +48,13 @@ function showHub(){
       ${plank('aventura','Aventura',next?'fase '+next.id:'tudo vencido!')}
       ${plank('jornada','Jornada',jornadaOpen()?'desafio em 3 atos':'vença Jericó 2-4',!jornadaOpen())}
       ${plank('jardim','Estufa',gardenOpen()?'plante e colha':'vença Éden 1-4',!gardenOpen())}
+      ${plank('minijogos','Minijogos',miniOpen('raposas')?trophies()+'/6 troféus':'vença 2 fases',!miniOpen('raposas'))}
       ${treeOwned()?plank('arvore','Árvore da Vida','nível '+META.garden.tree.lvl+'/10'):''}</div></div>
     <div class="props">${prop('codex','Códex','book')}${prop('loja','Quitanda','crate')}${prop('personagem','Lavrador','hat')}${prop('missoes','Missões','scroll',mr||'')}${prop('conquistas','Conquistas','medal')}${prop('intro','Ajuda','sack')}${prop('config','Ajustes','sack')}</div>
   </div>`);
   $('menu').classList.add('scene');paintCoins();barnArt();
   $('menu').querySelectorAll('canvas[data-prop]').forEach(c=>propIconTo(c,c.dataset.prop));
-  $('menu').querySelectorAll('[data-hub]').forEach(b=>{b.onmouseenter=()=>sfx('hit');b.onclick=()=>{initAudio();sfx('card');({aventura:showWorld,jardim:showGarden,arvore:showTree,intro:()=>showIntro(0),config:showConfig,loja:()=>showShop2('ferramentas'),personagem:showLavrador,jornada:showJornada,missoes:showMissions,codex:()=>showCodex('caminho'),conquistas:showAchs})[b.dataset.hub]()}});
+  $('menu').querySelectorAll('[data-hub]').forEach(b=>{b.onmouseenter=()=>sfx('hit');b.onclick=()=>{initAudio();sfx('card');({aventura:showWorld,jardim:showGarden,arvore:showTree,intro:()=>showIntro(0),config:showConfig,loja:()=>showShop2('ferramentas'),personagem:showLavrador,jornada:showJornada,minijogos:showMinis,missoes:showMissions,codex:()=>showCodex('caminho'),conquistas:showAchs})[b.dataset.hub]()}});
 }
 // a two-storey red barn: gambrel roof in slate, white trim, hayloft door and windows upstairs, big braced doors below
 function barnArt(){const g=hdCtx($('barnc'),200,260,3);C=g;
@@ -168,6 +169,7 @@ function startLevel(n){
   showDeck();
 }
 function levelNode(){
+  if(RUN.mini)return miniNode();
   if(RUN.endless)return endlessNode();
   const L=LEVELS[RUN.level],w=WORLDS[L.wi];seedRng(9001+L.n*977);
   const nW=L.l===0?2:3,waves=[];
@@ -176,9 +178,10 @@ function levelNode(){
   RNG=Math.random;
   return{type:L.boss?'chefe':'batalha',map:w.arena&&L.boss?w.arena:w.map,waves,night:L.night,level:L.id};
 }
-function startLevelBattle(){META.lastDeck=RUN.deck.map(c=>c.k);saveMeta();const L=LEVELS[RUN.level];if(L.rule==='poucas')RUN.handSize=3;RUN.handSize=Math.min(RUN.handSize,RUN.deck.length);hideMenu();clearInterval(wmapTimer);const node=levelNode();startBattle(node);
-  if(L.rule==='sempisao')S.noSlam=true;if(L.rule==='trevas')S.trevas=true;if(L.rule)banner('Regra da fase',RULES[L.rule].name+': '+RULES[L.rule].desc);goalStart()}
+function startLevelBattle(){META.lastDeck=RUN.deck.map(c=>c.k);saveMeta();const L=LEVELS[RUN.level],rule=RUN.mini?null:L.rule;if(rule==='poucas')RUN.handSize=3;RUN.handSize=Math.min(RUN.handSize,RUN.deck.length);hideMenu();clearInterval(wmapTimer);const node=levelNode();startBattle(node);
+  if(rule==='sempisao')S.noSlam=true;if(rule==='trevas')S.trevas=true;if(rule)banner('Regra da fase',RULES[rule].name+': '+RULES[rule].desc);goalStart();miniStart()}
 function levelWon(){
+  if(RUN.mini)return miniOver(true);
   const L=LEVELS[RUN.level],first=!META.done[L.id],treeBonus=1+(META.garden.tree.lvl||0)*.05;
   const reward=Math.round((first?60+L.n*20:30+L.n*5)*treeBonus),picked=Math.round(S.coins*treeBonus);
   META.coins+=reward+picked;META.done[L.id]=1;const stars=RUN.hp>=18?3:RUN.hp>=10?2:1;META.stars=META.stars||{};const newBest=stars>(META.stars[L.id]||0);META.stars[L.id]=Math.max(stars,META.stars[L.id]||0);
@@ -198,6 +201,7 @@ function levelWon(){
   if($('fim'))$('fim').onclick=()=>startEpilogue();
 }
 function levelLost(){
+  if(RUN.mini)return miniOver(false);
   if(RUN.endless)return endlessOver();
   const picked=Math.round(S.coins*.5);META.coins+=picked;saveMeta();MUS.mode='calm';
   const worst=Object.entries(S.leaks||{}).sort((a,b)=>b[1]-a[1])[0],w=worst&&EN[worst[0]];

@@ -4,7 +4,7 @@ let S=null,RUN=null;
 const META_DEFAULTS={celeiro:store.get('jardim-do-fruto-celeiro',[]),chars:{lavrador:1},ascMax:0,stats:{kills:0,podas:0,runs:0,wins:0},ach:{},tut:0,daily:{},
   coins:0,char:'lavrador',weapon:'enxada',weapons:{enxada:1},items:{cerca:2,espantalho:1,lama:2},upg:{hearts:0,bag:0,mana:0,treeHearts:0},done:{},unlocked:['videira','mana'],seen:{c:{},e:{},r:{}},
   garden:{pots:[],potsN:8,seeds:{trigo:2,'t:videira':1},adubo:1,spray:3,mel:1,fertil:0,treeSeed:0,tree:{planted:false,lvl:0,xp:0,lastWater:0},lastVisit:0},
-  stars:{},talents:{},cardLv:{},sysSeen:{},dlg:{},endless:{},missions:null,intro:0,v:2};
+  stars:{},talents:{},cardLv:{},sysSeen:{},dlg:{},endless:{},mg:{},missions:null,intro:0,v:2};
 function fillDefaults(t,d){for(const k in d){const dv=d[k];if(t[k]===undefined||t[k]===null&&dv!==null)t[k]=structuredClone(dv);
   else if(dv&&typeof dv==='object'&&!Array.isArray(dv)&&t[k]&&typeof t[k]==='object'&&!Array.isArray(t[k]))fillDefaults(t[k],dv)}return t}
 const META=fillDefaults(store.get('fds-meta',{}),META_DEFAULTS);META.celeiro=store.get('jardim-do-fruto-celeiro',META.celeiro||[]);
@@ -321,7 +321,7 @@ function playCard(i,si=null){
   else if(c.k==='joio'){RUN.deck=RUN.deck.filter(k=>k!==c);RUN.coll=RUN.coll.filter(k=>k!==c);pop(P.x,P.y-24,'joio arrancado da bolsa','#ffffff')}
   else{if(c.k==='chuva'){tx=W/2;ty=30}if(blessing(c.k)===false)return}
   flyCard(i,c,tx,ty);
-  S.mana-=I.cost;if(CARDS[c.k]&&CARDS[c.k].type==='bencao'){vfx('holy',S.p.x,0);mission('bless',1)}if(S.goal==='esteira')S.hand[i]=null;else{if(c.k!=='joio')S.draw.push(c);S.hand[i]=S.draw.shift()}S.sel=-1;S.newIdx=i;renderHand();S.newIdx=-1;
+  S.mana-=I.cost;if(CARDS[c.k]&&CARDS[c.k].type==='bencao'){vfx('holy',S.p.x,0);mission('bless',1)}if(S.goal==='esteira'||S.mini==='chuva')S.hand[i]=null;else{if(c.k!=='joio')S.draw.push(c);S.hand[i]=S.draw.shift()}S.sel=-1;S.newIdx=i;renderHand();S.newIdx=-1;
 }
 function blessing(k){
   const P=S.p;sfx('card');
@@ -400,7 +400,7 @@ function fallWalls(){S.fallen=true;MAP._fallen=true;C=GROUND.getContext('2d');C.
 function nearestTreeSlot(){let best=-1,bd=90;MAP.slots.forEach((s,i)=>{if(!S.tw[i])return;const d=Math.hypot(s.x-S.p.x,s.y-S.p.y);if(d<bd){bd=d;best=i}});return best}
 
 // ---------- the gardener fights back, and gets hurt
-function playerAttack(){const p=S.p;if(p.stun>0||p.atkCD>0)return;if(tutStep===4)tutNext();const w=WEAPONS[META.weapon||'enxada'];p.atkCD=w.cd;p.swing=.22;sfx('hit');
+function playerAttack(){if(S.mini==='funda')return slingShot();const p=S.p;if(p.stun>0||p.atkCD>0)return;if(tutStep===4)tutNext();const w=WEAPONS[META.weapon||'enxada'];p.atkCD=w.cd;p.swing=.22;sfx('hit');
   if(w.dash){p.dash=.22;p.dashHit=new Set();sfx('wind');return}
   for(const e of S.en){if(e.dive>0)continue;const d=EN[e.k],ddx=(e.x-p.x)*p.face,ddy=ecy(e)-(p.y-8);
     if(ddx>-(w.wide?10:4)&&ddx<w.rng+d.w/2&&Math.abs(ddy)<(w.wide?26:14)+d.h/2){damage(e,w.dmg*(isChar('davi')?1.5:1));onoma(e.x,ecy(e)-6,'hit',.45);if(!d.boss)e.x+=p.face*(w.push||8);burst(e.x,ecy(e),5,['#ffffff','#e8dcc0'],60,200,.3)}}
@@ -426,7 +426,7 @@ function update(dt){
   for(let i=0;i<4;i++)if(pr('Digit'+(i+1),'Numpad'+(i+1)))playCard(S.babelOn>0&&S.perm[i]!=null?S.perm[i]:i);
   computeLinks(dt);updStory(dt);
   if(pr('KeyX','KeyJ'))playerAttack();if(pr('KeyQ'))placeItem('cerca');if(pr('KeyE'))placeItem('espantalho');if(pr('KeyR'))placeItem('lama');updHazards(dt);
-  const regen=.75*(relic('jarro')?1.2:1)*(ascN()>=2?.85:1)*(S.goal==='seca'?.5:1);goalUpdate(dt);
+  const regen=.75*(relic('jarro')?1.2:1)*(ascN()>=2?.85:1)*(S.goal==='seca'?.5:1)*(S.mini==='ultima'?0:1);goalUpdate(dt);miniUpdate(dt);
   if(S.mana<MAXM)S.mana=Math.min(MAXM,S.mana+regen*dt);
   S.rain=Math.max(0,S.rain-dt);
   S.wet+=((S.rain>0?1:0)-S.wet)*Math.min(1,dt*(S.rain>0?1.5:.12));

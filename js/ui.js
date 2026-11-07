@@ -64,7 +64,7 @@ function updHUD(){
   if(S.babelOn>0)sh.push('Confusão de línguas!');
   if(S.bank)sh.push('Celeiro: '+Math.floor(S.bank)+' maná');
   if(S.pstones)sh.push('Pedras: '+S.pstones);
-  sh.unshift(goalHud());$('storyhud').innerHTML=sh.filter(Boolean).join('<br>');
+  sh.unshift(goalHud(),miniHud());$('storyhud').innerHTML=sh.filter(Boolean).join('<br>');
   const tal=$('tal');tal.hidden=!(S.talents||S.talentsDue);
   tal.textContent=S.talents?`Talentos: ${S.talents}${S.fullT>1?' · gaste maná!':''}`:`Talentos a receber: ${S.talentsDue}`;tal.classList.toggle('warn',S.fullT>1);
   const boss=S.en.find(e=>EN[e.k].boss||EN[e.k].elite),bb=$('boss');bb.hidden=!boss;
@@ -434,7 +434,8 @@ function frameBody(now){
   }
 }
 $('timer').addEventListener('click',()=>callWave());
-(document.fonts?document.fonts.load('8px "Pixelify Sans"'):Promise.resolve()).catch(()=>{}).finally(()=>requestAnimationFrame(frame));
+// the loop starts once every script has loaded (scripts after this one define parts of a frame) and the pixel font is ready
+addEventListener('load',()=>(document.fonts?document.fonts.load('8px "Pixelify Sans"'):Promise.resolve()).catch(()=>{}).finally(()=>requestAnimationFrame(frame)));
 
 function startEpilogue(){hideMenu();blankBattle('tumulo');S.state='epilogue';MUS.mode='calm';banner('A manhã do primeiro dia','João 20:1');showStory()}
 
