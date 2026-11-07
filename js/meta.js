@@ -20,7 +20,7 @@ const jornadaOpen=()=>!!META.done['2-4'];
 // ---------- hub (main menu)
 function coinsTag(){return `<span class="coins"><canvas width="12" height="12" class="coin"></canvas>${META.coins} moedas</span>`}
 function paintCoins(){document.querySelectorAll('canvas.coin').forEach(c=>{const g=c.getContext('2d');C=g;g.clearRect(0,0,12,12);disc(6,6,5,'#c9921a');disc(6,6,4,'#f7c948');r(4,3,2,2,'#fff6c0');r(6,4,1,5,'#c9921a');C=x})}
-function hubIconTo(cvs,k){const g=cvs.getContext('2d');g.clearRect(0,0,32,32);C=g;
+function hubIconTo(cvs,k){const g=cvs.getContext('2d');g.clearRect(0,0,cvs.width,cvs.height);C=g;
   if(k==='aventura'){disc(16,18,11,'#3a6a3a');disc(16,16,10,'#4faa50');r(10,22,12,6,'#6a5a6a');blob(16,10,7,5,'#2a7a3a','#5fc060','#b0f090',5);r(15,12,2,8,'#7a4a2e')}
   if(k==='jardim'){r(4,22,24,8,'#5a3a20');for(let i=0;i<4;i++){r(6+i*6,16,1,6,'#5fe08a');r(5+i*6,15,3,2,['#e0284a','#9b4be0','#f7c948','#ff8ac0'][i])}r(3,20,26,2,'#8a5a2a')}
   if(k==='loja'){r(5,12,22,16,'#8a5236');r(5,12,22,2,'#b07a40');for(let i=0;i<5;i++)r(4+i*5,6,5,6,i%2?'#e0284a':'#f4f0e0');r(12,18,8,10,'#3a2010');disc(25,25,3,'#f7c948')}
@@ -33,26 +33,28 @@ function hubIconTo(cvs,k){const g=cvs.getContext('2d');g.clearRect(0,0,32,32);C=
   if(k==='conquistas'){disc(16,14,8,'#f7c948');disc(16,14,6,'#ffe08a');r(11,21,4,8,'#e0284a');r(17,21,4,8,'#2a5bd7');r(15,11,2,6,'#c9921a')}
   C=x}
 function showHub(){
-  if(!S||S.state!=='title'){blankBattle('eden');S.state='title'}MUS.mode='calm';RUN=null;
-  const tile=(k,label,sub,locked)=>`<button type="button" class="hubtile ${locked?'locked':''}" data-hub="${k}" ${locked?'disabled':''}><canvas width="32" height="32" data-hubicon="${k}"></canvas><b>${label}</b><small>${sub}</small></button>`;
+  if(!S||S.state!=='title'){blankBattle('eden',true);S.state='title';
+    // a few grown trees so the title scene looks like a garden being kept
+    [['roma',1],['tamareira',4],['oliveira',6],['videira',9],['amendoeira',11]].forEach(([k,i])=>{if(!MAP.slots[i])return;plantAt(i,[k],false,0);Object.assign(S.tw[i],{grow:1,water:3,szv:1,lvl:3})});S.pops=[]}
+  MUS.mode='calm';RUN=null;
   const doneN=Object.keys(META.done).length;
   if(!META.intro){META.intro=1;saveMeta();return showIntro(0)}
-  menu(`<div class="mbox"><small class="eyebrow">O fruto do Espírito · Gálatas 5:22-23</small><h1>Farm Defense Saga</h1>${coinsTag()}
-    <div class="hubgrid">
-      ${tile('aventura','Aventura',doneN+'/'+LEVELS.length+' fases')}
-      ${tile('jardim','Jardim',gardenOpen()?'Plante, regue e venda':'Libera ao vencer Éden 1-4',!gardenOpen())}
-      ${treeOwned()?tile('arvore','Árvore da Vida',META.garden.tree.planted?'Nível '+META.garden.tree.lvl+'/10':'Semente pronta para plantar'):''}
-      ${tile('loja','Loja','Ferramentas, barreiras e sementes')}
-      ${tile('personagem','Lavrador',CHARS[META.char].name+' · '+WEAPONS[META.weapon].name)}
-      ${tile('jornada','Jornada',jornadaOpen()?'Modo desafio em 3 atos':'Libera ao vencer Jericó 2-4',!jornadaOpen())}
-      ${tile('codex','Códex','Cartas, inimigos, relíquias')}
-      ${tile('intro','Como jogar','Tutorial ilustrado')}
-      ${tile('config','Configurações','Som, modo leve, progresso')}
-      ${tile('conquistas','Conquistas',Object.keys(META.ach).length+'/'+Object.keys(ACH).length)}
-    </div>
-    <p class="keys">← → andar · ↑ pular · ↓ no ar: pisão · parado ao lado da árvore: regar · X golpe · Q cerca · E espantalho · R lama · 1 a 4 cartas (ou arraste) · Enter chama a onda · M som</p></div>`);
+  const item=(k,label,sub,locked,main)=>`<button type="button" class="mi ${main?'main':''} ${locked?'locked':''}" data-hub="${k}" ${locked?'disabled':''}><canvas width="32" height="32" data-hubicon="${k}"></canvas><span><b>${label}</b><small>${sub}</small></span><em>▸</em></button>`;
+  const mini=(k,label)=>`<button type="button" class="mini" data-hub="${k}" title="${label}"><canvas width="32" height="32" data-hubicon="${k}"></canvas><small>${label}</small></button>`;
+  menu(`<div class="title">
+    <div class="logo"><small>O fruto do Espírito · Gálatas 5:22-23</small><h1>Farm<br>Defense<br><span>Saga</span></h1>${coinsTag()}</div>
+    <div class="sign"><div class="plank">O Jardim</div><div class="scroll">
+      ${item('aventura','Jogar',doneN?'Aventura · '+doneN+'/'+LEVELS.length+' fases':'Comece pela Aventura',false,true)}
+      ${item('jornada','Jornada',jornadaOpen()?'Modo desafio em 3 atos':'Libera ao vencer Jericó 2-4',!jornadaOpen())}
+      ${item('jardim','Jardim',gardenOpen()?'Plante, regue e venda':'Libera ao vencer Éden 1-4',!gardenOpen())}
+      ${treeOwned()?item('arvore','Árvore da Vida',META.garden.tree.planted?'Nível '+META.garden.tree.lvl+'/10':'Semente pronta para plantar'):''}
+      ${item('loja','Loja','Ferramentas, barreiras, sementes')}
+      ${item('personagem','Lavrador',CHARS[META.char].name+' · '+WEAPONS[META.weapon].name)}
+    </div><div class="minis">${mini('codex','Códex')}${mini('conquistas','Conquistas')}${mini('intro','Como jogar')}${mini('config','Ajustes')}</div></div>
+    <p class="keys">← → andar · ↑ pular · ↓ no ar: pisão · parado ao lado da árvore: regar · X golpe · 1 a 4 cartas · Enter chama a onda · M som</p></div>`);
+  $('menu').classList.add('scene');
   $('menu').querySelectorAll('canvas[data-hubicon]').forEach(c=>hubIconTo(c,c.dataset.hubicon));paintCoins();
-  $('menu').querySelectorAll('[data-hub]').forEach(b=>b.onclick=()=>{initAudio();sfx('card');({aventura:showWorld,jardim:showGarden,arvore:showTree,intro:()=>showIntro(0),config:showConfig,loja:()=>showShop2('ferramentas'),personagem:showLavrador,jornada:showJornada,codex:()=>showCodex('cartas'),conquistas:showAchs})[b.dataset.hub]()});
+  $('menu').querySelectorAll('[data-hub]').forEach(b=>{b.onmouseenter=()=>sfx('hit');b.onclick=()=>{initAudio();sfx('card');({aventura:showWorld,jardim:showGarden,arvore:showTree,intro:()=>showIntro(0),config:showConfig,loja:()=>showShop2('ferramentas'),personagem:showLavrador,jornada:showJornada,codex:()=>showCodex('cartas'),conquistas:showAchs})[b.dataset.hub]()}});
 }
 GO.title=showHub;GO.hub=showHub;
 function showJornada(){

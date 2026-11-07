@@ -1,7 +1,7 @@
 // ---------- persistent profile, current journey (RUN) and current battle (S)
 let S=null,RUN=null;
 const META=Object.assign({celeiro:store.get('jardim-do-fruto-celeiro',[]),chars:{lavrador:1},ascMax:0,stats:{kills:0,podas:0,runs:0,wins:0},ach:{},tut:0,daily:{},
-  coins:0,char:'lavrador',weapon:'enxada',weapons:{enxada:1},items:{cerca:2,espantalho:1,lama:2},upg:{hearts:0,bag:0,mana:0,treeHearts:0},done:{},unlocked:['videira','mana'],
+  coins:0,char:'lavrador',weapon:'enxada',weapons:{enxada:1},items:{cerca:2,espantalho:1,lama:2},upg:{hearts:0,bag:0,mana:0,treeHearts:0},done:{},unlocked:['videira','mana'],seen:{c:{},e:{},r:{}},
   garden:{pots:[],potsN:6,seeds:{trigo:2},adubo:0,fertil:0,treeSeed:0,tree:{planted:false,lvl:0,xp:0,lastWater:0}}},store.get('fds-meta',{}));
 function saveMeta(){store.set('fds-meta',META)}
 let UID=1;const mk=(k,o={})=>({uid:UID++,k,...o});
@@ -22,8 +22,8 @@ function newRelic(){const free=Object.keys(RELICS).filter(k=>!RUN.relics.include
 function unlockAch(id){if(META.ach[id])return;META.ach[id]=1;saveMeta();toast('Conquista: '+ACH[id].name,ACH[id].ref);sfx('ach')}
 
 // ---------- battle setup
-function blankBattle(mapId){
-  MAPS[mapId]._fallen=false;buildMap(mapId);
+function blankBattle(mapId,day=false){
+  MAPS[mapId]._fallen=false;buildMap(mapId,day);
   S={t:0,state:'title',node:null,wi:0,waves:[],q:[],qt:0,total:1,done:0,between:12,cam:0,mana:6,
      en:[],tw:MAP.slots.map(()=>null),proj:[],eproj:[],parts:[],pops:[],drops:[],fx:[],shake:0,stop:0,combo:0,comboT:0,comboShow:0,comboN:0,lifeHit:0,
      rain:0,talents:0,talentsDue:0,fullT:0,setMult:1,setTier:0,fruits:new Set(),bolt:0,night:0,wet:0,sand:0,sandT:20,sandOn:0,
@@ -34,10 +34,11 @@ function blankBattle(mapId){
   S.p.y=gy(60);
 }
 function startBattle(node){
-  blankBattle(node.map);
+  blankBattle(node.map,node.night===false);
   S.node=node;S.waves=node.waves;S.state='prep';S.between=12;
   S.mana=6+(relic('arca')?4:0)+2*((META.upg&&META.upg.mana)||0);S.p.maxhp=S.p.hp=3+((META.upg&&META.upg.hearts)||0)+((META.upg&&META.upg.treeHearts)||0);S.levelNight=node.night??null;
   S.draw=rshuffle(RUN.deck);S.hand=S.draw.splice(0,RUN.handSize);
+  RUN.deck.forEach(c=>(c.hyb||[c.k]).forEach(k=>META.seen.c[k]=1));RUN.relics.forEach(k=>META.seen.r[k]=1);saveMeta();
   if(isChar('elias'))S.rain=16;
   S.reveal=relic('pomba')||isChar('jose');
   if(node.map==='eden')S.forbid={x:530,y:gy(530),on:false,t:0,wh:3};
@@ -74,6 +75,7 @@ function spawn(k,xo){
   let sc=d.boss?1+a*.1:d.elite?1+a*.3:1+a*.45+S.wi*.08;
   if(ascN()>=1)sc*=1.15;if(d.boss&&ascN()>=4)sc*=1.3;
   const x0=xo??MAP.ww+12;
+  if(!META.seen.e[k]){META.seen.e[k]=1;saveMeta();if(S.intro)(S.introQ||(S.introQ=[])).push(k);else foeIntro(k)}
   const e={k,born:S.t,x:x0,y:gy(Math.min(x0,MAP.ww-1)),hp:d.hp*sc,max:d.hp*sc,slow:0,frz:0,t:rnd(0,9),flash:0,base:rnd(90,122),st:3};
   if(d.fly===1)e.y=gy(Math.min(x0,MAP.ww-1))-20;if(d.fly===2)e.y=e.base;
   S.en.push(e);return e;
@@ -380,7 +382,7 @@ function updStory(dt){
   if(S.floodIn>0){S.floodIn-=dt;if(S.floodIn<=0){S.flood=6;banner('O dilúvio','Só a Arca protege');sfx('wind');MAP.slots.forEach((s,i)=>{const t=S.tw[i];if(t&&!(t.ark>0))t.stun=6})}}
   S.flood=Math.max(0,S.flood-dt);
 }
-function fallWalls(){S.fallen=true;MAP._fallen=true;C=GROUND.getContext('2d');C.clearRect(0,0,GROUND.width,H);drawGround();MAP.homeDraw();C=x;
+function fallWalls(){S.fallen=true;MAP._fallen=true;C=GROUND.getContext('2d');C.clearRect(0,0,MAP.ww,H);drawGround();MAP.homeDraw();C=x;
   shake(14);flash(.5,'255,220,150');sfx('horn');banner('As muralhas caíram','Josué 6:20');
   MAP.plats.forEach(pl=>{if(pl.wall)burst(pl.x+pl.w/2,pl.y+20,20,['#8a5c3a','#b88a5a','#ecd090'],120,300,.9,2)});
   for(const e of S.en){damage(e,20);e.frz=3}}

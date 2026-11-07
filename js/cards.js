@@ -1,5 +1,5 @@
 // ---------- cards drawn as pixel art: each category has its own shape, frame and layout
-const CARD_W=120,CARD_H=168,MINI_W=72,MINI_H=100;
+const CARD_W=120,CARD_H=168,MINI_W=72,MINI_H=100,CK=3;// cards are drawn at 3x so text and art stay sharp
 const CSTYLE={
   semente:{shape:'chamfer',rim:['#16201e','#eef6f2','#a8c4ba','#5f7e74','#22302c'],bg:['#5a3a2e','#2c1a14'],gem:['#ffe08a','#f08a2a','#8a3a10'],plate:'ribbon'},
   hibrida:{shape:'chamfer',rim:['#16201e','#e8fff0','#8ae0a8','#9a6ad8','#22302c'],bg:['#4a3450','#22142a'],gem:['#ffe08a','#f08a2a','#8a3a10'],plate:'ribbon'},
@@ -31,7 +31,7 @@ function gemDraw(g,cx,cy,rad,cols,txt){C=g;disc(cx,cy,rad+1,'#120808');disc(cx,c
 const SMALL_ICON={dmg:[[0,6],[1,5],[2,4],[3,3],[4,2],[5,1],[6,0],[1,6],[0,5]],rng:[[1,0],[2,0],[3,0],[0,1],[4,1],[0,2],[2,2],[4,2],[0,3],[4,3],[1,4],[2,4],[3,4]],cd:[[1,0],[2,0],[3,0],[0,1],[4,1],[0,2],[2,2],[3,2],[4,2],[0,3],[4,3],[1,4],[2,4],[3,4],[2,1]]};
 function iconPx(g,k,x0,y0,c){g.fillStyle=c;SMALL_ICON[k].forEach(([a,b])=>g.fillRect(x0+a,y0+b,1,1))}
 function cardCanvas(c,mini=false){
-  const W=mini?MINI_W:CARD_W,H=mini?MINI_H:CARD_H,cv2=mkCanvas(W,H),g=cv2.getContext('2d');g.imageSmoothingEnabled=false;
+  const W=mini?MINI_W:CARD_W,H=mini?MINI_H:CARD_H,cv2=mkHD(W,H,CK),g=cv2.getContext('2d');
   const I=info(c),cat=catOf(c),st=CSTYLE[cat],rare=!!c.rare;
   const rim=rare?['#2a1604','#fffbe0','#f7c948','#b07a1a','#3a2006']:st.rim;
   // frame: dark outline, light bevel, mid, dark inner line, then the inner field
@@ -43,10 +43,10 @@ function cardCanvas(c,mini=false){
   // corner rivets on the steel frame
   if(st.shape==='chamfer'&&!mini){[[6,12],[W-8,12],[6,H-14],[W-8,H-14]].forEach(([a,b])=>{g.fillStyle='#22302c';g.fillRect(a,b,3,3);g.fillStyle='#eef6f2';g.fillRect(a,b,1,1)})}
   // art window
-  const art=mkCanvas(64,44);cardArtTo(art,c);
+  const art=mkHD(64,44,CK);cardArtTo(art,c);
   const ax=mini?4:12,aw=mini?64:96,ah=mini?44:66;
   const ay=mini?(cat==='semente'||cat==='hibrida'?14:16):(cat==='semente'||cat==='hibrida'?20:30);
-  g.fillStyle='#0a0606';g.fillRect(ax-2,ay-2,aw+4,ah+4);g.fillStyle=st.shape==='torn'?'#8a7050':rim[2];g.fillRect(ax-1,ay-1,aw+2,ah+2);g.drawImage(art,ax,ay,aw,ah);
+  g.fillStyle='#0a0606';g.fillRect(ax-2,ay-2,aw+4,ah+4);g.fillStyle=st.shape==='torn'?'#8a7050':rim[2];g.fillRect(ax-1,ay-1,aw+2,ah+2);g.imageSmoothingEnabled=true;g.drawImage(art,ax,ay,aw,ah);g.imageSmoothingEnabled=false;
   g.fillStyle='#ffffff22';g.fillRect(ax,ay,aw,1);
   // name plate
   const name=I.name.replace(' ★','');
@@ -59,6 +59,9 @@ function cardCanvas(c,mini=false){
     g.fillStyle=plateCol[0];g.fillRect(px0-1,py-1,pw+2,ph+2);g.fillStyle=plateCol[2];g.fillRect(px0,py,pw,ph);g.fillStyle=plateCol[1];g.fillRect(px0,py,pw,1);
     pxText(g,name,px0+pw/2,py+(mini?8:12),(mini?'700 7px':'700 10px')+' "Pixelify Sans", monospace',st.plate==='gold'?'#2a1408':'#fbe9d0',st.plate==='gold'?null:'#000')}
   if(mini){
+    // short rule text in the lower field, so a card in hand says what it does
+    const sy=(cat==='semente'||cat==='hibrida')?ay+ah+19:ay+ah+8;g.font='600 7px "Pixelify Sans", monospace';
+    wrapLines(g,I.short,W-10,Math.max(1,Math.floor((H-6-sy)/8))).forEach((ln,i)=>pxText(g,ln,W/2,sy+i*8,'600 7px "Pixelify Sans", monospace',st.ink||'#fbe9d0',st.ink?null:'#000000aa'));
     gemDraw(g,cat==='semente'||cat==='hibrida'?W/2:9,cat==='semente'||cat==='hibrida'?8:9,6,st.gem,'');
     pxText(g,String(I.cost),cat==='semente'||cat==='hibrida'?W/2:9,(cat==='semente'||cat==='hibrida'?8:9)+4,'700 10px "Pixelify Sans", monospace','#ffffff','#000');
     if(rare){C=g;for(let i=0;i<5;i++)r(hs(i,7)*W,hs(i,8)*H,1,1,'#fff6c0');C=x}
@@ -67,7 +70,7 @@ function cardCanvas(c,mini=false){
   // cost gem
   if(cat==='semente'||cat==='hibrida')gemDraw(g,W/2,10,10,st.gem,String(I.cost));else gemDraw(g,15,16,10,st.gem,String(I.cost));
   // fruit suits under the art
-  I.fruits.forEach((f,i)=>{const e=mkCanvas(12,12);embTo(e,f);g.fillStyle='#000000aa';g.fillRect(ax+2+i*16,ay+ah-16,14,14);g.drawImage(e,ax+3+i*16,ay+ah-15)});
+  I.fruits.forEach((f,i)=>{const e=mkHD(12,12,CK);embTo(e,f);g.fillStyle='#000000aa';g.fillRect(ax+2+i*16,ay+ah-16,14,14);g.drawImage(e,ax+3+i*16,ay+ah-15,12,12)});
   if(c.plus){g.fillStyle='#0a1a30';g.fillRect(ax+aw-16,ay+2,14,14);g.fillStyle='#4a9ad8';g.fillRect(ax+aw-15,ay+3,12,12);pxText(g,'+',ax+aw-9,ay+13,'700 12px "Pixelify Sans", monospace','#ffffff')}
   // type line, rules text, stats, verse
   const ink=st.ink||'#fbe9d0',dim=st.ink?'#6a4a30':'#c9a99a';
@@ -89,8 +92,13 @@ function cardCanvas(c,mini=false){
 
 // ---------- card markup for menus and the hand
 function cardHTML(c,cls=''){const I=info(c),cat=catOf(c);
-  return `<button type="button" class="card2 c-${cat}${c.rare?' rare':''}${c.plus?' plus':''} ${cls}" data-uid="${c.uid}" title="${(I.name+': '+I.desc+(I.ref?' ('+I.ref+')':'')).replace(/"/g,'&quot;')}"><canvas width="${CARD_W}" height="${CARD_H}" data-card="${c.uid}"></canvas></button>`}
-function paintCards(root,cards){root.querySelectorAll('canvas[data-card]').forEach(cv2=>{const card=cards.find(k=>String(k.uid)===cv2.dataset.card);if(card){const g=cv2.getContext('2d');g.clearRect(0,0,cv2.width,cv2.height);g.drawImage(cardCanvas(card),0,0)}})}
+  return `<button type="button" class="card2 c-${cat}${c.rare?' rare':''}${c.plus?' plus':''} ${cls}" data-uid="${c.uid}" title="${c.locked?'Carta por descobrir':(I.name+': '+I.desc+(I.ref?' ('+I.ref+')':'')).replace(/"/g,'&quot;')}"><canvas width="${CARD_W*CK}" height="${CARD_H*CK}" data-card="${c.uid}"></canvas></button>`}
+function paintCards(root,cards){root.querySelectorAll('canvas[data-card]').forEach(cv2=>{const card=cards.find(k=>String(k.uid)===cv2.dataset.card);if(card){const g=cv2.getContext('2d');g.clearRect(0,0,cv2.width,cv2.height);g.drawImage(card.locked?cardBack():cardCanvas(card),0,0)}})}
+// the back of a card nobody has found yet
+function cardBack(mini){const W=mini?MINI_W:CARD_W,H=mini?MINI_H:CARD_H,c=mkHD(W,H,CK),g=c.getContext('2d');
+  fillShape(g,'chamfer',W,H,0,'#120a08');fillShape(g,'chamfer',W,H,2,'#8a5a30');fillShape(g,'chamfer',W,H,4,'#3a2216');fillShape(g,'chamfer',W,H,7,'#24140c');
+  g.fillStyle='#3a2418';for(let y=10;y<H-10;y+=6)for(let xx=10+(y/6%2)*3;xx<W-10;xx+=6)g.fillRect(xx,y,2,2);
+  pxText(g,'?',W/2,H/2+16,'700 46px "Pixelify Sans", monospace','#c9a24a','#000');pxText(g,'por descobrir',W/2,H-16,'9px "Pixelify Sans", monospace','#c9a99a');return c}
 function renderHand(){
   const el=$('cards');el.innerHTML='';const n=S.hand.length,conf=S.babelOn>0;
   for(let j=0;j<n;j++){
@@ -98,9 +106,9 @@ function renderHand(){
     b.style.setProperty('--rot',((j-(n-1)/2)*5)+'deg');b.style.setProperty('--lift',(Math.abs(j-(n-1)/2)*4)+'px');
     if(!c){b.className='hc2 empty';b.disabled=true;el.append(b);continue}
     const I=info(c);b.className='hc2 c-'+catOf(c)+(S.sel===i?' sel':'')+(conf?' garbled':'');
-    b.innerHTML=`<canvas width="${MINI_W}" height="${MINI_H}"></canvas><span class="key">${j+1}</span>`;b.title=conf?'':I.name+': '+I.desc;
+    b.innerHTML=`<canvas width="${MINI_W*CK}" height="${MINI_H*CK}"></canvas><span class="key">${j+1}</span>`;b.title=conf?'':I.name+': '+I.desc;
     const g=b.querySelector('canvas').getContext('2d');
-    if(conf){g.fillStyle='#3a1e4a';g.fillRect(0,0,MINI_W,MINI_H);pxText(g,garble('????'),MINI_W/2,MINI_H/2,'16px serif','#e0c0ff')}else g.drawImage(cardCanvas(c,true),0,0);
+    if(conf){g.scale(CK,CK);g.fillStyle='#3a1e4a';g.fillRect(0,0,MINI_W,MINI_H);pxText(g,garble('????'),MINI_W/2,MINI_H/2,'16px serif','#e0c0ff')}else g.drawImage(cardCanvas(c,true),0,0);
     b.addEventListener('pointerdown',e=>startDrag(e,i,b));
     b.addEventListener('click',e=>{e.currentTarget.blur();if(e.detail===0)onCardClick(i)});
     if(i===S.newIdx)b.classList.add('enter');el.append(b)}

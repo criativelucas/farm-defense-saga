@@ -1,10 +1,14 @@
 // ---------- core helpers shared by every file
 const $=id=>document.getElementById(id);
-const W=384,H=216,MAXM=10,LIFE_X=26;
-const cv=$('c'),x=cv.getContext('2d'),gl=$('glow'),gx=gl.getContext('2d');
+const W=384,H=216,MAXM=10,LIFE_X=26,RS=2;
+const cv=$('c'),x=cv.getContext('2d'),gl=$('glow'),gx=gl.getContext('2d');x.__k=gx.__k=RS;
 const rnd=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>v<a?a:v>b?b:v,pick=a=>a[Math.random()*a.length|0];
 const hs=(a,b)=>{let h=Math.imul(a|0,374761393)^Math.imul(b|0,668265263);h=Math.imul(h^(h>>>13),1274126177);return((h^(h>>>16))>>>0)/4294967295};
 const mkCanvas=(w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return c};
+// The world is 384x216 units but drawn at RS device pixels per unit, so foliage, ground and text get finer detail.
+// An HD canvas carries its scale in __k; the pixel helpers read it from the context they draw on.
+function mkHD(w,h,k=RS){const c=mkCanvas(Math.ceil(w*k),Math.ceil(h*k)),g=c.getContext('2d');g.scale(k,k);g.imageSmoothingEnabled=false;g.__k=k;c.__k=k;return c}
+const dl=(g,c,dx,dy)=>g.drawImage(c,dx,dy,c.width/(c.__k||1),c.height/(c.__k||1));
 
 // Gameplay randomness (map, waves, events, rewards). Seeded in the daily challenge so every player gets the same journey.
 let RNG=Math.random;
@@ -20,18 +24,21 @@ const store={
 
 // ---------- pixel helpers (C = current context, OV = flat color override for flashes and outlines)
 let C=x,OV=null;
-function r(px,py,w,h,c){C.fillStyle=OV||c;C.fillRect(Math.round(px),Math.round(py),w,h)}
+function r(px,py,w,h,c){const k=C.__k||1;C.fillStyle=OV||c;C.fillRect(Math.round(px*k)/k,Math.round(py*k)/k,w,h)}
+// leafy blobs are drawn once at the target's resolution and cached, then stamped; at 2x the leaves are half-size pixels
+const BLOBC=new Map();
 function blob(cx,cy,rx,ry,dark,mid,lite,seed){
-  for(let dy=-ry;dy<=ry;dy++)for(let dx=-rx;dx<=rx;dx++){
-    const d=dx*dx/(rx*rx)+dy*dy/(ry*ry),n=hs(dx+seed*31,dy+seed);
-    if(d>1.15-n*.4)continue;
-    const l=(-dx-dy*1.3)/(rx+ry)+n*.35;
-    r(cx+dx,cy+dy,1,1,l>.4?lite:l>-.15?mid:dark);
-  }
-}
+  if(rx<=0||ry<=0)return;const k=C.__k||1,key=rx+','+ry+','+dark+mid+lite+','+seed+','+(OV||'')+','+k;let b=BLOBC.get(key);
+  if(!b){if(BLOBC.size>800)BLOBC.clear();b=mkHD(rx*2+3,ry*2+3,k);const keep=C;C=b.getContext('2d');const s=1/k;
+    for(let dy=-ry;dy<=ry;dy+=s)for(let dx=-rx;dx<=rx;dx+=s){
+      const d=dx*dx/(rx*rx)+dy*dy/(ry*ry),n=hs(Math.round(dx*k)+seed*31,Math.round(dy*k)+seed);
+      if(d>1.15-n*.4)continue;const l=(-dx-dy*1.3)/(rx+ry)+n*.35;
+      r(rx+1+dx,ry+1+dy,s,s,l>.4?lite:l>-.15?mid:dark)}
+    C=keep;BLOBC.set(key,b)}
+  C.drawImage(b,Math.round((cx-rx-1)*k)/k,Math.round((cy-ry-1)*k)/k,b.width/k,b.height/k)}
 function ring(cx,cy,rad,c){const n=Math.max(8,rad*6|0);for(let i=0;i<n;i++){const a=i/n*Math.PI*2;r(cx+Math.cos(a)*rad,cy+Math.sin(a)*rad,1,1,c)}}
-function disc(cx,cy,rad,c){for(let dy=-rad;dy<=rad;dy++){const w=Math.round(Math.sqrt(rad*rad-dy*dy));r(cx-w,cy+dy,w*2+1,1,c)}}
-function mount(w,base,amp,f,seed,c){for(let i=0;i<w;i++){const h=Math.sin(i*f+seed)*amp+Math.sin(i*f*2.7+seed*3)*amp*.4+Math.sin(i*.2+seed)*1.5;r(i,base-h,1,H,c)}}
+function disc(cx,cy,rad,c){const s=1/(C.__k||1);for(let dy=-rad;dy<=rad;dy+=s){const w=Math.round(Math.sqrt(Math.max(0,rad*rad-dy*dy))/s)*s;r(cx-w,cy+dy,w*2+1,s,c)}}
+function mount(w,base,amp,f,seed,c){const s=1/(C.__k||1);for(let i=0;i<w;i+=s){const h=Math.sin(i*f+seed)*amp+Math.sin(i*f*2.7+seed*3)*amp*.4+Math.sin(i*.2+seed)*1.5;r(i,base-h,s,H,c)}}
 function palm(px,py,c){for(let i=0;i<22;i++)r(px+Math.sin(i*.15)*3,py-i,2,1,c);
   for(let a=0;a<5;a++){const an=-Math.PI*.9+a*Math.PI*.45;for(let j=0;j<10;j++)r(px+Math.cos(an)*j,py-22+Math.sin(an)*j+j*j*.06,2,1,c)}}
 

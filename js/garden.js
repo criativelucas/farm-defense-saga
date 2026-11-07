@@ -169,25 +169,56 @@ function showTree(){
 const INTRO=[
  ['Bem-vindo ao jardim','Você é o lavrador. As obras da carne (Ódio, Inveja, Discórdia...) querem chegar à árvore do lado esquerdo. Não deixe passar.','gard'],
  ['Plante com cartas','Sua mão tem 4 cartas. Pare sobre um canteiro (os brotinhos) e aperte 1 a 4, ou arraste a carta até ele. Cada carta custa maná, que recarrega sozinho.','card'],
- ['Regue para crescer','Fique parado ao lado de uma árvore e o lavrador rega. A cada rega completa ela cresce e sobe de nível; com 3 vira árvore adulta. A chuva e a carta Regar também regam.','gardener'],
+ ['Regue para crescer','Fique parado ao lado de uma árvore e o lavrador rega. A cada rega completa ela cresce e sobe de nível; com 3 vira árvore adulta. A chuva e a carta Regar também regam.','water'],
  ['Cada fruto vence uma praga','Romã vence Ódio, Videira vence Inveja, Oliveira vence Discórdia... O dano fica 2,5 vezes maior. Árvores vizinhas se fortalecem.','fruit'],
- ['Lute junto','← → anda, ↑ pula. No ar, ↓ dá um pisão: em cima de uma árvore, solta o poder dela. X golpeia com a ferramenta. Q, E e R põem cerca, espantalho e lama.','gardener'],
+ ['Lute junto','← → anda, ↑ pula. No ar, ↓ dá um pisão: em cima de uma árvore, solta o poder dela. X golpeia com a ferramenta. Q, E e R põem cerca, espantalho e lama.','fight'],
  ['Cuidado com as pragas','Encostar nelas tira corações. Sem corações você desmaia e perde maná. Pegue os frutos e as moedas que caem.','hurt'],
  ['Fora das batalhas','Vença fases para ganhar moedas e cartas novas. Na Loja compre ferramentas e sementes. Depois da fase 1-4 abre o Jardim; a Árvore da Vida vem mais tarde.','shop']];
-function introArt(cvs,k){const g=cvs.getContext('2d');g.imageSmoothingEnabled=false;g.clearRect(0,0,96,64);C=g;
-  const gr=g.createLinearGradient(0,0,0,64);gr.addColorStop(0,'#3a2a5a');gr.addColorStop(1,'#d08a5a');g.fillStyle=gr;g.fillRect(0,0,96,64);r(0,52,96,12,'#4b2228');r(0,52,96,2,'#5fe08a');
-  g.save();
-  if(k==='gard'){drawTower('roma',20,52,1);enemyBody({k:'odio',x:62,y:52,t:1});enemyBody({k:'inveja',x:80,y:30,t:1})}
-  if(k==='card'){g.drawImage(cardCanvas(mk('videira'),true),30,6,36,50)}
-  if(k==='fruit'){drawTower('roma',26,52,1);enemyBody({k:'odio',x:70,y:52,t:1});pxText(g,'x2,5',48,24,'700 10px "Pixelify Sans"','#ffe14a','#000')}
-  if(k==='gardener'){const kp=RUN;RUN={char:META.char};drawGardener({face:1,x:40,y:52,vx:0,vy:0,on:true,sq:1,anim:0,slam:false,stun:0,inv:0,faint:0,swing:0});RUN=kp;C=g;drawTower('videira',70,52,1)}
-  if(k==='hurt'){[30,42,54].forEach((hx,i)=>disc(hx,22,5,i<2?'#e0284a':'#3a1a24'));enemyBody({k:'gula',x:74,y:52,t:1})}
-  if(k==='shop'){g.translate(24,0);g.scale(1.5,1.5);ICONS.talentos();g.setTransform(1,0,0,1,0,0);drawTower('oliveira',78,52,1)}
-  g.restore();C=x}
+// ---------- tutorial art: small animated scenes drawn at 4x, sprites at 2x, so they read clearly
+let introRAF=0,introCard=null;
+function introArt(cvs,k){cancelAnimationFrame(introRAF);const g=cvs.getContext('2d'),t0=performance.now();
+  const loop=()=>{if(!cvs.isConnected)return;g.setTransform(4,0,0,4,0,0);g.__k=4;g.imageSmoothingEnabled=false;introScene(g,k,(performance.now()-t0)/1000);introRAF=requestAnimationFrame(loop)};loop()}
+function introScene(g,k,t){const keep=C,kr=RUN;C=g;RUN={char:META.char};g.save();
+  const gr=g.createLinearGradient(0,0,0,90);gr.addColorStop(0,'#3a86de');gr.addColorStop(.8,'#bfe4ff');g.fillStyle=gr;g.fillRect(0,0,160,90);
+  for(let i=0;i<160;i+=.5){const h=Math.sin(i*.04+1)*6+Math.sin(i*.11)*3;r(i,54-h,.5,30,'#9cc4dc')}
+  for(let i=0;i<160;i+=.5){const h=Math.sin(i*.07+3)*4;r(i,64-h,.5,20,'#7cae86')}
+  for(let c=0;c<2;c++){const cx=((t*4+c*90)%200)-30;blob(cx,14+c*8,12,3,'#c8dcf0','#e8f2ff','#ffffff',c+3)}
+  const A=MAP&&MAP.atlas;if(A)for(let i=0;i<160;i+=8){g.drawImage(A,(hs(i,1)*3|0)*8*A.__k,0,8*A.__k,8*A.__k,i,74,8,8);for(let j=82;j<90;j+=8)g.drawImage(A,(5+(hs(i,j)*3|0))*8*A.__k,0,8*A.__k,8*A.__k,i,j,8,8)}
+  else{r(0,74,160,16,'#4b2228');r(0,74,160,2,'#5fe08a')}
+  const txt=(s,x0,y0,c='#fff',sz=7)=>pxText(g,s,x0,y0,`700 ${sz}px "Pixelify Sans", monospace`,c,'#1a0c06');
+  const P=(o)=>Object.assign({face:1,x:0,y:37,vx:0,vy:0,on:true,sq:1,anim:0,slam:false,stun:0,inv:0,faint:0,swing:0},o);
+  const T=(kind,X,sz=1.2)=>drawTower(kind,X,37,t,null,sz);
+  g.save();g.scale(2,2);// sprite space: 80x45, ground at y=37
+  if(k==='gard'){T('oliveira',10,1.7);const ex=78-((t*10)%52);enemyBody({k:'odio',x:ex,y:37,t});enemyBody({k:'inveja',x:ex+14,y:16+Math.sin(t*3)*2,t});
+    drawGardener(P({x:30,face:1}))}
+  if(k==='card'){const ph=(t%3.4)/3.4,grow=ph<.55?0:Math.min(1,(ph-.55)/.25);r(39,36,5,1,'#3a2010');
+    if(grow>0)drawTower('videira',41,37,t,null,.5+easeBack(grow)*.8);else{r(41,33,1,3,'#5fe08a');r(40,32,1,1,'#5fe08a');r(42,32,1,1,'#5fe08a')}
+    drawGardener(P({x:33}))}
+  if(k==='water'){const u=(t%6)/6,sz=.55+Math.min(1,u*1.3)*.75;T('roma',46,sz*1.55);drawGardener(P({x:36,face:1}));
+    for(let i=0;i<6;i++){const v=(t*1.6+i/6)%1;r(39+v*6,26-Math.sin(v*Math.PI)*5+v*8,1,1,i%2?'#7ac0ff':'#bfe8ff')}
+    r(40,39,12,2,'#0a1a30');r(40,39,12*((u*3.9)%1),2,'#5ab0ff');for(let s2=0;s2<3;s2++)r(40+s2*5,42,3,1,s2<Math.min(3,u*3.9|0)?'#5ab0ff':'#2a3a50')}
+  if(k==='fruit'){T('roma',18,1.5);const ex=70-((t*8)%26);enemyBody({k:'odio',x:ex,y:37,t,flash:Math.sin(t*12)>.7?1:0});
+    for(let i=0;i<3;i++){const v=(t*1.4+i/3)%1;r(18+(ex-18)*v,22+(30-22)*v-Math.sin(v*Math.PI)*8,2,2,'#e0284a')}}
+  if(k==='fight'){const jy=Math.max(0,Math.sin(t*2.6))*14,slam=Math.sin(t*2.6)<-.2;drawGardener(P({x:30,y:37-jy,on:jy<.5,slam:jy>2&&Math.cos(t*2.6)<0,swing:slam?.1:0}));
+    enemyBody({k:'discordia',x:44,y:37,t});T('figueira',62,1.3);if(jy<1){g.globalAlpha=.6;ring(30,37,6+((t*20)%6),'#ffffff');g.globalAlpha=1}}
+  if(k==='hurt'){const gx2=58-((t*9)%24),hit=gx2<40;enemyBody({k:'gula',x:gx2,y:37,t});if(!(hit&&(t*12|0)%2))drawGardener(P({x:30,stun:hit?1:0}));}
+  if(k==='shop'){g.save();g.translate(16,8);g.scale(1.2,1.2);hubIconTo2('loja');g.restore();for(let i=0;i<4;i++){const cy=30-((t*20+i*6)%14);disc(56+i*4,cy,2,'#c9921a');disc(56+i*4,cy,1.5,'#f7c948')}T('oliveira',68,1.2)}
+  g.restore();
+  // labels drawn at full resolution so they stay sharp
+  if(k==='gard'){txt('proteja a árvore',44,20,'#ffe9a0');txt('←',96-((t*20)%104),52,'#ff6a6a',10)}
+  if(k==='card'){const ph=(t%3.4)/3.4;if(ph<.55){const u=ph/.55,cx=120+(84-120)*u,cy=40+(46-40)*u-Math.sin(u*Math.PI)*16;g.imageSmoothingEnabled=true;g.drawImage(introCard||(introCard=cardCanvas(mk('videira'),true)),cx-14,cy-20,28,39);C=g;g.imageSmoothingEnabled=false}
+    txt('aperte 1 a 4',120,86,'#fff3c0',6)}
+  if(k==='water'){txt('fique parado ao lado',86,12,'#ffe9a0');txt('rega '+Math.min(3,((t%6)/6*3.9)|0)+'/3',92,88,'#bfe8ff',6)}
+  if(k==='fruit'){const ex=140-((t*16)%52);txt('x2,5',ex,36+Math.sin(t*6)*2,'#ffe14a',10);txt('Romã vence Ódio',80,14,'#fff3c0')}
+  if(k==='fight'){txt('↑ pula   ↓ pisão   X golpe',80,14,'#fff3c0')}
+  if(k==='hurt'){for(let i=0;i<3;i++){const on=i<2||(t*3|0)%2;C=g;disc(12+i*11,12,4,'#1a0c06');disc(12+i*11,12,3,on&&i<2?'#e0284a':'#3a1a24')}txt('encostar tira coração',100,14,'#ffb0b0')}
+  if(k==='shop'){txt('moedas → loja → sementes',80,14,'#fff3c0')}
+  g.restore();C=keep;RUN=kr}
+function hubIconTo2(k){const keep=C;const c=mkHD(32,32,4);hubIconTo(c,k);C=keep;C.drawImage(c,0,0,32,32)}
 function showIntro(i){
   const[t,txt,art]=INTRO[i],last=i===INTRO.length-1;
   menu(`<div class="mbox"><small class="eyebrow">Como jogar · ${i+1}/${INTRO.length}</small><h2>${t}</h2>
-    <div class="introart"><canvas id="introc" width="96" height="64"></canvas></div><p>${txt}</p>
+    <div class="introart"><canvas id="introc" width="640" height="360"></canvas></div><p>${txt}</p>
     <div class="dots">${INTRO.map((_,j)=>`<i class="${j===i?'on':''}"></i>`).join('')}</div>
     <div class="row">${i?'<button class="btn ghost" id="iprev">‹ Voltar</button>':'<button class="btn ghost" id="iskip">Pular</button>'}<button class="btn" id="inext">${last?'Começar a jogar':'Próximo ›'}</button></div></div>`);
   introArt($('introc'),art);

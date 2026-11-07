@@ -218,7 +218,7 @@ function enemyIconTo(cvs,k){const g=cvs.getContext('2d');g.clearRect(0,0,48,48);
   enemyBody({k,x:0,y:d.fly?-d.h/2-2:0,t:1});g.restore();C=x}
 
 // ---------- frame
-const dc=mkCanvas(W+1,H),dx=dc.getContext('2d');
+const dc=mkHD(W+1,H),dx=dc.getContext('2d');
 const LC={videira:'#a05ae8',roma:'#ff4f7b',oliveira:'#d8f0a8',sarca:'#ff8a2a',mostarda:'#f7d050',figueira:'#9ae060',tamareira:'#ffa64a',amendoeira:'#ffc8e4',lirio:'#f4f4ff'};
 let LIGHTS=[];
 const easeBack=g=>1+2.70158*Math.pow(g-1,3)+1.70158*Math.pow(g-1,2);
@@ -255,8 +255,8 @@ function fog(y,a,spd){for(let k=0;k<3;k++){const span=W+260,bx=((k*200-S.cam*spd
   x.fillStyle=g;x.fillRect(-130,-130,260,260);x.restore()}}
 function drawWater(){
   if(!MAP.water)return;const[a,b]=MAP.water,y=gy(a),sx=Math.round(a-S.cam),w=b-a;if(sx>W||sx+w<0)return;
-  x.save();x.setTransform(1,0,0,1,0,0);
-  for(let j=0;j<16;j++){const off=Math.round(Math.sin(S.t*3+j*.9)*(1+j*.08));x.globalAlpha=.6-j*.03;x.drawImage(cv,sx,(y-1-j*1.2)|0,w,1,sx+off,y+1+j,w,1)}
+  x.save();x.setTransform(RS,0,0,RS,0,0);
+  for(let j=0;j<16;j++){const off=Math.round(Math.sin(S.t*3+j*.9)*(1+j*.08));x.globalAlpha=.6-j*.03;x.drawImage(cv,sx*RS,((y-1-j*1.2)|0)*RS,w*RS,RS,sx+off,y+1+j,w,1)}
   x.globalAlpha=1;x.fillStyle='rgba(40,110,180,.28)';x.fillRect(sx,y+1,w,16);
   for(let i=0;i<4;i++)r(sx+((hs(i,91)*w+S.t*(8+i*3))%w),y+2+i*3,3,1,'#bfe8ff');
   r(sx,y,w,1,'#7ac0f0');x.restore();
@@ -281,11 +281,11 @@ function drawHomeDyn(){
 }
 function drawPuddles(){if(S.wet<.05)return;x.globalAlpha=S.wet*.85;
   for(const p of MAP.puddles){r(p.x,p.y-1,p.w,2,'#3a6aa0');r(p.x+1,p.y-1,p.w-3,1,'#9ad0ff');if(Math.sin(S.t*4+p.x)>.6)r(p.x+((S.t*10)%p.w),p.y-1,1,1,'#ffffff')}x.globalAlpha=1}
-function drawFG(){const c='#0a0410';
+function drawFG(){const c=MAP.day?'#1c3424':'#0a0410';
   for(const f of MAP.fgItems){const fx=Math.round(f.x-S.cam*FGK);if(fx<-50||fx>W+50)continue;
-    if(f.t==='vine'){for(let i=0;i<f.len;i++){const px=fx+Math.sin(S.t*1.1+f.s+i*.15)*i*.06;r(px,i,2,1,c);if(i%4===2){r(px-3,i,3,2,c);r(px+2,i+1,3,1,c)}}blob(fx,0,12,7,c,c,'#16081e',f.s+90)}
+    if(f.t==='vine'){for(let i=0;i<f.len;i++){const px=fx+Math.sin(S.t*1.1+f.s+i*.15)*i*.06;r(px,i,2,1,c);if(i%4===2){r(px-3,i,3,2,c);r(px+2,i+1,3,1,c)}}blob(fx,0,12,7,c,c,MAP.day?'#2a4a30':'#16081e',f.s+90)}
     else if(f.t==='fern'){for(let b=0;b<6;b++){const an=Math.PI*(.25+b*.08)+Math.sin(S.t*1.4+f.s+b)*.05,dir=b%2?1:-1;for(let j=0;j<22;j++)r(fx+Math.cos(an)*j*dir,H-Math.sin(an)*j+j*j*.02,2,1,c)}}
-    else if(f.t==='rock')blob(fx,H,18,12,c,c,'#16081e',f.s+95);
+    else if(f.t==='rock')blob(fx,H,18,12,c,c,MAP.day?'#2a4a30':'#16081e',f.s+95);
     else if(f.t==='frond'){for(let b=0;b<4;b++){const an=.3+b*.25,dir=b%2?1:-1;for(let j=0;j<26;j++)r(fx+j*Math.cos(an)*dir,j*Math.sin(an)+j*j*.03+Math.sin(S.t+b)*j*.03,2,1,c)}}}
 }
 function drawTree(t,s,i){
@@ -324,19 +324,20 @@ function drawDrops(){for(const d of S.drops){if(d.t>10&&(S.t*10|0)%2)continue;co
 function draw(){
   if(!S)return;
   const sh=S.shake;S.sx=Math.round(rnd(-sh,sh));S.sy=Math.round(rnd(-sh,sh));
+  x.setTransform(RS,0,0,RS,0,0);gx.setTransform(RS,0,0,RS,0,0);
   const cam=Math.floor(S.cam),P=S.p,live=S.state==='prep'||S.state==='wave';
   buildLights();
   x.save();view(x);
-  x.drawImage(SKY,0,0);
+  dl(x,SKY,0,0);
   if(MAP.storm&&S.bolt>0){x.fillStyle=`rgba(220,220,255,${S.bolt*.6})`;x.fillRect(0,0,W,H);let lx=290,ly=26;
     for(let i=0;i<8;i++){const nx=lx+rnd(-6,6);x.fillStyle='#fffbe0';x.fillRect(Math.round(Math.min(lx,nx)),ly,Math.abs(nx-lx)+1,1);x.fillRect(Math.round(nx),ly,1,5);lx=nx;ly+=5}}
   drawRays();drawSkyLife();
-  x.drawImage(FAR,-Math.round(S.cam*PAR[0]),0);drawFarLife();if(!CFG.lite)fog(128,.16,.3);
-  x.drawImage(MID,-Math.round(S.cam*PAR[1]),0);drawMidLife();if(!CFG.lite)fog(150,.12,.6);
-  x.drawImage(NEAR,-Math.round(S.cam*PAR[2]),0);
-  for(let i=0;i<18;i++){const fx=(hs(i,5)*W+S.t*(6+hs(i,6)*8))%W,fy=60+hs(i,7)*90+Math.sin(S.t*1.5+i)*6;if(Math.sin(S.t*3+i*2)>-.2)r(fx,fy,1,1,'#fff4a0')}
+  dl(x,FAR,-Math.round(S.cam*PAR[0]),0);drawFarLife();if(!CFG.lite)fog(128,.16,.3);
+  dl(x,MID,-Math.round(S.cam*PAR[1]),0);drawMidLife();if(!CFG.lite)fog(150,.12,.6);
+  dl(x,NEAR,-Math.round(S.cam*PAR[2]),0);
+  if(!MAP.day)for(let i=0;i<18;i++){const fx=(hs(i,5)*W+S.t*(6+hs(i,6)*8))%W,fy=60+hs(i,7)*90+Math.sin(S.t*1.5+i)*6;if(Math.sin(S.t*3+i*2)>-.2)r(fx,fy,1,1,'#fff4a0')}
   x.save();x.translate(-cam,0);
-  x.drawImage(GROUND,0,0);
+  dl(x,GROUND,0,0);
   const gc=S.wet>.3?'#8affb0':MAP.pal.top1;
   for(const t of MAP.tufts){if(t.x<cam-4||t.x>cam+W+4)continue;const l=Math.sin(S.t*2.2+t.x*.07)>.25?1:0;r(t.x,t.y-t.h,1,t.h,gc);r(t.x+l,t.y-t.h-1,1,1,gc)}
   for(const v of MAP.vines)for(let i=0;i<v.len;i++){const px=v.x+Math.sin(S.t*1.3+v.x+i*.3)*i*.08;r(px,v.y+i,1,1,'#2f9a5a');if(i%3===1)r(px+1,v.y+i,1,1,gc)}
@@ -370,9 +371,9 @@ function draw(){
   drawWater();
   if(S.night>.01){dx.globalCompositeOperation='source-over';dx.clearRect(0,0,W+1,H);dx.fillStyle=`rgba(${MAP.night},${S.night})`;dx.fillRect(0,0,W+1,H);
     dx.globalCompositeOperation='destination-out';for(const L of LIGHTS)glowBlob(dx,{x:L.x-cam,y:L.y,r:L.r*1.3,c:'#000',a:L.a},1.8);
-    dx.globalCompositeOperation='source-over';x.drawImage(dc,0,0)}
+    dx.globalCompositeOperation='source-over';dl(x,dc,0,0)}
   for(const f of S.fx)if(f.k==='shock'&&!CFG.lite){const cx=f.x-cam,cy=f.y,R=f.r;x.save();x.beginPath();x.arc(cx,cy,R+7,0,Math.PI*2);x.arc(cx,cy,Math.max(0,R-7),0,Math.PI*2,true);x.clip();
-    x.translate(cx,cy);x.scale(1.07,1.07);x.translate(-cx,-cy);x.drawImage(cv,0,0);x.restore();x.globalAlpha=.45*(1-f.t/.5);ring(cx,cy,R,'#ffffff');x.globalAlpha=1}
+    x.translate(cx,cy);x.scale(1.07,1.07);x.translate(-cx,-cy);x.drawImage(cv,0,0,W+1,H);x.restore();x.globalAlpha=.45*(1-f.t/.5);ring(cx,cy,R,'#ffffff');x.globalAlpha=1}
   if(S.sand>.01){x.fillStyle=`rgba(190,130,70,${S.sand*.42})`;x.fillRect(0,0,W+1,H)}
   drawOverlays();
   drawFG();
@@ -389,7 +390,7 @@ function draw(){
     x.fillStyle='#fff';x.fillRect(Math.round(mx+P.x*k),my+2,1,3)}
   if(S.lifeHit>0){x.fillStyle=`rgba(255,40,80,${S.lifeHit*.3})`;x.fillRect(0,0,W+1,H)}
   if(S.flash.a>0){x.save();x.globalCompositeOperation='lighter';x.fillStyle=`rgba(${S.flash.c},${S.flash.a})`;x.fillRect(0,0,W+1,H);x.restore()}
-  x.drawImage(VIG,0,0,W+1,H);subpixel(S.cam-cam);
+  if(MAP.day)x.globalAlpha=.45;x.drawImage(VIG,0,0,W+1,H);x.globalAlpha=1;subpixel(S.cam-cam);
   gx.clearRect(0,0,W+1,H);if(CFG.lite)return;gx.save();view(gx);gx.globalCompositeOperation='lighter';
   for(const L of LIGHTS)glowBlob(gx,{...L,x:L.x-cam});
   gx.translate(-cam,0);C=gx;
@@ -413,7 +414,7 @@ const FEMB={
   Mansidão(){r(5,6,1,4,'#5fae4a');r(3,2,1,4,'#f4f4ff');r(7,2,1,4,'#f4f4ff');r(4,1,3,5,'#ffffff');r(5,4,1,1,'#ffd34a')},
   Domínio(){r(4,4,4,6,'#ff6a1a');r(5,2,2,3,'#ff6a1a');r(5,6,2,3,'#ffd34a');r(6,1,1,1,'#ffd34a')}
 };
-function embTo(cvs,f){const g=cvs.getContext('2d');g.clearRect(0,0,12,12);C=g;(FEMB[f]||(()=>{}))();C=x}
+function embTo(cvs,f){const g=cvs.getContext('2d');g.clearRect(0,0,cvs.width,cvs.height);C=g;(FEMB[f]||(()=>{}))();C=x}
 // card art: a little scene per type, the tree or symbol drawn large
 const ART_BG={Amor:'#7a1e3a',Alegria:'#4a2370',Paz:'#3a5a3a',Paciência:'#2a4a2a',Benignidade:'#7a4a1a',Bondade:'#7a4a6a',Fé:'#6a6a1a',Mansidão:'#4a5a7a',Domínio:'#7a2a10'};
 function cardArtTo(cvs,c){

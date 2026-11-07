@@ -7,11 +7,11 @@ function shade(h,k){const n=parseInt(h.slice(1),16),f=v=>clamp(Math.round(k<0?v*
 const theme=P=>P.grass?'grass':P.bricks?'brick':'rock';
 
 function buildTiles(P,th){
-  const A=mkCanvas(T*TI.N,T*2),g=A.getContext('2d'),keep=C;C=g;
+  const A=mkHD(T*TI.N,T*2),g=A.getContext('2d'),keep=C,s=1/RS;C=g;
   const out=shade(P.fill,-.55),drip=shade(P.top2,-.4);
   const body=(o,v)=>{r(o,0,T,T,P.fill);
     if(th==='brick'){for(const[row,off]of[[0,v%2?2:6],[4,v%2?6:2]]){r(o,row+3,T,1,P.band);r(o+off,row,1,3,P.band);r(o+(off+1)%T,row,2,1,P.lite)}}
-    else{for(let i=0;i<T;i++)for(let j=0;j<T;j++){const n=hs(i+v*13,j+v*7+3);if(n>.9)r(o+i,j,1,1,P.dark);else if(n<.05)r(o+i,j,1,1,P.lite)}
+    else{for(let i=0;i<T;i+=s)for(let j=0;j<T;j+=s){const n=hs(i*RS+v*13,j*RS+v*7+3);if(n>.9)r(o+i,j,s,s,P.dark);else if(n<.05)r(o+i,j,s,s,P.lite)}
       if(th==='rock'){// chunky stones: a crack across, one down, and a lit lip under each crack
         const cy=v===1?5:3,cx=(v*3+2)%T;r(o,cy,T,1,P.dark);r(o,cy+1,T,1,P.lite);r(o+cx,0,1,cy,P.dark);r(o+cx+1,0,1,cy,P.band);r(o+(cx+4)%T,cy+1,1,T-cy-1,P.dark)}
       else if(v===1){r(o+2,3,3,2,P.dark);r(o+2,3,2,1,P.lite)}else if(v===2){r(o+5,5,2,1,P.dark);r(o+1,1,1,2,P.band)}}};
@@ -33,7 +33,7 @@ function buildTiles(P,th){
 
 function drawGround(){
   const P=MAP.pal,th=theme(P),A=buildTiles(P,th);MAP.atlas=A;
-  const st=(i,dx,dy,w=T)=>C.drawImage(A,i*T,0,w,T,dx,dy,w,T);
+  const st=(i,dx,dy,w=T)=>C.drawImage(A,i*T*A.__k,0,w*A.__k,T*A.__k,dx,dy,w,T);
   const near=x0=>MAP.slots.some(s=>Math.abs(s.x-x0)<10);
   // Jericho's walls stand behind the path as brick columns under their platforms
   MAP.plats.forEach(pl=>{if(!pl.wall)return;if(MAP._fallen){const g2=gy(pl.x+pl.w/2);for(let i=0;i<pl.w;i+=3)r(pl.x+i,g2-2-(hs(i,pl.x)*7|0),3,9,i%2?'#8a5c3a':'#6a4228');return}const gyv=gy(pl.x+pl.w/2);r(pl.x+2,pl.y,pl.w-4,gyv-pl.y,'#8a5c3a');
@@ -71,8 +71,8 @@ function buildProps(){
   if(['eden','tumulo','jerico'].includes(MAPID))for(let k=0;k<5;k++)L.push({t:'fly',x:90+k*(MAP.ww-120)/5,y:gy(90+k*(MAP.ww-120)/5),s:k});
   MAP.props=L;
   // drifting clouds in the colors of each sky
-  const cc={eden:['#8a4a6a','#c87a8a','#f0b0a8'],mar:['#9a5a7a','#d8909a','#f8c8b0'],jerico:['#a8604a','#e0a070','#f8d8a0'],babel:['#5a3050','#8a4a6a','#b06a80'],tumulo:['#c890a0','#f0c0c0','#fff0e0']}[MAPID];
-  MAP.clouds=cc?[0,1,2].map(i=>{const c=mkCanvas(64,22),keep=C;C=c.getContext('2d');blob(32,14,24+i*3,6,cc[0],cc[1],cc[2],i*7+1);blob(20,10,12,6,cc[0],cc[1],cc[2],i*7+2);blob(42,9,13,6,cc[0],cc[1],cc[2],i*7+3);C=keep;return c}):null;
+  const cc=MAP.day?{[MAPID]:['#a8c4e0','#dceaf8','#ffffff']}[MAPID]:{eden:['#8a4a6a','#c87a8a','#f0b0a8'],mar:['#9a5a7a','#d8909a','#f8c8b0'],jerico:['#a8604a','#e0a070','#f8d8a0'],babel:['#5a3050','#8a4a6a','#b06a80'],tumulo:['#c890a0','#f0c0c0','#fff0e0']}[MAPID];
+  MAP.clouds=cc?[0,1,2].map(i=>{const c=mkHD(64,22),keep=C;C=c.getContext('2d');blob(32,14,24+i*3,6,cc[0],cc[1],cc[2],i*7+1);blob(20,10,12,6,cc[0],cc[1],cc[2],i*7+2);blob(42,9,13,6,cc[0],cc[1],cc[2],i*7+3);C=keep;return c}):null;
 }
 function flame(X,Y,k){const f=(S.t*12+k)|0,h=3+(f%3),sw=Math.round(Math.sin(S.t*9+k));
   r(X-1,Y-2,4,2,'#c0401a');r(X-1+sw*.5,Y-1-h,3,h,'#ff8a2a');r(X+sw,Y-h,2,h-1,'#ffd34a');r(X+sw,Y-h-1-(f%2),1,1,'#fff6c0')}
@@ -101,7 +101,7 @@ function propLights(L){for(const p of MAP.props){
 
 // sky life: clouds drift, birds cross, the far sea sparkles, tent fires flicker on Sinai
 function drawSkyLife(){
-  if(MAP.clouds)for(let i=0;i<5;i++){const span=W+140,cx=((i*131-S.cam*.06+S.t*(1.5+i*.6))%span+span)%span-70,cy=10+i*11+hs(i,3)*12|0;x.globalAlpha=.85;x.drawImage(MAP.clouds[i%3],Math.round(cx),cy);x.globalAlpha=1}
+  if(MAP.clouds)for(let i=0;i<5;i++){const span=W+140,cx=((i*131-S.cam*.06+S.t*(1.5+i*.6))%span+span)%span-70,cy=10+i*11+hs(i,3)*12|0;x.globalAlpha=.85;dl(x,MAP.clouds[i%3],Math.round(cx),cy);x.globalAlpha=1}
   if(!['getsemani','abismo','sinai'].includes(MAPID)){const per=26,ph=(S.t%per)/per;if(ph<.6){const k=ph/.6,bx=W+30-k*(W+90),by=34+Math.sin(S.t*.5)*6;
     for(let j=0;j<5;j++){const px=Math.round(bx+j*7),py=Math.round(by+Math.abs(j-2)*4+Math.sin(S.t*3+j)),w=(S.t*9+j|0)%2;r(px-2,py-w,2,1,'#2a1830');r(px,py,1,1,'#2a1830');r(px+1,py-w,2,1,'#2a1830')}}}
 }
@@ -112,3 +112,14 @@ function drawMidLife(){
   if(!MAP.midFires)return;const off=Math.round(S.cam*PAR[1]);
   for(const f of MAP.midFires){const sx=f.x-off;if(sx<-10||sx>W+10)continue;x.globalAlpha=.5+Math.sin(S.t*9+f.x)*.25+Math.random()*.15;r(sx-2,f.y,5,6,'#ffe0a0');x.globalAlpha=1}
 }
+
+// ---------- day levels: a blue sky with a real sun, and the parallax silhouettes washed in daylight haze
+function daySky(){const desert=!MAP.pal.grass;
+  skyGrad(desert?[[0,'#3f86d4'],[.6,'#94cbee'],[1,'#f6dfb2']]:[[0,'#3a86de'],[.55,'#86c4f2'],[1,'#d6efff']]);
+  C.globalAlpha=.1;for(let rr=30;rr>10;rr-=5)disc(300,42,rr,'#fff8d0');C.globalAlpha=1;disc(300,42,9,'#fff2b8');disc(299,41,7,'#ffffff');
+  if(MAPID==='sinai'){for(let i=0;i<W;i+=.5){const d=Math.abs(i-290),h=Math.max(0,150-d*.95-hs(i*2|0,3)*4);if(h>0)r(i,H-h-30,.5,h+30,i<290?'#c0a088':'#a0806c')}
+    blob(290,64,16,5,'#d8e4f0','#eef4fa','#ffffff',61)}
+}
+function dayTint(){const desert=!MAP.pal.grass;
+  [[FAR,desert?'#e0d0b8':'#a4cbe8',.72],[MID,desert?'#c0a07c':'#7cae86',.74],[NEAR,desert?'#7a5c40':'#3e7048',.62]].forEach(([c,col,a])=>{
+    const g=c.getContext('2d');g.save();g.setTransform(1,0,0,1,0,0);g.globalCompositeOperation='source-atop';g.globalAlpha=a;g.fillStyle=col;g.fillRect(0,0,c.width,c.height);g.restore()})}

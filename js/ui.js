@@ -126,7 +126,7 @@ addEventListener('pointerout',e=>{const c=e.target.closest&&e.target.closest('.c
 function showStory(){const st=STORY[MAPID];if(!st)return;const el=$('story');el.innerHTML=`<small>${MAP.name} · ${st[0]}</small><span>${st[1]}</span>`;el.hidden=false;
   el.classList.remove('show');void el.offsetWidth;el.classList.add('show');clearTimeout(showStory.t);showStory.t=setTimeout(()=>el.hidden=true,9000)}
 function menu(html,cards=[],onCard=null){
-  const m=$('menu'),st=m.scrollTop;m.innerHTML=html;m.hidden=false;m.scrollTop=st;
+  const m=$('menu'),st=m.scrollTop;m.innerHTML=html;m.hidden=false;m.scrollTop=st;m.classList.remove('scene');
   if(S&&S.state!=='title')S.state='menu';
   window.menuCards=cards;window.menuClick=onCard;
   if(typeof paintCards==='function')paintCards(m,cards);
@@ -147,7 +147,7 @@ function runBar(){return `<div class="runbar"><span>❤ <b>${RUN.hp}</b>/${RUN.m
 
 // ---------- title, characters, ascension
 function showTitle(){
-  if(!S||!S.node)blankBattle('eden');S.state='title';MUS.mode='calm';
+  if(!S||!S.node)blankBattle('eden',true);S.state='title';MUS.mode='calm';
   const saved=store.get('fds-run',null),today=todayKey(),best=META.daily[today];
   menu(`<div class="mbox"><small class="eyebrow">O fruto do Espírito · Gálatas 5:22-23</small><h1>Farm Defense Saga</h1>
     <p>Você é o lavrador. As obras da carne querem invadir o jardim. Atravesse três atos, do Éden ao Abismo, plantando cada fruto contra a obra que ele vence.</p>
@@ -389,13 +389,19 @@ function showWin(){
 }
 
 // ---------- codex and achievements
+// first time a work of the flesh shows up, the battle pauses and introduces it
+function foeIntro(k){const d=EN[k],el=$('foeintro');S.intro=k;sfx('horn');
+  el.innerHTML=`<div class="fi"><small>${d.boss?'Chefe':'Nova obra da carne'}</small><canvas width="48" height="48"></canvas><h3>${d.name}</h3><p>${d.desc}</p>${d.weak?`<p class="weak">Fraca contra <b>${CARDS[d.weak].name}</b>: dano 2,5 vezes maior.</p>`:''}<i>${d.ref||VICE_REF}</i><button class="btn" id="fiok">Entendi <small>Enter</small></button></div>`;
+  el.hidden=false;enemyIconTo(el.querySelector('canvas'),k);$('fiok').onclick=closeFoeIntro}
+function closeFoeIntro(){$('foeintro').hidden=true;S.intro=null;if(S.introQ&&S.introQ.length)foeIntro(S.introQ.shift())}
+const cardKnown=k=>META.unlocked.includes(k)||!!META.seen.c[k]||!!(CARDS[k].own&&META.chars[CARDS[k].own]);
 function showCodex(tab){
   const tabs={cartas:'Frutos e cartas',vizinhas:'Vizinhanças',inimigos:'Obras da carne',reliquias:'Relíquias',personagens:'Personagens'};let body='',cards=[];
-  if(tab==='cartas'){cards=Object.keys(CARDS).map(k=>mk(k));body=`<div class="grid">${cards.map(c=>{const I=info(c);return`<div class="cx">${cardHTML(c)}<i>${I.ref}</i></div>`}).join('')}</div>`}
+  if(tab==='cartas'){cards=Object.keys(CARDS).map(k=>mk(k,cardKnown(k)?{}:{locked:true}));body=`<p class="help">${cards.filter(c=>!c.locked).length} de ${cards.length} cartas descobertas. Vença fases para encontrar as outras.</p><div class="grid">${cards.map(c=>{const I=info(c);return`<div class="cx">${cardHTML(c)}<i>${c.locked?'???':I.ref}</i></div>`}).join('')}</div>`}
   if(tab==='vizinhas')body=`<p class="help">Árvores a até 72 passos de distância se ligam por ramos. Frutos diferentes juntos: +10% de dano. Perto de uma Videira: +25% (João 15:5). A Discórdia corta ramos ao passar por baixo.</p><div class="grid">${PAIRS.map(p=>`<div class="entry"><b>${p.name}</b><small>${CARDS[p.a].name} + ${CARDS[p.b].name}: ${p.desc}</small><i>${p.ref}</i></div>`).join('')}</div>`;
-  if(tab==='inimigos')body=`<div class="grid">${Object.entries(EN).filter(([,d])=>!d.hide).map(([k,d])=>`<div class="entry"><canvas width="48" height="48" data-enemy="${k}"></canvas><b>${d.name}</b><small>${d.desc}</small>${d.weak?`<small>Fraco contra: ${CARDS[d.weak].name}</small>`:''}<i>${d.ref||VICE_REF}</i></div>`).join('')}</div>`;
-  if(tab==='reliquias')body=`<div class="grid">${Object.entries(RELICS).map(([k,d])=>`<div class="entry"><canvas width="32" height="32" data-relic="${k}"></canvas><b>${d.name}</b><small>${d.desc}</small><i>${d.ref}</i></div>`).join('')}</div>`;
-  if(tab==='personagens')body=`<div class="grid">${Object.entries(CHARS).map(([k,c])=>`<div class="entry"><canvas width="32" height="40" data-char="${k}"></canvas><b>${c.name}${META.chars[k]?'':' · bloqueado'}</b><small>${c.desc}</small>${META.chars[k]?'':`<small>${c.hint}</small>`}<i>${c.ref}</i></div>`).join('')}</div>`;
+  if(tab==='inimigos')body=`<div class="grid cxg">${Object.entries(EN).filter(([,d])=>!d.hide).map(([k,d])=>META.seen.e[k]?`<div class="entry"><canvas width="48" height="48" data-enemy="${k}"></canvas><div><b>${d.name}</b><small>${d.desc}</small>${d.weak?`<small>Fraca contra: ${CARDS[d.weak].name}</small>`:''}<i>${d.ref||VICE_REF}</i></div></div>`:`<div class="entry unk"><canvas width="48" height="48" data-enemy="${k}"></canvas><div><b>???</b><small>Ainda não apareceu no seu jardim.</small></div></div>`).join('')}</div>`;
+  if(tab==='reliquias')body=`<div class="grid cxg">${Object.entries(RELICS).map(([k,d])=>META.seen.r[k]?`<div class="entry"><canvas width="32" height="32" data-relic="${k}"></canvas><div><b>${d.name}</b><small>${d.desc}</small><i>${d.ref}</i></div></div>`:`<div class="entry unk"><canvas width="32" height="32" data-relic="${k}"></canvas><div><b>???</b><small>Encontre na Jornada.</small></div></div>`).join('')}</div>`;
+  if(tab==='personagens')body=`<div class="grid cxg">${Object.entries(CHARS).map(([k,c])=>META.chars[k]?`<div class="entry"><canvas width="32" height="40" data-char="${k}"></canvas><div><b>${c.name}</b><small>${c.desc}</small><i>${c.ref}</i></div></div>`:`<div class="entry unk"><canvas width="32" height="40" data-char="${k}"></canvas><div><b>${c.name} · bloqueado</b><small>Como liberar: ${c.hint}</small></div></div>`).join('')}</div>`;
   menu(`<div class="mbox wide"><h2>Códex</h2><div class="row">${Object.entries(tabs).map(([k,t])=>`<button class="btn ghost ${k===tab?'act':''}" data-tab="${k}">${t}</button>`).join('')}</div>${body}<button class="btn" data-go="title">Voltar</button></div>`,cards);
   $('menu').querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>showCodex(b.dataset.tab));
   $('menu').querySelectorAll('canvas[data-char]').forEach(c=>charIconTo(c,c.dataset.char));
@@ -412,9 +418,10 @@ function frame(now){
   const rdt=Math.min(.033,(now-last)/1000);last=now;
   if(S){
     const dt=rdt*(S.slow>0?.28:1);S.slow=Math.max(0,S.slow-rdt);S.t+=dt;
+    if(S.state==='title'){S.cam=(Math.sin(S.t*.035-1.2)*.5+.5)*(MAP.ww-W);for(const t of S.tw)if(t)t.t+=dt}
     S.zoom+=((S.slow>0?1.7:1)-S.zoom)*Math.min(1,rdt*4);
     if(pr('KeyM'))setMuted(!muted);
-    if(S.state==='prep'||S.state==='wave'){if(S.stop>0)S.stop-=rdt;else update(dt)}
+    if(S.state==='prep'||S.state==='wave'){if(S.intro){if(pr('Enter','Space','KeyX'))closeFoeIntro()}else if(S.stop>0)S.stop-=rdt;else update(dt)}
     else if(S.state==='epilogue'){updPlayer(dt);if(Math.random()<dt*4)S.parts.push({x:S.cam+rnd(0,W+60),y:rnd(-10,60),vx:rnd(-22,-8),vy:rnd(8,16),g:0,life:9,max:9,c:pick(['#ffb0c8','#ffffff','#ffe36a']),s:1,sway:1});if(S.p.x>MAP.ww-70){S.state='menu';showWin()}}
     updFx(dt);draw();updHUD();
   }

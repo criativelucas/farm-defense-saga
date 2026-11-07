@@ -1,5 +1,5 @@
 // ---------- scenarios. Each is wider than the screen; slots are [x, y, soil].
-function skyGrad(stops){const g=C.createLinearGradient(0,0,0,H);stops.forEach(([p,c])=>g.addColorStop(p,c));C.fillStyle=g;C.fillRect(0,0,C.canvas.width,H)}
+function skyGrad(stops){const g=C.createLinearGradient(0,0,0,H);stops.forEach(([p,c])=>g.addColorStop(p,c));C.fillStyle=g;C.fillRect(0,0,C.canvas.width/(C.__k||1),H)}
 function stars(n,maxY,a,b){for(let i=0;i<n;i++)r(hs(i,11)*W,hs(i,12)*maxY,1,1,hs(i,13)>.8?a:b)}
 function moon(cx,cy,rad,c,d){for(let yy=-rad;yy<=rad;yy++){const w=Math.sqrt(rad*rad-yy*yy);r(cx-w,cy+yy,w*2,1,c)}r(cx-6,cy-6,4,3,d);r(cx+3,cy+3,3,3,d);r(cx-4,cy+6,2,2,d)}
 function oliveTree(tx,ty,c){r(tx-2,ty,4,26,c);r(tx-6,ty+8,4,2,c);r(tx+2,ty+4,5,2,c);blob(tx,ty-4,16,8,c,c,c,tx|0);blob(tx-10,ty+2,8,5,c,c,c,(tx|0)+3)}
@@ -124,14 +124,15 @@ const VIG=mkCanvas(W,H);{const g=VIG.getContext('2d'),gr=g.createRadialGradient(
 function gy(px){for(const s of MAP.seg)if(px>=s[0]&&px<s[1])return s[2];return MAP.seg[MAP.seg.length-1][2]}
 const inWater=px=>!!MAP.water&&px>=MAP.water[0]&&px<MAP.water[1];
 const inSea=px=>!!MAP.sea&&S&&!S.seaOpen&&px>=MAP.sea[0]&&px<MAP.sea[1];
-function buildMap(id){
-  MAPID=id;MAP=MAPS[id];MUS.world=id;
+function buildMap(id,day=false){
+  MAPID=id;MAP=MAPS[id];MUS.world=id;MAP.day=day;
   const lw=f=>Math.ceil(W+2+(MAP.ww-W)*f);MAP.midFires=[];
-  SKY=mkCanvas(W+1,H);FAR=mkCanvas(lw(PAR[0]),H);MID=mkCanvas(lw(PAR[1]),H);NEAR=mkCanvas(lw(PAR[2]),H);GROUND=mkCanvas(MAP.ww,H);
-  C=SKY.getContext('2d');MAP.sky();
-  C=FAR.getContext('2d');MAP.far(FAR.width);
-  C=MID.getContext('2d');MAP.mid(MID.width);
-  C=NEAR.getContext('2d');MAP.near(NEAR.width);
+  SKY=mkHD(W+1,H);FAR=mkHD(lw(PAR[0]),H);MID=mkHD(lw(PAR[1]),H);NEAR=mkHD(lw(PAR[2]),H);GROUND=mkHD(MAP.ww,H);
+  C=SKY.getContext('2d');(day?daySky:MAP.sky)();
+  C=FAR.getContext('2d');MAP.far(lw(PAR[0]));
+  C=MID.getContext('2d');MAP.mid(lw(PAR[1]));
+  C=NEAR.getContext('2d');MAP.near(lw(PAR[2]));
+  if(day)dayTint();
   C=GROUND.getContext('2d');drawGround();MAP.homeDraw();
   C=x;
   MAP.fgItems=MAP.fg(Math.ceil(MAP.ww*FGK+W));buildProps();
