@@ -1,8 +1,9 @@
 // ---------- gamepad: buttons become the same keys the keyboard uses
 // A pula · B golpe · X pisão · Y habilidade · LB/RB/LT/RT cartas 1-4 · Select chama a onda · Start pausa · direcional/analógico anda
 const PADMAP={0:'ArrowUp',1:'KeyX',2:'ArrowDown',3:'KeyC',4:'Digit1',5:'Digit2',6:'Digit3',7:'Digit4',8:'Enter',9:'Escape',12:'ArrowUp',13:'ArrowDown',14:'ArrowLeft',15:'ArrowRight'};
-let padPrev={};
-function pollPad(){const gp=navigator.getGamepads&&[...navigator.getGamepads()].find(Boolean);if(!gp){if(Object.keys(padPrev).length){for(const k in padPrev)keys.delete(k);padPrev={}}return}
+let padPrev={},padOff=false;
+// some embeds forbid gamepad access and throw; then we simply stop asking
+function pollPad(){if(padOff)return;let gp=null;try{gp=navigator.getGamepads&&[...navigator.getGamepads()].find(Boolean)}catch(e){padOff=true;return}if(!gp){if(Object.keys(padPrev).length){for(const k in padPrev)keys.delete(k);padPrev={}}return}
   const down={};gp.buttons.forEach((b,i)=>{if(b.pressed&&PADMAP[i])down[PADMAP[i]]=1});const ax=gp.axes[0]||0;if(ax<-.4)down.ArrowLeft=1;if(ax>.4)down.ArrowRight=1;
   for(const k of new Set([...Object.keys(down),...Object.keys(padPrev)])){if(down[k]&&!padPrev[k]){keys.add(k);hit.add(k);initAudio()}if(!down[k]&&padPrev[k])keys.delete(k)}
   padPrev=down}

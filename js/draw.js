@@ -281,7 +281,8 @@ function draw(){
   for(const e of S.en)if(!(e.dive>0))drawIntent(e);
   x.textAlign='center';
   for(const p of S.pops){const k=p.size>8?1+Math.max(0,.14-p.t)*5:1;x.globalAlpha=Math.min(1,(1-p.t/.9)*2);x.save();x.translate(p.x,p.y-p.t*22);x.scale(k,k);
-    x.font=`700 ${p.size}px "Pixelify Sans", monospace`;x.fillStyle='#000';x.fillText(p.txt,1,1);x.fillStyle=p.c;x.fillText(p.txt,0,0);x.restore()}
+    // floating numbers and words get a solid dark outline so they read over any background
+    x.font=`700 ${p.size}px "Pixelify Sans", monospace`;x.lineJoin='round';x.lineWidth=2.6;x.strokeStyle='#1a0806';x.strokeText(p.txt,0,0);x.fillStyle=p.c;x.fillText(p.txt,0,0);x.restore()}
   x.globalAlpha=1;
   x.restore();
   drawWater();
@@ -295,8 +296,8 @@ function draw(){
   x.translate(0,-VY);drawFG();
   x.restore();
   if(S.comboShow>0){const a=Math.min(1,S.comboShow*2),sc=1+Math.max(0,S.comboShow-.75)*2;x.globalAlpha=a;x.save();x.translate(W/2,92);x.scale(sc,sc);
-    x.font='700 26px "Pixelify Sans", monospace';x.fillStyle='#6a2a1a';x.fillText('x'+S.comboN,0,3);x.fillStyle='#f7c948';x.fillText('x'+S.comboN,0,0);
-    x.font='8px "Pixelify Sans", monospace';x.fillStyle='#fff3c0';x.fillText('ALELUIA +'+Math.min(S.comboN,25)*2+'% de dano',0,11);x.restore();x.globalAlpha=1}
+    x.font='700 26px "Pixelify Sans", monospace';x.lineJoin='round';x.lineWidth=4;x.strokeStyle='#1a0806';x.strokeText('x'+S.comboN,0,3);x.fillStyle='#a8401a';x.fillText('x'+S.comboN,0,3);x.strokeText('x'+S.comboN,0,0);x.fillStyle='#ffcb3a';x.fillText('x'+S.comboN,0,0);
+    x.font='700 8px "Pixelify Sans", monospace';x.lineWidth=2.5;x.strokeText('ALELUIA +'+Math.min(S.comboN,25)*2+'% de dano',0,11);x.fillStyle='#fff3c0';x.fillText('ALELUIA +'+Math.min(S.comboN,25)*2+'% de dano',0,11);x.restore();x.globalAlpha=1}
   if(live){const mw=120,mx=(W-mw)/2,my=5,k=mw/MAP.ww;
     x.fillStyle='rgba(10,6,18,.7)';x.fillRect(mx-1,my-1,mw+2,8);
     x.fillStyle='rgba(255,255,255,.18)';x.fillRect(Math.round(mx+S.cam*k),my,Math.round(W*k),6);
@@ -399,7 +400,7 @@ const TOOLS={
   forcado(R,sw,by){R(4+sw,-17+by,1,14,'#8a5236');R(3+sw,-18+by,3,1,'#9aa0b0');R(3+sw,-21+by,1,3,'#9aa0b0');R(4+sw,-21+by,1,3,'#9aa0b0');R(5+sw,-21+by,1,3,'#9aa0b0')},
   arado(R,sw,by){R(4,-10+by,6,1,'#8a5236');R(9,-9+by,1,5,'#8a5236');R(8,-4+by,4,2,'#9aa0b0');R(11,-5+by,1,1,'#d0d0d8')}
 };
-function toolIconTo(cvs,k){const g=cvs.getContext('2d');g.clearRect(0,0,32,32);C=g;g.save();g.translate(16,30);g.scale(2,2);g.translate(-8,-1);const R=(dx,dy,w,h,c)=>r(4+dx,dy,w,h,c);TOOLS[k](R,0,0);g.restore();C=x}
+function toolIconTo(cvs,k,sc=2){const g=hdCtx(cvs,32,32,4);C=g;g.save();g.translate(16,31);g.scale(sc,sc);g.translate(-8,-1);const R=(dx,dy,w,h,c)=>r(4+dx,dy,w,h,c);TOOLS[k](R,0,0);g.restore();C=x}
 function drawBarriers(){
   for(const m of S.muds){x.globalAlpha=Math.min(1,m.t);r(m.x-15,m.y-1,30,2,'#5a3a20');r(m.x-12,m.y-2,24,1,'#6a4428');if(Math.sin(S.t*3+m.x)>.7)r(m.x+rnd(-10,10),m.y-3,2,1,'#8a6a4a');x.globalAlpha=1}
   for(const f of S.fences){const X=f.x,Y=f.y,dmg=1-f.hp/f.max;r(X-5,Y-14,2,14,'#8a5a2a');r(X+3,Y-14,2,14,'#8a5a2a');r(X-6,Y-12,12,2,'#b07a40');r(X-6,Y-6,12,2,'#b07a40');r(X-5,Y-15,2,1,'#c9a060');r(X+3,Y-15,2,1,'#c9a060');

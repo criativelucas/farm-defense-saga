@@ -433,24 +433,27 @@ function showCodex(tab){
   if(tab==='inimigos')body=`<div class="grid cxg">${Object.entries(EN).filter(([,d])=>!d.hide).map(([k,d])=>META.seen.e[k]?`<div class="entry"><canvas width="48" height="48" data-enemy="${k}"></canvas><div><b>${d.name}</b><small>${d.desc}</small>${d.weak?`<small>Fraca contra: ${CARDS[d.weak].name}</small>`:''}<i>${d.ref||VICE_REF}</i></div></div>`:`<div class="entry unk"><canvas width="48" height="48" data-enemy="${k}"></canvas><div><b>???</b><small>Ainda não apareceu no seu jardim.</small></div></div>`).join('')}</div>`;
   if(tab==='reliquias')body=`<div class="grid cxg">${Object.entries(RELICS).map(([k,d])=>META.seen.r[k]?`<div class="entry"><canvas width="32" height="32" data-relic="${k}"></canvas><div><b>${d.name}</b><small>${d.desc}</small><i>${d.ref}</i></div></div>`:`<div class="entry unk"><canvas width="32" height="32" data-relic="${k}"></canvas><div><b>???</b><small>Encontre na Jornada.</small></div></div>`).join('')}</div>`;
   if(tab==='personagens')body=`<div class="grid cxg">${Object.entries(CHARS).map(([k,c])=>META.chars[k]?`<div class="entry"><canvas width="32" height="40" data-char="${k}"></canvas><div><b>${c.name}</b><small>${c.desc}</small><i>${c.ref}</i></div></div>`:`<div class="entry unk"><canvas width="32" height="40" data-char="${k}"></canvas><div><b>${c.name} · bloqueado</b><small>Como liberar: ${c.hint}</small></div></div>`).join('')}</div>`;
-  menu(`<div class="mbox wide"><h2>Códex</h2><div class="row">${Object.entries(tabs).map(([k,t])=>`<button class="btn ghost ${k===tab?'act':''}" data-tab="${k}">${t}</button>`).join('')}</div>${body}<button class="btn" data-go="title">Voltar</button></div>`,cards);
+  menu(`<div class="mbox wide book"><h2>Códex</h2><div class="row tabs">${Object.entries(tabs).map(([k,t])=>`<button class="btn ghost ${k===tab?'act':''}" data-tab="${k}">${t}</button>`).join('')}</div>${body}<button class="btn" data-go="title">Voltar</button></div>`,cards);
   $('menu').querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>showCodex(b.dataset.tab));
   $('menu').querySelectorAll('canvas[data-char]').forEach(c=>charIconTo(c,c.dataset.char));
 }
 function showAchs(){
-  menu(`<div class="mbox"><h2>Conquistas</h2><p class="help">Obras da carne derrotadas: ${META.stats.kills} · Jornadas vencidas: ${META.stats.wins}</p>
+  menu(`<div class="mbox wide cabin"><h2>Conquistas</h2><p class="help">Obras da carne derrotadas: ${META.stats.kills} · Jornadas vencidas: ${META.stats.wins}</p>
     <div class="grid">${Object.entries(ACH).map(([k,a])=>`<div class="entry ${META.ach[k]?'got':'locked'}"><b>${META.ach[k]?'✓ ':''}${a.name}</b><small>${a.desc}</small><i>${a.ref}</i></div>`).join('')}</div>
     <button class="btn" data-go="title">Voltar</button></div>`);
 }
 
 // ---------- loop and boot
 let last=performance.now();
-function frame(now){
+// one bad frame must never stop the game loop: errors are reported once and the next frame runs
+let frameErr=0;
+function frame(now){try{frameBody(now)}catch(e){if(frameErr++<3)console.error(e)}hit.clear();requestAnimationFrame(frame)}
+function frameBody(now){
   pollPad();
   const rdt=Math.min(.033,(now-last)/1000);last=now;
   if(S){
     if(live()&&pr('Escape','KeyP')&&!S.intro&&!S.dialog)togglePause();if(live()&&pr('KeyF'))toggleSpeed();
-    if(S.paused&&live()){draw();updHUD();hit.clear();requestAnimationFrame(frame);return}
+    if(S.paused&&live()){draw();updHUD();return}
     const dt=rdt*(S.slow>0?.28:1)*(live()?S.speed||1:1);S.slow=Math.max(0,S.slow-rdt);S.t+=dt;
     if(S.state==='title'){S.cam=(Math.sin(S.t*.035-1.2)*.5+.5)*(MAP.ww-W);for(const t of S.tw)if(t)t.t+=dt}
     if(S.state==='choose')for(const e of S.en)e.t+=dt*.6;
@@ -460,7 +463,6 @@ function frame(now){
     else if(S.state==='epilogue'){updPlayer(dt);if(Math.random()<dt*4)S.parts.push({x:S.cam+rnd(0,W+60),y:rnd(-10,60),vx:rnd(-22,-8),vy:rnd(8,16),g:0,life:9,max:9,c:pick(['#ffb0c8','#ffffff','#ffe36a']),s:1,sway:1});if(S.p.x>MAP.ww-70){S.state='menu';showWin()}}
     updFx(dt);draw();updHUD();
   }
-  hit.clear();requestAnimationFrame(frame);
 }
 $('timer').addEventListener('click',()=>callWave());
 (document.fonts?document.fonts.load('8px "Pixelify Sans"'):Promise.resolve()).catch(()=>{}).finally(()=>requestAnimationFrame(frame));

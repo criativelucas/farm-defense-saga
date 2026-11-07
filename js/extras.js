@@ -40,10 +40,11 @@ function ensureMissions(){const day=todayKey();if(META.missions&&META.missions.d
 function mission(k,n=1){const M=ensureMissions();for(const m of M.list)if(m.k===k&&m.p<m.n){m.p=Math.min(m.n,m.p+n);if(m.p>=m.n){toast('Missão cumprida!',m.t+' · receba no menu');sfx('ach')}saveMeta()}}
 const missionsReady=()=>ensureMissions().list.filter(m=>m.p>=m.n&&!m.got).length;
 function showMissions(){const M=ensureMissions();
-  menu(`<div class="mbox"><div class="topbar"><button class="btn ghost" data-go="hub">‹ Menu</button><h2>Missões do dia</h2>${coinsTag()}</div>
-    <p class="help">Três missões novas por dia. Cada uma vale ${MISSION_PAY} moedas.</p>
-    <div class="sheet vstats">${M.list.map((m,i)=>`<div class="stat"><b>${m.got?'✓ ':''}${m.t}</b><span>${m.p}/${m.n}</span><div class="meter g"><i style="width:${m.p/m.n*100}%"></i></div>
-      ${m.p>=m.n&&!m.got?`<button class="btn sm" data-claim="${i}" style="grid-column:1/-1">Receber ${MISSION_PAY} moedas</button>`:''}</div>`).join('')}</div></div>`);
+  menu(`<div class="mbox wide board"><div class="topbar"><button class="btn ghost" data-go="hub">‹ Menu</button><h2>Missões do dia</h2>${coinsTag()}</div>
+    <div class="notes">${M.list.map((m,i)=>`<div class="note ${m.got?'got':m.p>=m.n?'ready':''}" style="--tilt:${[-3,2,-1.5][i]}deg"><i class="pin"></i><b>${m.t}</b>
+      <div class="xp"><i style="width:${m.p/m.n*100}%"></i></div><small>${m.p} de ${m.n}</small>
+      ${m.got?'<span class="stamp">feito!</span>':m.p>=m.n?`<button class="btn sm" data-claim="${i}">Receber ${MISSION_PAY}</button>`:`<span class="reward">${MISSION_PAY} moedas</span>`}</div>`).join('')}</div>
+    <p class="help">Três missões novas por dia, pregadas no quadro da fazenda.</p></div>`);
   paintCoins();$('menu').querySelectorAll('[data-claim]').forEach(b=>b.onclick=()=>{const m=M.list[+b.dataset.claim];m.got=true;META.coins+=MISSION_PAY;saveMeta();sfx('coin');showMissions()})}
 
 // ---------- the garden feeds the battle: growing pots give starting maná

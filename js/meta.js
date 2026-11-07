@@ -44,7 +44,7 @@ function showHub(){
   menu(`<div class="farmhub">
     <div class="logo"><img src="assets/logo.png" alt="Farm Defense Saga" width="720" height="606"></div>
     <div class="welcome"><b>Bem-vindo de volta,</b><span>${CHARS[META.char].name}!</span>${coinsTag()}</div>
-    <div class="barn"><canvas id="barnc" width="600" height="600"></canvas><div class="planks">
+    <div class="barn"><canvas id="barnc" width="600" height="780"></canvas><div class="planks">
       ${plank('aventura','Aventura',next?'fase '+next.id:'tudo vencido!')}
       ${plank('jornada','Jornada',jornadaOpen()?'desafio em 3 atos':'vença Jericó 2-4',!jornadaOpen())}
       ${plank('jardim','Estufa',gardenOpen()?'plante e colha':'vença Éden 1-4',!gardenOpen())}
@@ -55,23 +55,29 @@ function showHub(){
   $('menu').querySelectorAll('canvas[data-prop]').forEach(c=>propIconTo(c,c.dataset.prop));
   $('menu').querySelectorAll('[data-hub]').forEach(b=>{b.onmouseenter=()=>sfx('hit');b.onclick=()=>{initAudio();sfx('card');({aventura:showWorld,jardim:showGarden,arvore:showTree,intro:()=>showIntro(0),config:showConfig,loja:()=>showShop2('ferramentas'),personagem:showLavrador,jornada:showJornada,missoes:showMissions,codex:()=>showCodex('caminho'),conquistas:showAchs})[b.dataset.hub]()}});
 }
-// a red barn with a gambrel roof, white trim, a hayloft and a rooster on the vane
-function barnArt(){const g=hdCtx($('barnc'),200,200,3);C=g;
-  const red='#b8322a',dk='#7a1e1a',lt='#d84a3a',wh='#f4ecdc';
-  for(let y=34;y<200;y++){const w=y<70?Math.round(40+(y-34)*1.6):98;r(100-w,y,w*2,1,y<70?'#5a4a48':red)}
-  for(let y=36;y<70;y+=4)for(let x0=100-(40+(y-34)*1.6);x0<100+(40+(y-34)*1.6);x0+=8)r(x0+((y/4|0)%2)*4,y,7,1,'#6a5a58');
-  for(let i=0;i<2;i++){const x0=i?150:8;r(x0,70,42,130,red)}r(2,70,196,130,red);for(let x0=6;x0<196;x0+=8)r(x0,72,1,128,dk);
-  r(2,70,196,4,wh);r(2,70,4,130,wh);r(194,70,4,130,wh);
-  // hayloft
-  r(80,82,40,30,'#3a1a10');r(80,82,40,3,wh);r(80,82,3,30,wh);r(117,82,3,30,wh);for(let i=0;i<12;i++)r(84+i*3,104-((i*7)%6),2,8,'#e8c050');
-  // big doors with white X braces
-  r(46,150,108,50,dk);r(46,150,108,4,wh);r(46,150,4,50,wh);r(150,150,4,50,wh);r(98,150,4,50,wh);
-  for(let k=0;k<44;k++){r(50+k*1.1,154+k,3,2,wh);r(94-k*1.1,154+k,3,2,wh);r(102+k*1.1,154+k,3,2,wh);r(146-k*1.1,154+k,3,2,wh)}
-  // weathervane with a rooster
-  r(99,6,2,30,'#3a3a3a');r(92,20,16,1,'#3a3a3a');r(94,8,10,6,'#2a2a2a');r(103,5,3,4,'#c8302a');r(91,10,4,4,'#2a2a2a');
-  // ivy creeping up the left corner and flowers at the base
-  for(let j=0;j<60;j++)if(hs(j,4)>.35)r(4+Math.sin(j*.3)*3+hs(j,5)*6,198-j*1.6,3,2,j%3?'#3a8a3a':'#5fae4a');
-  for(let i=0;i<12;i++)r(10+i*16,196,3,3,['#ffe36a','#ff8ab0','#ffffff'][i%3]);
+// a two-storey red barn: gambrel roof in slate, white trim, hayloft door and windows upstairs, big braced doors below
+function barnArt(){const g=hdCtx($('barnc'),200,260,3);C=g;
+  const red='#b8322a',dk='#8a2420',lt='#cc4436',wh='#f4ecdc',wd='#c8bca8',sl='#4a4a62',sl2='#5c5c78';
+  r(16,58,168,202,red);for(let x0=20;x0<182;x0+=6){r(x0,58,1,202,dk);r(x0+1,58,1,202,lt)}
+  // gambrel roof: steep lower slopes, shallow upper slopes, shingles, white fascia
+  const roofY=x0=>{const d=Math.abs(x0-100);return d<70?12+d*.42:12+70*.42+(d-70)*2.6};
+  for(let x0=2;x0<198;x0+=.5){const y0=roofY(x0);r(x0,y0,.5,Math.max(0,62-y0+(Math.abs(x0-100)>88?10:0)),sl)}
+  for(let row=0;row<14;row++)for(let x0=4+(row%2)*5;x0<196;x0+=10){const y0=roofY(x0)+3+row*4;if(y0<64+(Math.abs(x0-100)>88?8:0))r(x0,y0,8,1,sl2)}
+  for(let x0=2;x0<198;x0+=.5)r(x0,roofY(x0)-1.5,.5,2,wh);
+  r(14,58,172,4,wh);r(14,58,4,202,wh);r(182,58,4,202,wh);r(14,146,172,4,wh);
+  // upstairs: hayloft door with an X, two four-pane windows
+  r(80,70,40,62,'#5a1a14');r(80,70,40,3,wh);r(80,129,40,3,wh);r(80,70,3,62,wh);r(117,70,3,62,wh);
+  for(let k=0;k<56;k++){r(83+k*.6,73+k,2,2,wh);r(115-k*.6,73+k,2,2,wh)}for(let i=0;i<8;i++)r(86+i*4,124-((i*5)%5),3,6,'#e8c050');
+  for(const wx of[30,146]){r(wx,84,24,28,wh);r(wx+3,87,18,22,'#2a3a5a');r(wx+11,87,2,22,wh);r(wx+3,97,18,2,wh);r(wx+4,88,6,3,'#7a9ac8')}
+  // downstairs: big double doors with diagonal braces, small side doors
+  r(54,166,92,94,dk);r(54,166,92,4,wh);r(54,166,4,94,wh);r(142,166,4,94,wh);r(98,166,4,94,wh);
+  for(let k=0;k<88;k++){r(58+k*.45,170+k,3,2,wh);r(102+k*.45,170+k,3,2,wh)}
+  for(const sx of[22,152]){r(sx,190,26,70,dk);r(sx,190,26,3,wh);r(sx,190,3,70,wh);r(sx+23,190,3,70,wh);r(sx+10,214,6,6,'#2a3a5a')}
+  // weathervane and a rooster on the ridge
+  r(99,0,2,13,'#2a2a2a');r(93,5,14,1,'#2a2a2a');r(95,0,8,4,'#1a1a1a');r(103,-1,3,3,'#c8302a');
+  // ivy and flowers at the base, two hay bales by the door
+  for(let j=0;j<90;j++)if(hs(j,4)>.35)r(17+Math.sin(j*.3)*3+hs(j,5)*6,258-j*1.5,3,2,j%3?'#3a8a3a':'#5fae4a');
+  for(const hx of[36,150]){r(hx,246,18,14,'#e8c050');r(hx,246,18,2,'#fff0a0');for(let i=hx+2;i<hx+18;i+=4)r(i,248,1,12,'#c8a030')}
   C=x}
 function propIconTo(cvs,k){const g=hdCtx(cvs,48,48,3);C=g;
   if(k==='codex'){r(8,14,32,26,'#6a2a1a');r(10,12,30,26,'#9a3a24');r(10,12,30,2,'#c05a3a');r(36,14,4,24,'#e8d8b0');r(14,18,18,3,'#f7c948');r(14,24,14,2,'#e8c890');r(14,28,16,2,'#e8c890');r(8,38,32,3,'#4a1a10')}
@@ -247,7 +253,7 @@ function sheetHTML(){
     <div class="sheet"><h4>Equipamento</h4><div class="slots">${slot(`<canvas width="32" height="32" data-tool="${META.weapon}"></canvas>`,w.name,'Golpe · X')}
     ${Object.entries(ITEMS).map(([k,it])=>slot(`<canvas width="32" height="32" data-bar="${k}"></canvas>`,it.name,'×'+(META.items[k]||0)+' · tecla '+it.key,!META.items[k])).join('')}</div></div></div>`}
 function showLavrador(){
-  const render=()=>{menu(`<div class="mbox"><div class="topbar"><button class="btn ghost" data-go="hub">‹ Menu</button><h2>O lavrador</h2>${coinsTag()}</div>
+  const render=()=>{menu(`<div class="mbox wide cabin"><div class="topbar"><button class="btn ghost" data-go="hub">‹ Menu</button><h2>O lavrador</h2>${coinsTag()}</div>
     ${sheetHTML()}
     <div class="sec"><h3>Personagem</h3><div class="grid g5">${Object.entries(CHARS).map(([k,c])=>{const ok=META.chars[k];return`<button type="button" class="pick ${META.char===k?'on':''} ${ok?'':'locked'}" data-ch="${k}" ${ok?'':'disabled'}>
       <canvas width="32" height="40" data-char="${k}"></canvas><b>${c.name}</b><small>${ok?c.desc:'Bloqueado: '+c.hint}</small>${ok&&c.card?`<small>Carta: ${CARDS[c.card].name}</small>`:''}</button>`}).join('')}</div></div>
@@ -311,13 +317,13 @@ function showShop2(tab){
   const pg=pages[shopPage],locked=Object.keys(SHOP_AT).filter(k=>!shopOpen(k));
   menu(`<div class="quitanda"><canvas id="qbg" width="960" height="540"></canvas>
     <div class="qsign">Quitanda do Boaz</div>
-    <div class="qboaz"><canvas id="qboazc" width="256" height="320"></canvas><div class="qbubble" id="qbub">${pick(BOAZ)}</div></div>
+    <div class="qboaz"><canvas id="qboazc" width="256" height="384"></canvas><div class="qbubble" id="qbub">${pick(BOAZ)}</div></div>
     <div class="qshelf">${pg.items.map(it=>`<button type="button" class="qitem ${it.owned?'owned':''} ${!it.owned&&META.coins<it.price?'poor':''} ${it.rare?'rare':''}" data-buy="${it.id}" ${it.owned?'disabled':''}>
       <canvas width="32" height="32" data-si="${it.icon.join(':')}"></canvas><small>${it.name}</small><span class="tag">${it.owned?'✓ tem':it.price}</span></button>`).join('')||'<p class="qempty">Prateleira vazia por enquanto.</p>'}</div>
     <button type="button" class="qarrow prev" id="qprev" ${shopPage?'':'disabled'}>‹</button><button type="button" class="qarrow next" id="qnext" ${shopPage<pages.length-1?'':'disabled'}>›</button>
     <div class="qfoot"><button class="btn ghost" data-go="hub">‹ Menu</button><span class="qpage">${SHOP_NAME[pg.tab]} · página ${shopPage+1} de ${pages.length}${locked.length?' · mais prateleiras abrem com as fases':''}</span>${coinsTag()}</div></div>`);
   paintCoins();quitandaArt();
-  $('menu').querySelectorAll('canvas[data-si]').forEach(c=>{const[t,...k]=c.dataset.si.split(':');const kk=k.join(':');if(t==='tool')toolIconTo(c,kk);else if(t==='bar')barrierIconTo(c,kk);else if(t==='card'){const g=hdCtx(c,32,32);C=g;drawTower(kk,16,30,1,null,1);C=x}else shopIconTo(c,kk)});
+  $('menu').querySelectorAll('canvas[data-si]').forEach(c=>{const[t,...k]=c.dataset.si.split(':');const kk=k.join(':');if(t==='tool')toolIconTo(c,kk,2.3);else if(t==='bar')barrierIconTo(c,kk);else if(t==='card'){const g=hdCtx(c,32,32);C=g;drawTower(kk,16,30,1,null,1);C=x}else shopIconTo(c,kk)});
   const bub=$('qbub'),all=pg.items;
   $('menu').querySelectorAll('[data-buy]').forEach(b=>{const it=all.find(i=>i.id===b.dataset.buy);
     b.onmouseenter=()=>{bub.innerHTML=`<b>${it.name}</b><br>${it.desc}`};b.onmouseleave=()=>{bub.textContent=pick(BOAZ)};
@@ -337,10 +343,27 @@ function quitandaArt(){let g=hdCtx($('qbg'),480,270,2);C=g;
   const crate=(cx,cy,c1,c2)=>{r(cx-16,cy-12,32,16,'#c8925a');r(cx-16,cy-12,32,2,'#e0b07a');r(cx-16,cy-4,32,1,'#8a5a30');for(let i=0;i<7;i++)disc(cx-12+i*4,cy-14+(i%2),3,i%2?c1:c2)};
   crate(150,245,'#e0284a','#ff6a6a');crate(120,258,'#f7c948','#ffe08a');crate(458,252,'#5fae4a','#9fe070');crate(30,250,'#9b4be0','#c58cff');
   C=x;
-  // Boaz: a broad farmer with a beard and a headscarf, drawn at 4 pixels per unit
-  g=hdCtx($('qboazc'),64,80,4);C=g;const kr=RUN;CHARS.boaz={pal:{tunic:'#5a7a3a',hat:null,band:null,hair:'#6a3a1a',beard:'#7a4a22',scarf:'#e8d8b0'}};RUN={char:'boaz'};
-  g.save();g.translate(32,78);g.scale(3,3);g.translate(-32,-78);drawGardener({face:1,x:32,y:78,vx:0,vy:0,on:true,sq:1,anim:0,slam:false,stun:0,inv:0,faint:0,swing:0});g.restore();
-  delete CHARS.boaz;RUN=kr;C=x}
+  // Boaz, drawn by hand at a finer scale: striped headscarf, full beard, robe and mantle, a basket of fruit
+  g=hdCtx($('qboazc'),64,96,4);C=g;OV='#1a0c06';for(const[ox,oy]of[[-1,0],[1,0],[0,-1],[0,1]]){g.translate(ox,oy);drawBoaz();g.translate(-ox,-oy)}OV=null;drawBoaz();C=x}
+function drawBoaz(){const sk='#e0a878',skd='#c08058',rb='#5a7a3a',rbd='#3e5a28',rbl='#7a9a50',mt='#8a5a34',mtd='#6a3e22',bd='#7a4a22',bdl='#9a6230';
+  r(20,90,10,4,'#5a3a20');r(34,90,10,4,'#5a3a20');r(20,92,10,2,'#3a2414');r(34,92,10,2,'#3a2414');
+  r(18,40,28,52,rb);r(18,40,4,52,rbd);r(40,44,3,46,rbl);for(const fx of[26,32,37])r(fx,64,1,26,rbd);r(17,88,30,3,rbd);
+  r(12,38,10,46,mt);r(42,38,10,46,mt);r(12,38,3,46,mtd);r(49,40,2,42,'#a8744a');r(12,82,10,3,mtd);r(42,82,10,3,mtd);
+  r(18,58,28,4,'#c8a040');r(18,58,28,1,'#f0d070');for(let i=0;i<5;i++)r(36+i*2,62,1,4,'#c8a040');
+  r(11,48,8,16,mt);r(45,48,8,16,mt);r(12,62,7,5,sk);r(45,62,7,5,sk);
+  // basket of fruit held in front
+  r(16,62,32,14,'#c89a5a');for(let j=64;j<76;j+=3)for(let i=17;i<47;i+=4)r(i+((j/3|0)%2)*2,j,2,1,'#a87a3a');r(15,61,34,2,'#a87a3a');
+  [[20,'#7b2fbf'],[25,'#e0284a'],[30,'#f7c948'],[35,'#e0284a'],[40,'#5fae4a'],[44,'#7b2fbf']].forEach(([fx,c],k)=>{disc(fx,59-(k%2),3,c);r(fx-1,57-(k%2),1,1,'#ffffff')});
+  // head, face, beard
+  r(22,16,20,22,sk);r(22,16,3,22,skd);r(38,20,4,14,skd);
+  r(25,22,5,2,'#5a3418');r(34,22,5,2,'#5a3418');r(26,25,3,3,'#ffffff');r(35,25,3,3,'#ffffff');r(27,26,2,2,'#2a1a10');r(36,26,2,2,'#2a1a10');r(27,26,1,1,'#ffffff');
+  r(31,27,3,5,skd);r(31,31,4,1,'#a86040');r(24,29,3,2,'#f09080');r(37,29,3,2,'#f09080');
+  r(21,31,22,14,bd);r(23,44,18,4,bd);r(26,47,12,3,bd);r(24,32,4,10,bdl);r(36,33,3,8,bdl);r(28,33,8,3,'#5a3418');r(29,36,6,2,'#c8505a');r(30,36,4,1,'#ffffff');
+  // keffiyeh with red stripes and a dark cord
+  r(18,8,28,12,'#efe4cc');for(let i=19;i<46;i+=5)r(i,9,2,10,'#c03a2a');r(16,16,6,26,'#efe4cc');r(42,16,6,26,'#efe4cc');for(let j=18;j<42;j+=5){r(16,j,6,1,'#c03a2a');r(42,j,6,1,'#c03a2a')}
+  r(18,14,28,3,'#2a1a10');r(18,14,28,1,'#5a4030');r(20,8,24,1,'#ffffff');
+}
+
 
 // ---------- garden: pots that grow in real time, and the tree of life
 const TREE_REWARDS=[null,{coins:150,txt:'150 moedas'},{items:{cerca:4},txt:'4 cercas'},{rare:1,txt:'uma carta consagrada no celeiro'},{heart:1,txt:'+1 coração em toda batalha'},
@@ -350,7 +373,7 @@ function potAdvance(p){const P=GPLANTS[p.k],now=Date.now();while(p.watered&&p.st
 
 // ---------- settings
 function showConfig(){let armed=false;
-  const render=()=>{menu(`<div class="mbox"><div class="topbar"><button class="btn ghost" data-go="hub">‹ Menu</button><h2>Configurações</h2><span></span></div>
+  const render=()=>{menu(`<div class="mbox cabin"><div class="topbar"><button class="btn ghost" data-go="hub">‹ Menu</button><h2>Configurações</h2><span></span></div>
     <div class="cfg"><label>Música <input type="range" id="cmus" min="0" max="1" step="0.05" value="${CFG.mus}"></label>
     <label>Efeitos <input type="range" id="csfx" min="0" max="1" step="0.05" value="${CFG.sfx}"></label>
     <label class="chk"><input type="checkbox" id="clite" ${CFG.lite?'checked':''}> Modo leve <small>sem brilho, neblina e distorção; para aparelhos mais fracos</small></label>
