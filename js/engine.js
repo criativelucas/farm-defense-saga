@@ -53,18 +53,20 @@ function initAudio(){
     MUSG=AC.createGain();MUSG.gain.value=CFG.mus;SFXG=AC.createGain();SFXG.gain.value=CFG.sfx;SFXG.connect(MASTER);
     // music goes through a soft low-pass and a short echo, so the square waves sound warm instead of buzzy
     const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=2600;const dl2=AC.createDelay();dl2.delayTime.value=.27;const fb=AC.createGain();fb.gain.value=.28;const wet=AC.createGain();wet.gain.value=.22;
-    MUSG.connect(lp);lp.connect(MASTER);lp.connect(dl2);dl2.connect(fb);fb.connect(dl2);dl2.connect(wet);wet.connect(MASTER)}catch(e){AC=null}}
+    MUSG.connect(lp);lp.connect(MASTER);lp.connect(dl2);dl2.connect(fb);fb.connect(dl2);dl2.connect(wet);wet.connect(MASTER);loadAudio()}catch(e){AC=null}}
   else if(AC.state==='suspended')AC.resume();
 }
 function setMuted(m){muted=m;if(MASTER)MASTER.gain.value=m?0:.9}
 const lastS={};
-const SND={jump:[320,640,.08,'square',.04],slam:[200,40,.2,'sawtooth',.09],hit:[520,300,.04,'square',.025],kill:[600,1200,.09,'triangle',.06],
+const SND={bleat:[400,300,.4,'square',.05],splash:[900,200,.25,'sine',.05],thunder:[90,40,.9,'sawtooth',.08],sling:[600,1200,.15,'triangle',.04],pop:[900,1500,.08,'triangle',.04],jump:[320,640,.08,'square',.04],slam:[200,40,.2,'sawtooth',.09],hit:[520,300,.04,'square',.025],kill:[600,1200,.09,'triangle',.06],
   coin:[900,1600,.06,'square',.03],plant:[300,900,.18,'triangle',.07],beam:[1300,180,.28,'sawtooth',.05],hurt:[160,60,.3,'square',.08],
   super:[200,1400,.35,'triangle',.08],no:[220,140,.14,'square',.05],wave:[220,440,.4,'triangle',.06],horn:[180,240,.6,'sawtooth',.08],card:[600,900,.06,'triangle',.05],
   stone:[140,70,.2,'square',.07],wind:[400,200,.3,'sine',.05],heal:[500,1000,.3,'sine',.05],ach:[700,1400,.4,'triangle',.07]};
 // a noisy layer under the tone gives hits, stomps and stones some body
 const NOISY={hit:[2400,.04,.05],kill:[1800,.08,.07],slam:[300,.22,.25],stone:[500,.12,.12],plant:[900,.08,.06],hurt:[600,.12,.08],wind:[1200,.3,.06]};
 function sfx(n){if(!AC||muted)return;const now=AC.currentTime;if(lastS[n]&&now-lastS[n]<.035)return;lastS[n]=now;
+  if(AUD.sfx[n]){const s=AC.createBufferSource();s.buffer=AUD.sfx[n];s.playbackRate.value=.95+Math.random()*.1;s.connect(SFXG||MASTER);s.start(now);return}
+  if(!SND[n])return;
   const P=SND[n],o=AC.createOscillator(),g=AC.createGain(),j=1+(Math.random()-.5)*.1;o.type=P[3];
   o.frequency.setValueAtTime(P[0]*j,now);o.frequency.exponentialRampToValueAtTime(P[1]*j,now+P[2]);
   const N=NOISY[n];if(N){if(!NOISE)drum(now,0,1);const s=AC.createBufferSource(),bp=AC.createBiquadFilter(),v=AC.createGain();s.buffer=NOISE;bp.type='bandpass';bp.frequency.value=N[0];
@@ -90,6 +92,7 @@ function drum(t,g,f){if(!NOISE){NOISE=AC.createBuffer(1,AC.sampleRate*.3|0,AC.sa
 const PROG=[0,5,3,4];
 function musicTick(){
   if(!AC||muted||AC.state!=='running')return;
+  if(AUD.mode==='files')return musicFiles();
   const boss=MUS.mode==='boss',wave=MUS.mode==='wave',ms=MSTYLE[MUS.world]||MSTYLE.eden,spb=60/(boss?120:wave?ms.t*1.12:ms.t)/2,mel=melody(MUS.world);
   if(MUS.next<AC.currentTime)MUS.next=AC.currentTime+.05;
   while(MUS.next<AC.currentTime+.25){
@@ -106,6 +109,28 @@ function musicTick(){
   }
 }
 setInterval(musicTick,50);
+
+// ---------- recorded music and effects (assets/audio, made by tools/audio/compose.py)
+// Effects load up front (they are tiny); music tracks load when first needed. If anything fails, the synth above takes over.
+const AUD={mode:'synth',sfx:{},buf:{},loading:{},meta:null,cur:null};
+const AUD_SFX=['jump','slam','hit','kill','coin','plant','beam','hurt','super','no','horn','wave','card','stone','wind','heal','ach','bleat','splash','thunder','sling','pop'];
+async function loadAudio(){if(AUD.meta)return;AUD.meta={};
+  const get=async f=>{const r=await fetch('assets/audio/'+f);if(!r.ok)throw new Error(f);return AC.decodeAudioData(await r.arrayBuffer())};
+  try{AUD.meta=await (await fetch('assets/audio/music.json')).json();AUD.mode='files'}catch(e){AUD.mode='synth';return}
+  AUD_SFX.forEach(n=>get('sfx-'+n+'.wav').then(b=>AUD.sfx[n]=b).catch(()=>{}))}
+function trackBuf(k){if(AUD.buf[k])return AUD.buf[k];if(!AUD.loading[k]){AUD.loading[k]=1;fetch('assets/audio/'+k+'.mp3').then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()}).then(a=>AC.decodeAudioData(a)).then(b=>AUD.buf[k]=b).catch(()=>{if(!/perc|vitoria|derrota/.test(k))AUD.mode='synth'})}return null}
+function wantedTrack(){if(MUS.mode==='boss')return'chefe';if(MUS.scene)return MUS.scene;const w=MUS.world==='abismo'?'mar':MUS.world;return AUD.meta.loops&&AUD.meta.loops[w]?w:'titulo'}
+function loopSource(buf,L,dest,when){const s=AC.createBufferSource();s.buffer=buf;s.loop=true;let lead=0;const d=buf.getChannelData(0);while(lead<4000&&Math.abs(d[lead])<1e-3)lead++;
+  s.loopStart=lead/buf.sampleRate;s.loopEnd=Math.min(buf.duration,s.loopStart+L);s.connect(dest);s.start(when,s.loopStart);return s}
+function musicFiles(){const k=wantedTrack(),now=AC.currentTime,cur=AUD.cur;
+  if(!cur||cur.k!==k){const buf=trackBuf(k);if(!buf)return;const hasPerc=(AUD.meta.perc||[]).includes(k),pbuf=hasPerc?trackBuf(k+'-perc'):null;if(hasPerc&&!pbuf)return;
+    if(cur){cur.g.gain.setTargetAtTime(0,now,.4);const old=cur;setTimeout(()=>{try{old.s.stop();old.p&&old.p.stop()}catch(e){}},2500)}
+    const g=AC.createGain(),pg=AC.createGain();g.gain.value=0;g.gain.setTargetAtTime(1,now+.05,.5);pg.gain.value=0;pg.connect(g);g.connect(MUSG);
+    const L=AUD.meta.loops[k],when=now+.06;AUD.cur={k,g,pg,s:loopSource(buf,L,g,when),p:pbuf?loopSource(pbuf,L,pg,when):null}}
+  // drums come in during a wave and fade out between waves
+  const c=AUD.cur;if(c&&c.p){const want=MUS.mode==='wave'||MUS.mode==='boss'?.9:0;if(Math.abs(c.pg.gain.value-want)>.01)c.pg.gain.setTargetAtTime(want,now,.6)}}
+function playJingle(k){if(!AC||muted||AUD.mode!=='files')return;const b=trackBuf(k);if(!b)return;const s=AC.createBufferSource();s.buffer=b;s.connect(MUSG);s.start();
+  if(AUD.cur){const g=AUD.cur.g.gain,t=AC.currentTime;g.setTargetAtTime(.2,t,.1);g.setTargetAtTime(1,t+b.duration,.8)}}
 
 // ---------- input
 const keys=new Set(),hit=new Set();

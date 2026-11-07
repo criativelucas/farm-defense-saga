@@ -1,0 +1,22 @@
+{
+ "loops": {
+  "titulo": 45.7143,
+  "eden": 43.6364,
+  "jerico": 39.1837,
+  "mar": 42.6667,
+  "sinai": 50.5263,
+  "babel": 36.9231,
+  "getsemani": 58.1818,
+  "estufa": 50.5263,
+  "chefe": 32.0,
+  "tumulo": 53.3333
+ },
+ "perc": [
+  "eden",
+  "jerico",
+  "mar",
+  "sinai",
+  "babel",
+  "chefe"
+ ]
+}

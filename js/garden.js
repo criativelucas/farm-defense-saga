@@ -127,7 +127,7 @@ function gardenBar(){const G=META.garden,el=$('gbar');if(!el)return;const cnt={a
   $('gcoins').textContent=META.coins}
 function showGarden(){
   clearInterval(wmapTimer);if(!gardenOpen()){toast('O jardim abre ao vencer a fase 1-4');return}
-  const G=META.garden;while(G.pots.length<G.potsN)G.pots.push(null);if(G.spray==null){G.spray=3;G.mel=1;G.seeds['t:videira']=(G.seeds['t:videira']||0)+1}
+  MUS.scene='estufa';const G=META.garden;while(G.pots.length<G.potsN)G.pots.push(null);if(G.spray==null){G.spray=3;G.mel=1;G.seeds['t:videira']=(G.seeds['t:videira']||0)+1}
   // coins the happy trees dropped while you were away (up to 3 each)
   const now=Date.now(),away=now-(G.lastVisit||now);G.lastVisit=now;gDrops=[];
   if(away>25000)G.pots.forEach((p,i)=>{if(p&&isTree(p.k)&&p.stage>=3&&(p.happy||0)>now-away){const n=Math.min(3,Math.floor(Math.min(away,(p.happy-(now-away)))/25000));const sp=GSPOTS[i];for(let k=0;k<n;k++)gDrops.push({i,x:sp.x+rnd(-14,14)*sp.s,y:sp.y+4*sp.s,vy:0,yy:0,gold:Math.random()<.12,t:0})}});

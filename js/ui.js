@@ -437,7 +437,7 @@ $('timer').addEventListener('click',()=>callWave());
 // the loop starts once every script has loaded (scripts after this one define parts of a frame) and the pixel font is ready
 addEventListener('load',()=>(document.fonts?document.fonts.load('8px "Pixelify Sans"'):Promise.resolve()).catch(()=>{}).finally(()=>requestAnimationFrame(frame)));
 
-function startEpilogue(){hideMenu();blankBattle('tumulo');S.state='epilogue';MUS.mode='calm';banner('A manhã do primeiro dia','João 20:1');showStory()}
+function startEpilogue(){hideMenu();MUS.scene=null;blankBattle('tumulo');S.state='epilogue';MUS.mode='calm';banner('A manhã do primeiro dia','João 20:1');showStory()}
 
 function renderItems(){const el=$('itembar');if(!el)return;const A=ABIL[(RUN&&RUN.char)||META.char]||ABIL.lavrador;el.innerHTML=Object.entries(ITEMS).filter(()=>sysOn('barriers')).map(([k,it])=>`<button type="button" class="itm ${META.items[k]?'':'empty'}" data-itm="${k}" title="${it.name}: ${it.desc}"><canvas width="32" height="32" data-bar="${k}"></canvas><b>${META.items[k]||0}</b><small>${it.key}</small></button>`).join('')+
   `<button type="button" class="itm atk" id="atkbtn" title="Golpe com a ferramenta (X)"><canvas width="32" height="32" data-tool="${META.weapon}"></canvas><b>X</b><small>golpe</small></button>`+

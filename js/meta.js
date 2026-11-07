@@ -36,7 +36,7 @@ function hubIconTo(cvs,k){const g=hdCtx(cvs,32,32);C=g;
 function showHub(){
   if(!S||S.state!=='title'){blankBattle('eden',true);S.state='title';
     [['roma',1],['tamareira',4],['oliveira',6],['videira',9],['amendoeira',11]].forEach(([k,i])=>{if(!MAP.slots[i])return;plantAt(i,[k],false,0);Object.assign(S.tw[i],{grow:1,water:3,szv:1,lvl:3})});S.pops=[]}
-  MUS.mode='calm';RUN=null;
+  MUS.mode='calm';MUS.scene='titulo';RUN=null;
   if(!META.intro){META.intro=1;saveMeta();return showIntro(0)}
   const next=LEVELS.find(l=>!META.done[l.id]),mr=missionsReady();
   const plank=(k,label,sub,locked)=>`<button type="button" class="plank2 ${locked?'locked':''}" data-hub="${k}" ${locked?'disabled':''}><b>${label}</b>${sub?`<small>${sub}</small>`:''}</button>`;
@@ -216,7 +216,7 @@ function starPx(cvs,on){const g=hdCtx(cvs,15,15);C=g;
   rows.forEach((row,y)=>{for(let i=0;i<15;i++)if(row[i]==='#')r(i,y+1,1,1,on?(y<4||i<5?'#fff3a0':y>8?'#c98a10':'#f7c948'):'#4a3020')});
   if(on){r(6,3,1,2,'#ffffff');r(3,5,2,1,'#ffffff')}C=x}
 function endScreen(o){
-  ['story','tut','foeintro'].forEach(id=>$(id).hidden=true);
+  ['story','tut','foeintro'].forEach(id=>$(id).hidden=true);playJingle(o.win?'vitoria':'derrota');
   const st=S,secs=st.t|0,stat=(l,v)=>`<div class="stat"><b>${l}</b><span>${v}</span></div>`;
   menu(`<div class="mbox endscr ${o.win?'won':'lost'}"><small class="eyebrow">${o.eyebrow}</small><h2>${o.title}</h2>
     ${o.win?`<div class="vstars">${[0,1,2].map(i=>`<canvas width="60" height="60" data-vs="${i}"></canvas>`).join('')}</div>`:`<div class="wilt"><canvas width="60" height="60" id="wiltc"></canvas></div>`}

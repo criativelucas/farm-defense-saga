@@ -46,9 +46,9 @@ function miniUpdate(dt){const k=S.mini;if(!k)return;const P=S.p;
     for(const rc of S.rcards){rc.t+=dt;const fl=gy(rc.x)-6;if(rc.y<fl)rc.y=Math.min(fl,rc.y+42*dt);
       if(Math.abs(rc.x-P.x)<10&&Math.abs(rc.y-(P.y-8))<16){const i=S.hand.findIndex(c=>!c);if(i>=0){S.hand[i]=rc.c;rc.got=1;S.newIdx=i;renderHand();S.newIdx=-1;sfx('coin');vfx('sparkle',rc.x,rc.y,{s:3})}}}
     S.rcards=S.rcards.filter(rc=>!rc.got&&rc.t<9)}
-  if(k==='escuro'){S.darkT-=dt;if(S.darkT<=0){S.darkT=rnd(2.5,4.5);S.flashT=.35;flash(.35,'210,210,255');sfx('wind')}S.flashT=Math.max(0,(S.flashT||0)-dt)}
+  if(k==='escuro'){S.darkT-=dt;if(S.darkT<=0){S.darkT=rnd(2.5,4.5);S.flashT=.35;flash(.35,'210,210,255');sfx('thunder')}S.flashT=Math.max(0,(S.flashT||0)-dt)}
   if(k==='voltas'&&S.state!=='menu'){if(S.fallen){S.voltT=0;battleWon();return}if(S.state==='wave'||S.state==='prep'){S.voltT-=dt;if(S.voltT<=0){S.state='menu';showOver()}}}}
-function slingShot(){const p=S.p;if(p.atkCD>0||p.stun>0)return;p.atkCD=.42;p.swing=.22;sfx('hit');
+function slingShot(){const p=S.p;if(p.atkCD>0||p.stun>0)return;p.atkCD=.42;p.swing=.22;sfx('sling');
   S.proj.push({x:p.x+p.face*5,y:p.y-13,vx:p.face*200,vy:-70,g:240,kind:'pstone',dmg:4*(1+.08*tl('dmg')),src:'pedras',life:2})}
 // in the dark a pest shows only in a lightning flash, near a tree's light, or close to you
 function darkVisible(e){return S.flashT>0||Math.abs(e.x-S.p.x)<30||MAP.slots.some((s,i)=>S.tw[i]&&S.tw[i].grow>=1&&Math.abs(s.x-e.x)<38)}
@@ -75,10 +75,10 @@ function showFoxes(){const F={t:40,score:0,holes:[],pops:[],over:false};
     <div class="gscene"><canvas id="foxc" width="960" height="600"></canvas></div><p class="help">“Apanhai as raposinhas que fazem mal às vinhas” (Cânticos 2:15). Clique nas raposas; cordeiro tira 2 pontos.</p></div>`);
   const cvs=$('foxc');let last=performance.now(),spawnT=.5;
   const hitAt=ev=>{if(F.over)return;const rc=cvs.getBoundingClientRect(),mx=(ev.clientX-rc.left)/rc.width*480,my=(ev.clientY-rc.top)/rc.height*300;
-    for(const h of F.holes){if(h.up>.4&&Math.abs(mx-h.x)<24&&my<h.y+8&&my>h.y-h.up*36-14){h.hit=1;h.dir=-1;h.stay=0;F.score+=h.lamb?-2:1;F.pops.push({x:h.x,y:h.y-44,t:0,w:h.lamb?'BÉÉ!':pick(['POW!','PÁ!','TOC!','PLAFT!']),bad:h.lamb});sfx(h.lamb?'no':'hit');return}}};
+    for(const h of F.holes){if(h.up>.4&&Math.abs(mx-h.x)<24&&my<h.y+8&&my>h.y-h.up*36-14){h.hit=1;h.dir=-1;h.stay=0;F.score+=h.lamb?-2:1;F.pops.push({x:h.x,y:h.y-44,t:0,w:h.lamb?'BÉÉ!':pick(['POW!','PÁ!','TOC!','PLAFT!']),bad:h.lamb});sfx(h.lamb?'bleat':'hit');return}}};
   cvs.addEventListener('pointerdown',hitAt);$('fxback').onclick=()=>{clearInterval(foxLoop);showMinis()};
   clearInterval(foxLoop);foxLoop=setInterval(()=>{if(!cvs.isConnected){clearInterval(foxLoop);return}const now=performance.now(),dt=Math.min(.05,(now-last)/1000);last=now;
-    if(!F.over){F.t-=dt;spawnT-=dt;if(spawnT<=0){spawnT=Math.max(.35,.9-(40-F.t)/80);const free=F.holes.filter(h=>h.up<=0&&h.dir===0);if(free.length){const h=pick(free);h.dir=1;h.lamb=Math.random()<.18;h.stay=rnd(.7,1.3)-(40-F.t)/90;h.hit=0}}
+    if(!F.over){F.t-=dt;spawnT-=dt;if(spawnT<=0){spawnT=Math.max(.35,.9-(40-F.t)/80);const free=F.holes.filter(h=>h.up<=0&&h.dir===0);if(free.length){const h=pick(free);h.dir=1;sfx('pop');h.lamb=Math.random()<.18;h.stay=rnd(.7,1.3)-(40-F.t)/90;h.hit=0}}
       for(const h of F.holes){if(h.dir===1){h.up=Math.min(1,h.up+dt*6);if(h.up>=1){h.stay-=dt;if(h.stay<=0)h.dir=-1}}else if(h.dir===-1){h.up=Math.max(0,h.up-dt*6);if(h.up<=0)h.dir=0}}
       if(F.t<=0){F.over=true;foxEnd(F)}}
     $('fxscore')&&($('fxscore').textContent=F.score+' pontos · '+Math.max(0,Math.ceil(F.t))+'s');drawFoxes(cvs,F,dt)},33)}

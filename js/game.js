@@ -40,7 +40,7 @@ function blankBattle(mapId,day=false){
   S.p.y=gy(60);
 }
 function startBattle(node){
-  blankBattle(node.map,node.night===false);
+  MUS.scene=null;blankBattle(node.map,node.night===false);
   S.node=node;S.waves=node.waves;S.state='prep';S.between=12;
   S.mana=6+(relic('arca')?4:0)+2*((META.upg&&META.upg.mana)||0);S.p.maxhp=S.p.hp=3+((META.upg&&META.upg.hearts)||0)+((META.upg&&META.upg.treeHearts)||0)+tl('hearts');S.mana+=tl('mana');S.levelNight=node.night??null;
   S.draw=rshuffle(RUN.deck);S.hand=S.draw.splice(0,RUN.handSize);
@@ -421,7 +421,7 @@ function placeItem(k){const p=S.p;if(p.stun>0||!sysOn('barriers'))return;if(!MET
 function update(dt){
   S.abil=Math.max(0,(S.abil||0)-dt);if(pr('KeyC'))useAbility();
   // walking through water fills the bucket: watering is twice as fast for a while
-  if(inWater(S.p.x)&&S.p.on&&!(S.bucket>0)){S.bucket=8;pop(S.p.x,S.p.y-26,'balde cheio: rega 2x','#9ad0ff',8);sfx('heal')}
+  if(inWater(S.p.x)&&S.p.on&&!(S.bucket>0)){S.bucket=8;pop(S.p.x,S.p.y-26,'balde cheio: rega 2x','#9ad0ff',8);sfx('splash')}
   updPlayer(dt);
   for(let i=0;i<4;i++)if(pr('Digit'+(i+1),'Numpad'+(i+1)))playCard(S.babelOn>0&&S.perm[i]!=null?S.perm[i]:i);
   computeLinks(dt);updStory(dt);

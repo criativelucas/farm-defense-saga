@@ -26,7 +26,7 @@ function goalUpdate(dt){const g=S.goal;if(!g)return;
   if(g==='ovelhas'){let alive=0;for(const sh of S.sheep){if(sh.hp<=0)continue;alive++;sh.t+=dt;sh.hurt=Math.max(0,sh.hurt-dt);
       const want=sh.home+Math.sin(sh.t*.3)*14;sh.face=want>sh.x?1:-1;sh.x+=clamp(want-sh.x,-6*dt,6*dt);
       for(const e of S.en){const d=EN[e.k];if(d.fly||e.hp<=0||Math.abs(e.x-sh.x)>8)continue;sh.hp-=dt*(d.boss?4:1.5);
-        if(sh.hurt<=0){sh.hurt=.6;pop(sh.x,gy(sh.x)-16,'béé!','#ffffff',8);sfx('hurt')}}
+        if(sh.hurt<=0){sh.hurt=.6;pop(sh.x,gy(sh.x)-16,'béé!','#ffffff',8);sfx('bleat')}}
       if(sh.hp<=0){burst(sh.x,gy(sh.x)-6,18,['#ffffff','#e8e0d0'],70,200,.7);pop(sh.x,gy(sh.x)-20,'levaram uma ovelha!','#ff9a9a',9);shake(4)}}
     if(!alive&&S.state!=='menu'){S.state='menu';RUN.hp=0;showOver()}}
   if(g==='vigilia'&&S.state==='wave'){S.vig-=dt;S.vigT-=dt;
