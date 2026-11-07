@@ -1,13 +1,16 @@
-// ---------- the Garden: a little backyard where you see every plant (like a zen garden)
-const GW=480,GH=270;
-const GSPOTS=(()=>{const a=[];[{y:132,s:.72,dx:70},{y:178,s:.86,dx:86},{y:232,s:1,dx:104}].forEach(rw=>{for(let i=0;i<4;i++)a.push({x:240+(i-1.5)*rw.dx,y:rw.y,s:rw.s})});return a})();
-let gRain=0,gNextEv=600,gPests=[];
-function gEvents(){const G=META.garden;gRain=Math.max(0,gRain-1);gNextEv--;
-  if(gNextEv<=0){gNextEv=500+(Math.random()*400|0);if(Math.random()<.5){gRain=120;let n=0;G.pots.forEach(p=>{if(p&&!p.watered&&p.stage<3){p.watered=true;p.t0=Date.now();n++}});saveMeta();toast('Chuva serôdia no jardim',n?n+' vaso(s) regado(s)':'Tudo já estava regado')}
-    else{const opts=G.pots.map((p,i)=>p?i:-1).filter(i=>i>=0&&!gPests.some(q=>q.i===i));if(opts.length){gPests.push({i:pick(opts)});toast('Uma praguinha no jardim!','Clique no vaso para espantar e ganhar 5 moedas')}}}}
-let gTool=null,gHover=-1,gLoop=null,gT=0,gParts=[],gSnail={x:60,d:1},gInfo='';
+// ---------- the Garden: a greenhouse with tables of pots, like a zen garden.
+// Crops grow and are sold; the nine fruit trees grow up, ask for things in little bubbles, and drop coins while happy.
+const GW=480,GH=300,GROWS=[{y:128,s:.84},{y:174,s:.9},{y:222,s:.95},{y:272,s:1}];
+const GSPOTS=(()=>{const a=[];GROWS.forEach(rw=>{for(let i=0;i<8;i++)a.push({x:240+(i-3.5)*52*rw.s,y:rw.y,s:rw.s})});return a})();
+const GTOOLS=[['regar','Regador','Mata a sede'],['adubo','Adubo','Faz crescer um estágio'],['spray','Spray','Tira a praguinha'],['harpa','Harpa','Um salmo alegra a árvore'],
+  ['mel','Mel','A árvore dança e solta moedas por 20s'],['luva','Luva','Muda um vaso de lugar'],['vender','Vender','Vende a planta']];
+const NEEDS=['water','spray','harpa'];
+let gTool=null,gHover=-1,gLoop=null,gT=0,gParts=[],gSnail={x:80,d:1},gInfo='',gRain=0,gNextEv=900,gDrops=[],gHeld=-1;
 function potPrice(){return 150+META.garden.potsN*40}
+const isTree=k=>k&&k.startsWith('t:');
 function gPlant(k,stage,t){// drawn at the pot's soil line, local pixels
+  if(isTree(k)){const sp=k.slice(2),sz=[.32,.5,.72,.92][stage]*TREE[sp].b*.8;if(stage===0){r(-1,-4,1,4,'#5fe08a');r(0,-6,1,6,'#5fe08a');r(1,-3,1,3,'#8ae07a');return}
+    sp==='mostarda'?drawMostarda(0,0,Math.min(2,stage-1)):drawTower(sp,0,0,t,null,sz);return}
   const sw=Math.sin(t*2+k.length)*.6;
   if(stage===0){r(-1,-4,1,4,'#5fe08a');r(0,-6,1,6,'#5fe08a');r(1,-3,1,3,'#8ae07a');return}
   if(k==='trigo'){const n=2+stage*2,h=[0,8,14,20][stage];for(let i=0;i<n;i++){const x0=-6+i*(12/(n-1||1)),lean=Math.round(sw*(i%2?1:-1));r(x0,-h,1,h,'#6aa040');r(x0+lean,-h-1,1,2,'#8ac050');
@@ -19,88 +22,125 @@ function gPlant(k,stage,t){// drawn at the pot's soil line, local pixels
   if(k==='oliva'){const h=[0,7,12,17][stage];r(-1,-h,2,h,'#7d6a5a');r(-3,-h+3,2,2,'#7d6a5a');blob(0,-h-3,4+stage*2,2+stage*2,'#4f6b48','#7f9a6e','#b8cf9a',23);
     if(stage===3)[[-5,-h-2],[4,-h-4],[0,-h],[-2,-h-7],[6,-h]].forEach(([a,b])=>{r(a,b,2,2,'#2a2a3a');r(a,b,1,1,'#6a6a8a')})}
 }
-function gPot(){r(-11,-1,22,2,'#4a2a1a');r(-12,-3,24,4,'#d07a4a');r(-12,-3,24,1,'#f09a6a');r(-10,1,20,11,'#b0603a');r(-10,1,2,11,'#d07a4a');r(-10,11,20,1,'#7a3a20')}
+function gPot(){r(-14,4,28,4,'#e8c870');r(-15,5,30,2,'#c8a050');for(let i=-13;i<14;i+=3)r(i,4,1,4,'#d8b060');// straw mat
+  r(-9,-1,18,2,'#4a2a1a');r(-10,-3,20,4,'#d07a4a');r(-10,-3,20,1,'#f09a6a');r(-8,1,16,8,'#b0603a');r(-8,1,2,8,'#d07a4a');r(-8,8,16,1,'#7a3a20')}
 function gBubble(kind){r(-6,-12,13,11,'#ffffff');r(-7,-11,15,9,'#ffffff');r(-1,-1,3,2,'#ffffff');r(-7,-12,15,1,'#00000022');
-  if(kind==='water'){r(-1,-10,2,2,'#4a9ad8');r(-2,-8,4,3,'#4a9ad8');r(-1,-8,1,1,'#bfe8ff')}else{disc(0,-7,3,'#c9921a');disc(0,-7,2,'#f7c948');r(-1,-9,1,1,'#fff6c0')}}
+  if(kind==='water'){r(-1,-10,2,2,'#4a9ad8');r(-2,-8,4,3,'#4a9ad8');r(-1,-8,1,1,'#bfe8ff')}
+  else if(kind==='spray'){r(-3,-9,4,7,'#5aa84a');r(-2,-11,2,2,'#3a6a3a');r(1,-10,3,1,'#9a9aa8');r(4,-11,1,1,'#bfe8ff');r(4,-9,1,1,'#bfe8ff')}
+  else if(kind==='harpa'){r(-3,-10,1,8,'#c9921a');r(-3,-10,6,1,'#c9921a');r(3,-10,1,5,'#c9921a');for(let i=-2;i<3;i+=2)r(i,-9,1,6,'#fff6c0')}
+  else{disc(0,-7,3,'#c9921a');disc(0,-7,2,'#f7c948');r(-1,-9,1,1,'#fff6c0')}}
+// ---------- tree pots: grow like crops, then cycle between needs and happy, coin-dropping spells
+function treeTick(p,now){if(!isTree(p.k)||p.stage<3)return;
+  if(!p.need&&!(p.happy>now)&&now>=(p.needAt||0))p.need=NEEDS[(now/1000|0)%3];}
+function satisfy(p,i,kind){const now=Date.now();if(p.need!==kind)return false;p.need=null;p.happy=now+180000;p.needAt=now+240000;p.coinAt=now+8000;gBurst(i,12,['#ff8ab0','#ffd0e0','#fff6c0'],1);return true}
+function gBurst(i,n,c,up){const sp=GSPOTS[i];for(let k=0;k<n;k++)gParts.push({x:sp.x+rnd(-10,10)*sp.s,y:sp.y-24*sp.s,vx:rnd(-1,1),vy:up?rnd(-2,-1):rnd(-.5,.5),g:up?.08:.15,t:rnd(.6,1.2),c:pick(c),s:2})}
+function dropCoins(now){const G=META.garden;G.pots.forEach((p,i)=>{if(!p||!isTree(p.k)||p.stage<3)return;const mel=p.mel>now,happy=p.happy>now||mel;if(!happy||now<(p.coinAt||0))return;
+  if(gDrops.filter(d=>d.i===i).length>=4)return;p.coinAt=now+(mel?1800:25000);const gold=Math.random()<(mel?.25:.12),sp=GSPOTS[i];
+  gDrops.push({i,x:sp.x+rnd(-14,14)*sp.s,y:sp.y+4*sp.s,vy:-2.5,yy:0,gold,t:0});sfx('coin')})}
+function gPick(d){META.coins+=d.gold?25:5;d.dead=1;saveMeta();sfx('coin');gParts.push({x:d.x,y:d.y-6,vx:0,vy:-1.2,g:0,t:.8,c:d.gold?'#ffe36a':'#e8e8f0',s:2,txt:'+'+(d.gold?25:5)});$('gcoins')&&($('gcoins').textContent=META.coins)}
+function drawGreenhouse(g){
+  // glass wall with white frames, sunlight, a garden outside
+  let gr=g.createLinearGradient(0,0,0,110);gr.addColorStop(0,'#c8ecf4');gr.addColorStop(1,'#eef8f0');g.fillStyle=gr;g.fillRect(0,0,GW,110);
+  for(let i=0;i<GW;i+=26)blob(i+10,88+hs(i,3)*8,16,12,'#8ac08a','#a8d8a0','#c8ecc0',i);for(let i=0;i<GW;i+=40)blob(i+20,70,14,18,'#7ab07a','#98c890','#b8e0b0',i+5);
+  g.globalAlpha=.35;for(let i=0;i<5;i++){g.fillStyle='#ffffff';g.beginPath();g.moveTo(40+i*100,0);g.lineTo(70+i*100,0);g.lineTo(130+i*100,110);g.lineTo(100+i*100,110);g.fill()}g.globalAlpha=1;
+  for(let i=0;i<=GW;i+=60){r(i-2,0,4,110,'#f8faf8');r(i+1,0,1,110,'#c8d0c8')}for(const yy of[0,36,72]){r(0,yy,GW,4,'#f8faf8');r(0,yy+3,GW,1,'#c8d0c8')}
+  r(0,104,GW,8,'#e8ece8');r(0,111,GW,2,'#a8b0a8');
+  // floor: packed earth with gravel, darker toward the front
+  gr=g.createLinearGradient(0,113,0,GH);gr.addColorStop(0,'#a07a58');gr.addColorStop(1,'#6a4a32');g.fillStyle=gr;g.fillRect(0,113,GW,GH-113);
+  for(let i=0;i<420;i++){const px=hs(i,61)*GW,py=114+hs(i,62)*(GH-114);r(px,py,1+(i%3===0),1,i%2?'#c09a78':'#5a3c28')}
+  // white tables under each row
+  GROWS.forEach(rw=>{const y=rw.y+11*rw.s,h=7*rw.s;r(16,y-2,GW-32,h+2,'#f4f2ec');r(16,y-2,GW-32,1,'#ffffff');r(16,y+h,GW-32,2,'#b8b4a8');
+    for(const lx of[26,GW/2-4,GW-34]){r(lx,y+h+2,5,18*rw.s,'#e0ddd4');r(lx+4,y+h+2,1,18*rw.s,'#b8b4a8')}})}
 function drawGarden(){
   const cvs=$('gardc');if(!cvs){clearInterval(gLoop);gLoop=null;return}
-  gT+=.05;const g=cvs.getContext('2d');C=g;const G=META.garden;G.pots.forEach(p=>p&&potAdvance(p));
-  // sky, hedge, fence, shed
-  let gr=g.createLinearGradient(0,0,0,100);gr.addColorStop(0,'#7cc6ec');gr.addColorStop(1,'#d4f0f6');g.fillStyle=gr;g.fillRect(0,0,GW,100);
-  disc(420,26,12,'#fff6c8');for(let i=0;i<5;i++)blob(((i*120+gT*6)%600)-60,18+(i%2)*12,24,5,'#e8f2f6','#f6fafc','#ffffff',i+3);
-  for(let i=0;i<GW;i+=18)blob(i+8,70,14,10,'#2a6a3a','#3a8a4a','#5aaa5a',i);
-  r(0,74,GW,30,'#d8b878');for(let i=0;i<GW;i+=16){r(i,66,10,40,'#e8c890');r(i,66,10,2,'#fff0c8');r(i+2,64,6,2,'#e8c890');r(i+9,66,1,40,'#a8885a')}r(0,80,GW,3,'#b8986a');r(0,94,GW,3,'#b8986a');
-  for(let i=0;i<5;i++){const fx=300+i*34;r(fx,44,1,34,'#3a8a3a');disc(fx,42,4,'#f7c948');disc(fx,42,2,'#7a4a20')}
-  r(14,40,64,60,'#a05a3a');for(let j=44;j<100;j+=6)r(14,j,64,1,'#8a4a2e');for(let j=0;j<20;j++)r(8+j*1.8,40-j,80-j*3.6,1,'#c0383a');r(36,66,20,34,'#4a2414');r(52,82,2,2,'#f7c948');r(20,52,10,10,'#7cc6ec');r(24,52,1,10,'#a05a3a');r(20,56,10,1,'#a05a3a');
-  // lawn in perspective
-  for(let y=100;y<GH;y++){const k=(y-100)/(GH-100),band=Math.floor(Math.pow(k,.7)*9)%2;g.fillStyle=band?'#5cae4a':'#6abe56';g.fillRect(0,y,GW,1)}
-  for(let i=0;i<70;i++){const tx=hs(i,1)*GW,ty=104+hs(i,2)*160;r(tx,ty,1,2,'#8ad870')}
-  for(let i=0;i<6;i++){const fx=hs(i,21)*GW,fy=110+hs(i,22)*150;if(GSPOTS.some(s=>Math.abs(s.x-fx)<30&&Math.abs(s.y-fy)<24))continue;r(fx,fy,2,2,['#ffffff','#ffd0e0','#ffe36a'][i%3])}
-  // spots back to front
-  GSPOTS.forEach((sp,i)=>{const open=i<G.potsN,p=G.pots[i];g.save();g.translate(sp.x,sp.y);g.scale(sp.s*2,sp.s*2);
-    C.globalAlpha=.25;disc(0,11,13,'#1a3a10');C.globalAlpha=1;
-    if(!open){C.globalAlpha=.55;for(let a=0;a<16;a++){if(a%2)continue;const an=a/16*Math.PI*2;r(Math.cos(an)*12,4+Math.sin(an)*5,2,1,'#ffffff')}r(-1,0,3,9,'#ffffff');r(-4,3,9,3,'#ffffff');C.globalAlpha=1}
-    else{gPot();if(p){g.save();gPlant(p.k,p.stage,gT+i);g.restore();const h=[6,12,18,24][p.stage];
-      if(p.stage>=3){g.save();g.translate(0,-h-12+Math.sin(gT*3)*1.5);gBubble('coin');g.restore()}else if(!p.watered){g.save();g.translate(0,-h-10+Math.sin(gT*3+i)*1.5);gBubble('water');g.restore()}
-      else{const P=GPLANTS[p.k],u=Math.min(1,(Date.now()-p.t0)/(P.stage*1000));r(-8,15,16,2,'#00000055');r(-8,15,16*u,2,'#7fc8ff')}}}
-    if(gHover===i){C.globalAlpha=.6+Math.sin(gT*6)*.3;ring(0,5,15,'#ffe36a');C.globalAlpha=1}
+  gT+=.05;const g=hdCtx(cvs,GW,GH,2);C=g;const G=META.garden,now=Date.now();G.pots.forEach(p=>{if(p){potAdvance(p);treeTick(p,now)}});dropCoins(now);
+  drawGreenhouse(g);
+  GSPOTS.forEach((sp,i)=>{const open=i<G.potsN,p=G.pots[i];g.save();g.translate(sp.x,sp.y);g.scale(sp.s*1.55,sp.s*1.55);
+    if(!open){g.globalAlpha=i===G.potsN?.7:.25;r(-14,4,28,4,'#d8d0b8');r(-1,-6,3,9,'#8a8070');r(-5,-3,11,3,'#8a8070');g.globalAlpha=1}
+    else if(gHeld!==i){gPot();if(p){const mel=p.mel>now,happy=p.happy>now;g.save();if(mel){g.rotate(Math.sin(gT*12)*.12)}else if(happy)g.translate(0,-Math.abs(Math.sin(gT*3+i))*1);gPlant(p.k,p.stage,gT+i);g.restore();
+      const h=isTree(p.k)?[8,14,22,30][p.stage]*(TREE[p.k.slice(2)]?Math.min(1.4,TREE[p.k.slice(2)].b):1):[6,12,18,24][p.stage],bob=Math.sin(gT*3+i)*1.5;
+      const need=isTree(p.k)?(p.stage<3&&!p.watered?'water':p.need):(p.stage>=3?'coin':!p.watered?'water':null);
+      if(need){g.save();g.translate(4,-h-6+bob);gBubble(need);g.restore()}
+      else if(p.stage<3){const P=GPLANTS[p.k],u=Math.min(1,(now-p.t0)/(P.stage*1000));r(-8,10,16,2,'#00000055');r(-8,10,16*u,2,'#7fc8ff')}
+      if(happy&&(gT*4|0)%6===i%6){const hy=-h-4-((gT*20+i*7)%14);r(-2,hy,1,2,'#ff6a9a');r(1,hy,1,2,'#ff6a9a');r(-2,hy+1,4,1,'#ff6a9a');r(-1,hy+2,2,1,'#ff6a9a')}}}
+    if(gHover===i){g.globalAlpha=.6+Math.sin(gT*6)*.3;ring(0,5,16,'#ffe36a');g.globalAlpha=1}
     g.restore()});
-  // snail and butterflies
-  gSnail.x+=gSnail.d*.12;if(gSnail.x>GW-30||gSnail.x<30)gSnail.d*=-1;const sx=gSnail.x,sy=258;
+  // coins on the tables: hover or click to pick up
+  gDrops=gDrops.filter(d=>!d.dead&&(d.t+=.05)<30);for(const d of gDrops){if(d.yy<0||d.vy<0){d.vy+=.25;d.yy=Math.min(0,d.yy+d.vy)}const w=Math.abs(Math.cos(d.t*3))*3+1;
+    if(d.t>26&&(gT*10|0)%2)continue;disc(d.x,d.y+d.yy,4,d.gold?'#c9921a':'#8a8a98');disc(d.x,d.y+d.yy,3,d.gold?'#ffe36a':'#e0e0ea');r(d.x-w/2,d.y+d.yy-2,w,4,d.gold?'#fff6c0':'#ffffff')}
+  if(gHeld>=0&&G.pots[gHeld]){const p=G.pots[gHeld];g.save();g.translate(gMouse.x,gMouse.y);g.scale(1.2,1.2);gPot();gPlant(p.k,p.stage,gT);g.restore()}
+  // the snail on the floor, and rain over the glass
+  gSnail.x+=gSnail.d*.15;if(gSnail.x>GW-30||gSnail.x<30)gSnail.d*=-1;const sx=gSnail.x,sy=292;
   r(sx-5,sy,10,3,'#c8b090');disc(sx-gSnail.d,sy-3,4,'#b07a40');disc(sx-gSnail.d,sy-3,2,'#e0a060');r(sx+gSnail.d*5,sy-4,1,4,'#c8b090');
-  for(let i=0;i<3;i++){const bx=(hs(i,40)*GW+gT*(10+i*4))%GW,by=110+hs(i,41)*80+Math.sin(gT*2+i)*10,w=(gT*20|0)%2;r(bx-2,by-w,2,2,['#ff8ac0','#ffe36a','#8ad0ff'][i]);r(bx+1,by-w,2,2,['#ff8ac0','#ffe36a','#8ad0ff'][i]);r(bx,by,1,2,'#2a2030')}
-  gEvents();
-  if(gRain>0)for(let i=0;i<10;i++)r((hs(i,gT*100|0)*GW),(hs(i+3,gT*100|0)*GH),1,4,'#bfe8ff');
-  gPests.forEach(p=>{const sp=GSPOTS[p.i];if(!sp)return;const px=sp.x+Math.sin(gT*5+p.i)*6,py=sp.y-24*sp.s;r(px-2,py,5,3,'#2a2838');r(px-3,py,2,2,'#ff3d3d');r(px-1,py-2+((gT*20|0)%2),3,2,'#d2ebff')});
-  gParts=gParts.filter(p=>(p.t-=.05)>0);for(const p of gParts){p.x+=p.vx;p.y+=p.vy;p.vy+=p.g;r(p.x,p.y,p.s||1,p.s||1,p.c)}
-  C=x;
-}
-function gSpotAt(ev){const cvs=$('gardc'),rc=cvs.getBoundingClientRect(),mx=(ev.clientX-rc.left)/rc.width*GW,my=(ev.clientY-rc.top)/rc.height*GH;
-  let best=-1,bd=1e9;GSPOTS.forEach((s,i)=>{const d=Math.hypot(s.x-mx,(s.y-8*s.s)-my);if(d<28*s.s&&d<bd){bd=d;best=i}});return best}
-function gDescribe(i){const G=META.garden,p=G.pots[i];if(i<0)return'';if(i>=G.potsN)return'Espaço vazio · vaso novo por '+potPrice()+' moedas (clique para comprar)';
-  if(!p)return'Vaso vazio · escolha uma semente embaixo e clique aqui';const P=GPLANTS[p.k];
-  if(p.stage>=3)return P.name+' madura! Clique para colher e vender por '+P.sell+' moedas';
-  if(!p.watered)return P.name+' · '+['broto','muda','jovem'][p.stage]+' · precisa de água';
-  return P.name+' · '+['broto','muda','jovem'][p.stage]+' · crescendo, falta '+Math.max(0,P.stage-(Date.now()-p.t0)/1000|0)+'s'}
-function gAct(i){const G=META.garden;if(i<0)return;
-  const pi=gPests.findIndex(p=>p.i===i);if(pi>=0){gPests.splice(pi,1);META.coins+=5;saveMeta();sfx('hit');toast('Praguinha espantada','+5 moedas');gardenBar();return}
-  if(i>=G.potsN){if(i!==G.potsN){toast('Compre os espaços em ordem');return}const pr2=potPrice();if(META.coins<pr2){sfx('no');toast('Faltam moedas','Um vaso custa '+pr2);return}
-    META.coins-=pr2;G.potsN++;G.pots.push(null);saveMeta();sfx('coin');toast('Vaso novo','-'+pr2+' moedas');gardenBar();return}
-  const p=G.pots[i],sp=GSPOTS[i],burstAt=(n,c,up)=>{for(let k=0;k<n;k++)gParts.push({x:sp.x+rnd(-10,10)*sp.s,y:sp.y-20*sp.s,vx:rnd(-1,1),vy:up?rnd(-2,-1):rnd(-.5,.5),g:up?.08:.15,t:rnd(.6,1.2),c:pick(c),s:2})};
-  if(gTool&&gTool.startsWith('seed:')){const k=gTool.slice(5);if(p){toast('Esse vaso já tem planta');return}if(!G.seeds[k]){sfx('no');return}
-    G.seeds[k]--;G.pots[i]={k,stage:0,watered:false,t0:0};saveMeta();sfx('plant');burstAt(8,['#6a3a24','#8a5236'],1);if(!G.seeds[k])gTool=null;gardenBar();return}
-  if(!p)return;
-  if((gTool==='colher'||!gTool)&&p.stage>=3){const P=GPLANTS[p.k];META.coins+=P.sell;G.pots[i]=null;saveMeta();sfx('coin');burstAt(14,['#f7c948','#fff6c0'],1);toast('+'+P.sell+' moedas',P.name+' vendida');gardenBar();return}
-  if((gTool==='regar'||!gTool)&&!p.watered&&p.stage<3){p.watered=true;p.t0=Date.now();saveMeta();sfx('heal');burstAt(14,['#7fc8ff','#bfe8ff'],0);gardenBar();return}
-}
-function gIcon(cvs,k){const g=cvs.getContext('2d');g.clearRect(0,0,32,32);C=g;
-  if(k==='regar'){r(6,14,16,11,'#7a8a9a');r(6,14,16,2,'#a0b0c0');r(22,16,6,2,'#7a8a9a');r(27,13,3,3,'#7a8a9a');r(10,9,8,2,'#5a6a7a');r(9,9,1,6,'#5a6a7a');r(18,9,1,6,'#5a6a7a');for(let i=0;i<3;i++)r(29+(i%2),18+i*3,1,2,'#7fc8ff')}
-  if(k==='colher'){for(let i=0;i<12;i++)r(8+i,22-i*.4,2,2,'#8a5236');for(let i=0;i<10;i++){const a=-2.2+i*.24;r(19+Math.cos(a)*8,12+Math.sin(a)*8,2,2,'#d0d0d8')}}
-  if(k.startsWith('seed:')){const p=GPLANTS[k.slice(5)];r(8,6,16,22,'#e8d8b0');r(8,6,16,3,'#c9a060');r(8,25,16,3,'#c9a060');g.save();g.translate(16,22);gPlant(k.slice(5),3,1);g.restore()}
-  if(k==='loja')hubIconTo(cvs,'loja');
+  gEvents();if(gRain>0)for(let i=0;i<24;i++)r(hs(i,gT*80|0)*GW,hs(i+3,gT*80|0)*104,1,5,'#9ad0f0');
+  gParts=gParts.filter(p=>(p.t-=.05)>0);for(const p of gParts){p.x+=p.vx;p.y+=p.vy;p.vy+=p.g;if(p.txt){g.font='700 9px "Pixelify Sans", monospace';g.textAlign='center';g.fillStyle='#000';g.fillText(p.txt,p.x+1,p.y+1);g.fillStyle=p.c;g.fillText(p.txt,p.x,p.y)}else r(p.x,p.y,p.s||1,p.s||1,p.c)}
   C=x}
-function gardenBar(){const G=META.garden,el=$('gbar');if(!el)return;
-  const tools=[['regar','Regador','Rega um vaso com sede'],['colher','Colher','Colhe e vende o que está maduro']];
-  el.innerHTML=tools.map(([k,n,d])=>`<button type="button" class="gtool ${gTool===k?'on':''}" data-gt="${k}" title="${d}"><canvas width="32" height="32" data-gi="${k}"></canvas><b>${n}</b></button>`).join('')+'<span class="gsep"></span>'+
-    Object.entries(GPLANTS).map(([k,P])=>`<button type="button" class="gtool seed ${gTool==='seed:'+k?'on':''}" data-gt="seed:${k}" ${G.seeds[k]?'':'disabled'} title="${P.name}: vende por ${P.sell} · ${Math.round(P.stage*3/60)} min no total"><canvas width="32" height="32" data-gi="seed:${k}"></canvas><b>${P.name}</b><i>${G.seeds[k]||0}</i></button>`).join('')+
-    `<span class="gsep"></span><button type="button" class="gtool" id="gshop"><canvas width="32" height="32" data-gi="loja"></canvas><b>Loja</b></button>`;
-  el.querySelectorAll('canvas[data-gi]').forEach(c=>gIcon(c,c.dataset.gi));
-  el.querySelectorAll('[data-gt]').forEach(b=>b.onclick=()=>{gTool=gTool===b.dataset.gt?null:b.dataset.gt;sfx('card');gardenBar()});
-  $('gshop').onclick=()=>showShop2('jardim');
-  $('ginfo').textContent=gInfo||(gTool?{regar:'Regador na mão: clique num vaso com sede.',colher:'Colher: clique numa planta madura.'}[gTool]||'Semente na mão: clique num vaso vazio.':'Clique num vaso: ele rega quem tem sede e colhe quem está maduro.');
-  $('menu').querySelectorAll('.coins').forEach(e=>e.outerHTML=coinsTag());paintCoins();
+function gEvents(){const G=META.garden;gRain=Math.max(0,gRain-1);if(--gNextEv>0)return;gNextEv=900+(Math.random()*600|0);
+  gRain=140;let n=0;G.pots.forEach(p=>{if(p&&!p.watered&&p.stage<3){p.watered=true;p.t0=Date.now();n++}if(p&&p.need==='water'&&satisfy(p,G.pots.indexOf(p),'water'))n++});saveMeta();toast('Chuva serôdia na estufa',n?n+' planta(s) regada(s)':'Tudo já estava regado')}
+const gMouse={x:0,y:0};
+function gPos(ev){const cvs=$('gardc'),rc=cvs.getBoundingClientRect();return{x:(ev.clientX-rc.left)/rc.width*GW,y:(ev.clientY-rc.top)/rc.height*GH}}
+function gSpotAt(ev){const m=gPos(ev);let best=-1,bd=1e9;GSPOTS.forEach((s,i)=>{const d=Math.hypot(s.x-m.x,(s.y-8*s.s)-m.y);if(d<26*s.s&&d<bd){bd=d;best=i}});return best}
+const sellPrice=p=>isTree(p.k)?[5,25,70,160][p.stage]:p.stage>=3?GPLANTS[p.k].sell:Math.round(GPLANTS[p.k].price*.3);
+function gDescribe(i){const G=META.garden,p=G.pots[i];if(i<0)return'';if(i>=G.potsN)return i===G.potsN?'Lugar livre · vaso novo por '+potPrice()+' moedas (clique para comprar)':'Compre os vasos em ordem';
+  if(!p)return'Vaso vazio · escolha uma semente ou muda na barra e clique aqui';const P=GPLANTS[p.k],nm=P.name,st=['broto','muda','jovem','adulta'][p.stage];
+  if(isTree(p.k)){if(p.stage<3)return nm+' · '+st+(p.watered?' · crescendo':' · precisa de água')+' · vende por '+sellPrice(p);
+    if(p.need)return nm+' adulta · quer '+{water:'água (regador)',spray:'o spray contra praguinha',harpa:'ouvir a harpa'}[p.need];
+    return nm+' adulta · '+(p.mel>Date.now()?'dançando com o mel!':p.happy>Date.now()?'feliz, soltando moedas':'descansando')+' · vende por '+sellPrice(p)}
+  if(p.stage>=3)return nm+' madura! Clique para colher e vender por '+P.sell+' moedas';
+  return nm+' · '+st+(p.watered?' · crescendo, falta '+Math.max(0,P.stage-(Date.now()-p.t0)/1000|0)+'s':' · precisa de água')}
+function gAct(i,ev){const G=META.garden,now=Date.now();
+  if(gTool==='luva'&&gHeld>=0){if(i>=0&&i<G.potsN&&!G.pots[i]){G.pots[i]=G.pots[gHeld];G.pots[gHeld]=null;sfx('plant');saveMeta()}gHeld=-1;gardenBar();return}
+  if(i<0)return;
+  if(i>=G.potsN){if(i!==G.potsN){toast('Compre os vasos em ordem');return}const pr2=potPrice();if(META.coins<pr2){sfx('no');toast('Faltam moedas','Um vaso custa '+pr2);return}
+    META.coins-=pr2;G.potsN++;G.pots.push(null);saveMeta();sfx('coin');toast('Vaso novo','-'+pr2+' moedas');gardenBar();return}
+  const p=G.pots[i];
+  if(gTool&&gTool.startsWith('seed:')){const k=gTool.slice(5);if(p){toast('Esse vaso já tem planta');return}if(!G.seeds[k]){sfx('no');return}
+    G.seeds[k]--;G.pots[i]={k,stage:0,watered:false,t0:0};saveMeta();sfx('plant');gBurst(i,8,['#6a3a24','#8a5236'],1);if(!G.seeds[k])gTool=null;gardenBar();return}
+  if(!p)return;
+  if(gTool==='luva'){gHeld=i;sfx('card');return}
+  if(gTool==='vender'){const v=sellPrice(p);META.coins+=v;G.pots[i]=null;saveMeta();sfx('coin');gBurst(i,12,['#f7c948','#fff6c0'],1);toast('+'+v+' moedas',GPLANTS[p.k].name+' vendida');gardenBar();return}
+  if(gTool==='adubo'){if(!G.adubo){sfx('no');toast('Sem adubo','Compre na loja');return}if(p.stage>=3){toast('Ela já está adulta');return}G.adubo--;p.stage++;p.watered=false;p.t0=now;saveMeta();sfx('super');gBurst(i,14,['#8a5a2a','#5fe08a','#f7c948'],1);gardenBar();return}
+  if(gTool==='mel'){if(!G.mel){sfx('no');toast('Sem mel','Compre na loja');return}if(!isTree(p.k)||p.stage<3){toast('O mel é para árvores adultas');return}G.mel--;p.mel=now+20000;p.coinAt=now;saveMeta();sfx('ach');gardenBar();return}
+  if(gTool==='spray'){if(p.need!=='spray'){toast('Essa planta não tem praguinha');return}if(!G.spray){sfx('no');toast('Sem spray','Compre na loja');return}G.spray--;satisfy(p,i,'spray');sfx('wind');gardenBar();return}
+  if(gTool==='harpa'){if(p.need!=='harpa'){toast('Ela não pediu música agora');return}satisfy(p,i,'harpa');[0,4,7,12].forEach((n,k)=>setTimeout(()=>AC&&tone(hz(n+12),AC.currentTime,.4,'triangle',.05),k*120));return}
+  if((gTool==='colher'||!gTool)&&!isTree(p.k)&&p.stage>=3){const P=GPLANTS[p.k];META.coins+=P.sell;G.pots[i]=null;saveMeta();sfx('coin');gBurst(i,14,['#f7c948','#fff6c0'],1);toast('+'+P.sell+' moedas',P.name+' vendida');gardenBar();return}
+  if(gTool==='regar'||!gTool){if(p.stage<3&&!p.watered){p.watered=true;p.t0=now;saveMeta();sfx('heal');gBurst(i,14,['#7fc8ff','#bfe8ff'],0);mission('water',1);gardenBar();return}
+    if(p.need==='water'){satisfy(p,i,'water');sfx('heal');gBurst(i,14,['#7fc8ff','#bfe8ff'],0);return}}
 }
+function gIcon(cvs,k){const g=hdCtx(cvs,32,32);C=g;
+  if(k==='regar'){r(6,14,16,11,'#7a8a9a');r(6,14,16,2,'#a0b0c0');r(22,16,6,2,'#7a8a9a');r(27,13,3,3,'#7a8a9a');r(10,9,8,2,'#5a6a7a');r(9,9,1,6,'#5a6a7a');r(18,9,1,6,'#5a6a7a');for(let i=0;i<3;i++)r(29+(i%2),18+i*3,1,2,'#7fc8ff')}
+  if(k==='adubo'){r(8,9,16,19,'#c8a870');r(8,9,16,3,'#e8d0a0');r(10,4,12,5,'#a88050');r(11,16,10,7,'#6a4a2a');r(14,14,4,2,'#5fae4a')}
+  if(k==='spray'){r(10,10,10,17,'#5aa84a');r(10,10,10,2,'#8ad070');r(12,6,6,4,'#3a6a3a');r(18,6,6,2,'#9a9aa8');for(let i=0;i<4;i++)r(25+i,4+i*2,1,1,'#bfe8ff')}
+  if(k==='harpa'){r(8,6,2,22,'#c9921a');r(8,6,16,2,'#c9921a');r(22,6,2,14,'#c9921a');r(8,26,10,2,'#c9921a');for(let i=11;i<22;i+=3)r(i,8,1,17-(i-11)*.6,'#fff6c0')}
+  if(k==='mel'){r(9,10,14,16,'#e8a020');r(9,10,14,2,'#ffd060');r(11,6,10,4,'#c8a870');r(12,14,8,6,'#ffd060');r(13,15,2,2,'#fff6c0')}
+  if(k==='luva'){r(10,12,12,14,'#e05a4a');r(8,14,3,6,'#e05a4a');for(let i=0;i<4;i++)r(11+i*3,6,2,7,'#e05a4a');r(10,24,12,3,'#f0c040')}
+  if(k==='vender'){disc(16,16,11,'#3a8a3a');disc(16,16,9,'#5fae4a');r(15,8,2,16,'#fff6c0');r(12,11,8,2,'#fff6c0');r(12,15,8,2,'#fff6c0');r(12,19,8,2,'#fff6c0')}
+  if(k.startsWith('seed:')){const sk=k.slice(5);r(8,6,16,22,'#e8d8b0');r(8,6,16,3,'#c9a060');r(8,25,16,3,'#c9a060');g.save();g.translate(16,22);g.scale(.8,.8);gPlant(sk,3,1);g.restore()}
+  C=x}
+function gardenBar(){const G=META.garden,el=$('gbar');if(!el)return;const cnt={adubo:G.adubo,spray:G.spray||0,mel:G.mel||0};
+  el.innerHTML=GTOOLS.map(([k,n,d])=>`<button type="button" class="gtool ${gTool===k?'on':''}" data-gt="${k}" title="${n}: ${d}"><canvas width="32" height="32" data-gi="${k}"></canvas><b>${n}</b>${k in cnt?`<i>${cnt[k]}</i>`:''}</button>`).join('')+
+    `<button type="button" class="gtool shopb" id="gshop" title="Comprar sementes, mudas, adubo, spray e mel"><b>Loja ›</b></button>`;
+  const sd=$('gseeds');sd.innerHTML=Object.entries(GPLANTS).filter(([k])=>G.seeds[k]).map(([k,P])=>`<button type="button" class="gtool seed ${gTool==='seed:'+k?'on':''}" data-gt="seed:${k}" title="${P.name}"><canvas width="32" height="32" data-gi="seed:${k}"></canvas><b>${P.name}</b><i>${G.seeds[k]}</i></button>`).join('')||'<small>Sem sementes. Vença fases para ganhar mudas, ou compre na loja.</small>';
+  [el,sd].forEach(z=>{z.querySelectorAll('canvas[data-gi]').forEach(c=>gIcon(c,c.dataset.gi));z.querySelectorAll('[data-gt]').forEach(b=>b.onclick=()=>{gTool=gTool===b.dataset.gt?null:b.dataset.gt;gHeld=-1;sfx('card');gardenBar()})});
+  $('gshop').onclick=()=>showShop2('jardim');
+  $('ginfo').textContent=gInfo||({regar:'Regador: clique em quem tem sede.',adubo:'Adubo: a planta cresce um estágio na hora.',spray:'Spray: clique na planta com praguinha.',harpa:'Harpa: toque para quem pediu música.',mel:'Mel: uma árvore adulta dança e solta moedas.',luva:'Luva: pegue um vaso e solte num lugar vazio.',vender:'Vender: clique numa planta para vender.'}[gTool]||(gTool?'Semente na mão: clique num vaso vazio.':'Clique num vaso: rega quem tem sede e colhe o que está maduro. Passe o mouse nas moedas para pegar.'));
+  $('gcoins').textContent=META.coins}
 function showGarden(){
   clearInterval(wmapTimer);if(!gardenOpen()){toast('O jardim abre ao vencer a fase 1-4');return}
-  const G=META.garden;while(G.pots.length<G.potsN)G.pots.push(null);
-  menu(`<div class="mbox wide"><div class="topbar"><button class="btn ghost" data-go="hub">‹ Menu</button><h2>Jardim</h2>${coinsTag()}</div>
-    <div class="gscene"><canvas id="gardc" width="${GW}" height="${GH}"></canvas></div>
-    <p class="ginfo" id="ginfo"></p><div class="gbar" id="gbar"></div>
-    <p class="help">As plantas crescem com o tempo real, mesmo com o jogo fechado. Cada etapa de crescimento precisa de água.</p></div>`);
-  const cvs=$('gardc');
-  cvs.addEventListener('pointermove',e=>{const i=gSpotAt(e);if(i!==gHover){gHover=i;gInfo=gDescribe(i);$('ginfo').textContent=gInfo||' '}});
+  const G=META.garden;while(G.pots.length<G.potsN)G.pots.push(null);if(G.spray==null){G.spray=3;G.mel=1;G.seeds['t:videira']=(G.seeds['t:videira']||0)+1}
+  // coins the happy trees dropped while you were away (up to 3 each)
+  const now=Date.now(),away=now-(G.lastVisit||now);G.lastVisit=now;gDrops=[];
+  if(away>25000)G.pots.forEach((p,i)=>{if(p&&isTree(p.k)&&p.stage>=3&&(p.happy||0)>now-away){const n=Math.min(3,Math.floor(Math.min(away,(p.happy-(now-away)))/25000));const sp=GSPOTS[i];for(let k=0;k<n;k++)gDrops.push({i,x:sp.x+rnd(-14,14)*sp.s,y:sp.y+4*sp.s,vy:0,yy:0,gold:Math.random()<.12,t:0})}});
+  menu(`<div class="mbox wide garden"><div class="topbar"><button class="btn ghost" data-go="hub">‹ Menu</button><h2>Estufa</h2><span class="coins"><canvas width="12" height="12" class="coin"></canvas><b id="gcoins">${META.coins}</b> moedas</span></div>
+    <div class="gbar" id="gbar"></div>
+    <div class="gscene"><canvas id="gardc" width="${GW*2}" height="${GH*2}"></canvas></div>
+    <p class="ginfo" id="ginfo"></p><div class="gbar seeds" id="gseeds"></div>
+    <p class="help">Plantas crescem com o tempo real. Árvores adultas pedem água, spray ou música; atendidas, ficam felizes e soltam moedas.</p></div>`);
+  paintCoins();const cvs=$('gardc');
+  cvs.addEventListener('pointermove',e=>{const m=gPos(e);gMouse.x=m.x;gMouse.y=m.y;for(const d of gDrops)if(!d.dead&&Math.hypot(d.x-m.x,d.y-m.y)<9)gPick(d);
+    const i=gSpotAt(e);if(i!==gHover){gHover=i;gInfo=gDescribe(i);$('ginfo').textContent=gInfo||' '}});
   cvs.addEventListener('pointerleave',()=>{gHover=-1;gInfo='';gardenBar()});
-  cvs.addEventListener('click',e=>{const i=gSpotAt(e);gAct(i);gInfo=gDescribe(i);$('ginfo').textContent=gInfo});
+  cvs.addEventListener('click',e=>{const m=gPos(e);const d=gDrops.find(d=>!d.dead&&Math.hypot(d.x-m.x,d.y-m.y)<10);if(d){gPick(d);return}const i=gSpotAt(e);gAct(i,e);gInfo=gDescribe(i);$('ginfo').textContent=gInfo});
   gardenBar();clearInterval(gLoop);drawGarden();gLoop=setInterval(()=>{drawGarden();if(gHover>=0&&$('ginfo'))$('ginfo').textContent=gDescribe(gHover)},50);
 }
 

@@ -155,7 +155,9 @@ function levelWon(){
   META.coins+=reward+picked;META.done[L.id]=1;const stars=RUN.hp>=18?3:RUN.hp>=10?2:1;META.stars=META.stars||{};const newBest=stars>(META.stars[L.id]||0);META.stars[L.id]=Math.max(stars,META.stars[L.id]||0);
   let card=null;const unl=UNLOCK_ORDER[L.n];if(first&&unl&&!META.unlocked.includes(unl)){META.unlocked.push(unl);card=mk(unl)}
   saveMeta();MUS.mode='calm';mission('win',1);if(stars===3)mission('star3',1);
-  const news=[];if(L.id==='1-4')news.push('O Jardim foi liberado! Plante, regue e venda. Junte moedas para a semente da Árvore da Vida.');
+  // every win leaves a seedling of a tree you know in the greenhouse
+  const known=META.unlocked.filter(k=>CARDS[k].type==='semente'),sprout=known.length?known[(Math.random()*known.length)|0]:null;if(sprout){const sk='t:'+sprout;META.garden.seeds[sk]=(META.garden.seeds[sk]||0)+1;saveMeta()}
+  const news=[];if(sprout&&gardenOpen())news.push('Uma muda de '+CARDS[sprout].name+' foi para a estufa do jardim.');if(L.id==='1-4')news.push('O Jardim foi liberado! Plante, regue e venda. Junte moedas para a semente da Árvore da Vida.');
   if(L.id==='2-4')news.push('O modo Jornada foi liberado no menu.');
   const last=RUN.level===LEVELS.length-1,total=reward+picked;
   endScreen({win:true,eyebrow:`${WORLDS[L.wi].name} · ${L.id} · ${L.night?'Noite':'Dia'}`,title:'Vitória!',stars,
@@ -241,12 +243,16 @@ function showLavrador(){
 // ---------- shop
 const UPGRADES={hearts:{name:'Coração extra',prices:[200,500,1000],desc:'+1 coração em toda batalha.'},bag:{name:'Bolsa maior',prices:[300,800],desc:'+1 carta na bolsa.'},mana:{name:'Maná inicial',prices:[250,600],desc:'+2 de maná no começo das batalhas.'}};
 const GPLANTS={trigo:{name:'Trigo',price:20,stage:40,sell:50,col:'#e8c86a'},uva:{name:'Uva',price:50,stage:90,sell:130,col:'#9b4be0'},roma:{name:'Romã',price:120,stage:180,sell:320,col:'#e0284a'},oliva:{name:'Oliva',price:300,stage:360,sell:850,col:'#b8cf9a'}};
+// the nine fruit trees as greenhouse plants: they grow, then ask for care and drop coins while happy
+[...SEED_KEYS,'mostarda'].forEach((k,i)=>GPLANTS['t:'+k]={name:CARDS[k].name,price:90+i*25,stage:120+i*20,sell:160,col:FRUIT_COL[FRUIT[k]],tree:k});
 const TREE_SEED_PRICE=2000;
 function shopIconTo(cvs,k){const g=cvs.getContext('2d');g.clearRect(0,0,32,32);C=g;
   if(k==='hearts'){[[9,8,6],[17,8,6],[7,10,18],[7,12,18],[9,14,14],[11,16,10],[13,18,6],[15,20,2]].forEach(([a,b,w])=>r(a,b,w,2,'#ff4f7b'));r(10,10,3,2,'#ffb0c8')}
   if(k==='bag'){r(8,10,16,18,'#c9a99a');r(8,10,16,3,'#e8dcc0');r(11,6,10,4,'#a88a7a');r(14,16,4,6,'#5fe08a')}
   if(k==='mana'){disc(16,16,9,'#6a24a8');disc(16,16,7,'#9b4be0');r(12,11,4,3,'#e2b0ff')}
-  if(k.startsWith('seed:')){const p=GPLANTS[k.slice(5)];r(9,8,14,20,'#c9a060');r(9,8,14,3,'#e8c890');r(12,4,8,4,'#a8784a');disc(16,18,4,p.col)}
+  if(k.startsWith('seed:')){const p=GPLANTS[k.slice(5)];r(9,8,14,20,'#c9a060');r(9,8,14,3,'#e8c890');r(12,4,8,4,'#a8784a');if(p.tree){g.save();g.translate(16,25);g.scale(.6,.6);drawTower(p.tree,0,0,1,null,1);g.restore()}else disc(16,18,4,p.col)}
+  if(k==='spray'){r(10,10,10,17,'#5aa84a');r(12,6,6,4,'#3a6a3a');r(18,6,6,2,'#9a9aa8')}
+  if(k==='mel'){r(9,10,14,16,'#e8a020');r(11,6,10,4,'#c8a870');r(12,14,8,6,'#ffd060')}
   if(k==='vaso'){r(8,14,16,14,'#b0603a');r(6,12,20,4,'#d07a4a');r(10,16,2,10,'#d07a4a')}
   if(k==='adubo'){r(7,8,18,20,'#6a4a2a');r(7,8,18,3,'#8a6a3a');r(10,16,12,6,'#3a2414');r(13,4,6,4,'#5a3a20')}
   if(k==='fertil'){r(11,6,10,4,'#5fe08a');r(9,10,14,18,'#2a8a5a');r(11,14,10,8,'#9ff7b8');r(14,16,4,4,'#ffffff')}
@@ -259,7 +265,8 @@ function showShop2(tab){
   if(tab==='barreiras')items=Object.entries(ITEMS).map(([k,it])=>({id:'i:'+k,icon:['bar',k],name:it.name+' ×'+it.qty,desc:it.desc+' Tecla '+it.key+'. Você tem '+(META.items[k]||0)+'.',price:it.price}));
   if(tab==='melhorias')items=Object.entries(UPGRADES).map(([k,u])=>{const lv=META.upg[k]||0;return{id:'u:'+k,icon:['shop',k],name:u.name+' ('+lv+'/'+u.prices.length+')',desc:u.desc,price:u.prices[lv],owned:lv>=u.prices.length}});
   if(tab==='jardim'){items=Object.entries(GPLANTS).map(([k,p])=>({id:'s:'+k,icon:['shop','seed:'+k],name:'Semente de '+p.name,desc:'Vende por '+p.sell+' moedas quando madura. Você tem '+(META.garden.seeds[k]||0)+'.',price:p.price}));
-    items.push({id:'g:vaso',icon:['shop','vaso'],name:'Vaso novo ('+META.garden.potsN+'/12)',desc:'Mais um lugar para plantar.',price:150+META.garden.potsN*40,owned:META.garden.potsN>=12});
+    items.push({id:'g:vaso',icon:['shop','vaso'],name:'Vaso novo ('+META.garden.potsN+'/32)',desc:'Mais um lugar para plantar.',price:150+META.garden.potsN*40,owned:META.garden.potsN>=32});
+    items.push({id:'g:adubo',icon:['shop','adubo'],name:'Adubo',desc:'Faz uma planta crescer um estágio. Você tem '+META.garden.adubo+'.',price:100},{id:'g:spray',icon:['shop','spray'],name:'Spray ×3',desc:'Tira a praguinha de uma árvore. Você tem '+(META.garden.spray||0)+'.',price:60},{id:'g:mel',icon:['shop','mel'],name:'Mel',desc:'Uma árvore adulta dança e solta moedas por 20s. Você tem '+(META.garden.mel||0)+'.',price:150});
   }
   if(tab==='arvore'){items=[{id:'g:arvore',icon:['shop','arvore'],name:'Semente da Árvore da Vida',desc:'Abre um lugar só para ela no menu. “No meio da praça... estava a árvore da vida.” (Apocalipse 22:2)',price:TREE_SEED_PRICE,owned:treeOwned(),rare:1}];
     if(treeOwned()){items.push({id:'g:adubo',icon:['shop','adubo'],name:'Adubo',desc:'+20 de crescimento. Você tem '+META.garden.adubo+'.',price:100});
@@ -278,7 +285,7 @@ function showShop2(tab){
     if(t==='u'){const lv=META.upg[k]||0;price=UPGRADES[k].prices[lv];META.upg[k]=lv+1}
     if(t==='c'){price=CARD_LV_PRICE[cardLv(k)];if(META.coins<price)return;META.cardLv=META.cardLv||{};META.cardLv[k]=cardLv(k)+1}
     if(t==='s'){price=GPLANTS[k].price;META.garden.seeds[k]=(META.garden.seeds[k]||0)+1}
-    if(t==='g'){if(k==='vaso'){price=150+META.garden.potsN*40;META.garden.potsN++}if(k==='adubo'){price=100;META.garden.adubo++}if(k==='fertil'){price=400;META.garden.fertil++}if(k==='arvore'){price=TREE_SEED_PRICE;if(META.coins<price)return;META.garden.treeSeed=1;toast('A Árvore da Vida apareceu no menu','Gênesis 2:9')}}
+    if(t==='g'){if(k==='vaso'){price=150+META.garden.potsN*40;META.garden.potsN++}if(k==='adubo'){price=100;META.garden.adubo++}if(k==='spray'){price=60;META.garden.spray=(META.garden.spray||0)+3}if(k==='mel'){price=150;META.garden.mel=(META.garden.mel||0)+1}if(k==='fertil'){price=400;META.garden.fertil++}if(k==='arvore'){price=TREE_SEED_PRICE;if(META.coins<price)return;META.garden.treeSeed=1;toast('A Árvore da Vida apareceu no menu','Gênesis 2:9')}}
     if(META.coins<price)return;META.coins-=price;saveMeta();sfx('coin');showShop2(tab)});
 }
 

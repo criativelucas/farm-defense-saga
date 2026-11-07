@@ -2,7 +2,7 @@
 let S=null,RUN=null;
 const META=Object.assign({celeiro:store.get('jardim-do-fruto-celeiro',[]),chars:{lavrador:1},ascMax:0,stats:{kills:0,podas:0,runs:0,wins:0},ach:{},tut:0,daily:{},
   coins:0,char:'lavrador',weapon:'enxada',weapons:{enxada:1},items:{cerca:2,espantalho:1,lama:2},upg:{hearts:0,bag:0,mana:0,treeHearts:0},done:{},unlocked:['videira','mana'],seen:{c:{},e:{},r:{}},
-  garden:{pots:[],potsN:6,seeds:{trigo:2},adubo:0,fertil:0,treeSeed:0,tree:{planted:false,lvl:0,xp:0,lastWater:0}}},store.get('fds-meta',{}));
+  garden:{pots:[],potsN:8,seeds:{trigo:2,'t:videira':1},adubo:1,spray:3,mel:1,fertil:0,treeSeed:0,tree:{planted:false,lvl:0,xp:0,lastWater:0}}},store.get('fds-meta',{}));
 function saveMeta(){store.set('fds-meta',META)}
 let UID=1;const mk=(k,o={})=>({uid:UID++,k,...o});
 const relic=k=>!!RUN&&RUN.relics.includes(k);
