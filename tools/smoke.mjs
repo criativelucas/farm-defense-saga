@@ -54,8 +54,19 @@ async function battles(label){
       return MAPID+' '+S.state+' wave '+S.wi+' frames '+frames})()`);
     check(label+': battle '+(r||'?'),errors.length===before,errors.slice(before).join(' | ').slice(0,200))}}
 
+// each special objective: start it, play a while, and check its own state moves the right way
+async function goals(label){
+  for(const n of [2,6,10,14,18]){const before=errors.length;
+    const r=await js(`(async()=>{startLevel(${n});RUN.coll=['videira','roma','oliveira'].map(k=>mk(k));RUN.deck=[...RUN.coll];startLevelBattle();S.dialog=null;tutStep=-1;
+      const g=S.goal,start={hand:S.hand.filter(Boolean).length,vig:S.vig};
+      for(let i=0;i<300;i++){if(S.intro)closeFoeIntro();S.dialog=null;if(S.state==='prep')callWave();if(S.state!=='wave')break;
+        if(g==='colheita'&&i===50)S.fruitDrops.push({x:S.p.x,y:S.p.y-6,vx:0,vy:0,t:1,k:'roma',life:8});update(.033);updFx(.033);if(i%30===0)draw()}
+      const ok={esteira:S.hand.filter(Boolean).length>start.hand,ovelhas:Array.isArray(S.sheep)&&S.sheep.length===3,colheita:S.harvest>=1,seca:S.goal==='seca'&&S.rain===0,vigilia:S.vig<start.vig}[g];
+      return g+':'+(ok?'ok':'falhou')})()`);
+    check(label+': objetivo '+r,errors.length===before&&/:ok$/.test(r||''),errors.slice(before).join(' | ').slice(0,200))}}
+
 console.log('— new player');await load(true,false);await loopAndScene('new');
-console.log('— player with progress');await js(`Object.assign(META,{intro:1,tut:1,coins:5000});['1-1','1-2','1-3','1-4','2-1','2-4'].forEach(i=>META.done[i]=1);saveMeta();1`);await everyScreen('progress');await battles('progress');
+console.log('— player with progress');await js(`Object.assign(META,{intro:1,tut:1,coins:5000});['1-1','1-2','1-3','1-4','2-1','2-4'].forEach(i=>META.done[i]=1);saveMeta();1`);await everyScreen('progress');await battles('progress');await goals('progress');
 console.log('— embed with gamepad blocked');await load(false,true);await loopAndScene('blocked-pad');
 const fails=checks.filter(c=>!c[1]);console.log(`\n${checks.length-fails.length}/${checks.length} checks passed`+(errors.length?`; ${errors.length} error(s) logged:`:''));
 errors.forEach(e=>console.log('  · '+String(e).split('\n').slice(0,3).join(' / ')));

@@ -74,7 +74,7 @@ function endWave(){
     if(nl>(t.lvl||0)){t.lvl=nl;S.fx.push({k:'ring',x:s.x,y:s.y-14,r:2,max:22,t:0,c:'#f7c948'});pop(s.x,s.y-44,'nível '+(nl+1),'#f7c948',9)}
     if(t.kinds.includes('mostarda')&&t.age===2)unlockAch('mostarda')});
   S.talentsDue+=S.talents;S.talents=0;S.fullT=0;S.wi++;
-  if(S.wi>=S.waves.length){MUS.mode='calm';battleWon();return}
+  if(S.wi>=S.waves.length&&!goalKeepsWaves()){MUS.mode='calm';battleWon();return}
   S.state='prep';S.between=10;S.mana=Math.min(MAXM,S.mana+2);S.reveal=relic('pomba')||isChar('jose');
   banner('Onda vencida','Respire. A próxima vem aí');
 }
@@ -252,7 +252,7 @@ function updTowers(dt){
       if(Math.hypot(P.x-s.x,P.y-s.y)<34){if(t.sleep)pop(s.x,s.y-30,'acordou','#9ab0ff');t.awake=20;t.sleep=false}
       else{t.awake-=dt;if(t.awake<=0&&!t.sleep&&!(t.ark>0)){t.sleep=true;pop(s.x,s.y-30,'adormeceu','#9ab0ff')}}}
     if(t.grow<.6||t.joio||t.stun>0||t.sleep||t.seduced)return;
-    t.fruitT+=dt;if(sysOn('basket')&&t.fruitT>=10&&t.grow>=1&&S.state==='wave'){t.fruitT=0;S.fruitDrops.push({x:s.x+rnd(-5,5),y:s.y-18,vx:rnd(-30,30),vy:-50,t:0,k:t.kinds[0],life:isChar('rute')?16:8})}
+    t.fruitT+=dt;if((sysOn('basket')||S.goal==='colheita')&&t.fruitT>=(S.goal==='colheita'?4:10)&&t.grow>=1&&S.state==='wave'){t.fruitT=0;S.fruitDrops.push({x:s.x+rnd(-5,5),y:s.y-18,vx:rnd(-30,30),vy:-50,t:0,k:t.kinds[0],life:isChar('rute')?16:8})}
     const md=t.mods||{rate:1,fire:1,slowWind:0};
     const m=tmult(t),top=s.y-16;let rate=(S.rain>0?1.6:1)*(t.soil==='pedra'?1.3:1)*md.rate*(S.rally>0?1.5:1);
     if(buffs.some(bx=>bx!==s.x&&Math.abs(bx-s.x)<70))rate*=1.35;
@@ -321,7 +321,7 @@ function playCard(i,si=null){
   else if(c.k==='joio'){RUN.deck=RUN.deck.filter(k=>k!==c);RUN.coll=RUN.coll.filter(k=>k!==c);pop(P.x,P.y-24,'joio arrancado da bolsa','#ffffff')}
   else{if(c.k==='chuva'){tx=W/2;ty=30}if(blessing(c.k)===false)return}
   flyCard(i,c,tx,ty);
-  S.mana-=I.cost;if(CARDS[c.k]&&CARDS[c.k].type==='bencao'){vfx('holy',S.p.x,0);mission('bless',1)}if(c.k!=='joio')S.draw.push(c);S.hand[i]=S.draw.shift();S.sel=-1;S.newIdx=i;renderHand();S.newIdx=-1;
+  S.mana-=I.cost;if(CARDS[c.k]&&CARDS[c.k].type==='bencao'){vfx('holy',S.p.x,0);mission('bless',1)}if(S.goal==='esteira')S.hand[i]=null;else{if(c.k!=='joio')S.draw.push(c);S.hand[i]=S.draw.shift()}S.sel=-1;S.newIdx=i;renderHand();S.newIdx=-1;
 }
 function blessing(k){
   const P=S.p;sfx('card');
@@ -371,7 +371,7 @@ function updStory(dt){
     if((S.respigar>0||dist<30)&&f.t>.3){const k=dt*240/Math.max(dist,1);f.x+=(P.x-f.x)*k;f.y+=(P.y-6-f.y)*k}
     else{const py=f.y;f.vy+=300*dt;f.x+=f.vx*dt;f.y+=f.vy*dt;let fl=gy(f.x);for(const pl of MAP.plats)if(f.x>=pl.x&&f.x<=pl.x+pl.w&&py<=pl.y&&f.y>=pl.y-2)fl=Math.min(fl,pl.y);
       if(f.y>fl-2){f.y=fl-2;f.vy*=-.3;f.vx*=.6}}
-    if(dist<9){f.got=1;const v=isChar('rute')?2:1,was=S.basket;S.mana=Math.min(MAXM,S.mana+v);S.basket=Math.min(5,S.basket+v);sfx('coin');pop(P.x,P.y-22,'+'+v+' fruto','#ffd34a');
+    if(dist<9){f.got=1;goalHarvest(1);const v=isChar('rute')?2:1,was=S.basket;S.mana=Math.min(MAXM,S.mana+v);S.basket=Math.min(5,S.basket+v);sfx('coin');pop(P.x,P.y-22,'+'+v+' fruto','#ffd34a');
       if(was<5&&S.basket>=5)pop(P.x,P.y-34,'cesto cheio: dê um pisão!','#ffd34a',9)}}
   S.fruitDrops=S.fruitDrops.filter(f=>!f.got&&f.t<f.life);
   S.respigar=Math.max(0,S.respigar-dt);S.rally=Math.max(0,S.rally-dt);
@@ -426,7 +426,7 @@ function update(dt){
   for(let i=0;i<4;i++)if(pr('Digit'+(i+1),'Numpad'+(i+1)))playCard(S.babelOn>0&&S.perm[i]!=null?S.perm[i]:i);
   computeLinks(dt);updStory(dt);
   if(pr('KeyX','KeyJ'))playerAttack();if(pr('KeyQ'))placeItem('cerca');if(pr('KeyE'))placeItem('espantalho');if(pr('KeyR'))placeItem('lama');updHazards(dt);
-  const regen=.75*(relic('jarro')?1.2:1)*(ascN()>=2?.85:1);
+  const regen=.75*(relic('jarro')?1.2:1)*(ascN()>=2?.85:1)*(S.goal==='seca'?.5:1);goalUpdate(dt);
   if(S.mana<MAXM)S.mana=Math.min(MAXM,S.mana+regen*dt);
   S.rain=Math.max(0,S.rain-dt);
   S.wet+=((S.rain>0?1:0)-S.wet)*Math.min(1,dt*(S.rain>0?1.5:.12));

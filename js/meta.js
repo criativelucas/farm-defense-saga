@@ -145,7 +145,7 @@ function showWorld(sel){
 </div>
     <div class="lvpanel"><h3>${w.name}</h3><div class="lvrow">${lv.map(l=>{const open=levelOpen(l.n),done=META.done[l.id],unl=UNLOCK_ORDER[l.n];
       return `<button type="button" class="lvl ${l.night?'night':'day'} ${done?'done':''}" data-l="${l.n}" ${open?'':'disabled'}><canvas width="16" height="16" data-sky="${l.night?1:0}"></canvas>
-        <b>${l.id}</b><small>${l.night?'Noite':'Dia'}${l.boss?' · '+EN[l.boss].name:''}${l.rule?' · '+RULES[l.rule].name:''}</small><span class="stars">${done?starStr(starsOf(l.id)):''}</span><small class="rw">${done?'vencida':open?(unl&&!META.unlocked.includes(unl)?'Nova carta: '+CARDS[unl].name:'Moedas'):'bloqueada'}</small></button>`}).join('')}</div></div></div>`);
+        <b>${l.id}</b><small>${l.night?'Noite':'Dia'}${l.boss?' · '+EN[l.boss].name:''}${l.rule?' · '+RULES[l.rule].name:''}${l.goal?' · '+GOALS[l.goal].name:''}</small><span class="stars">${done?starStr(starsOf(l.id)):''}</span><small class="rw">${done?'vencida':open?(unl&&!META.unlocked.includes(unl)?'Nova carta: '+CARDS[unl].name:'Moedas'):'bloqueada'}</small></button>`}).join('')}</div></div></div>`);
   paintCoins();
   $('menu').querySelectorAll('canvas[data-sky]').forEach(c=>{const g=c.getContext('2d');C=g;if(c.dataset.sky==='1'){disc(8,8,6,'#f8f0d8');disc(10,6,5,'#2a3060')}else{disc(8,8,5,'#ffd34a');for(let i=0;i<8;i++){const a=i/8*Math.PI*2;r(8+Math.cos(a)*7,8+Math.sin(a)*7,1,1,'#ffd34a')}}C=x});
   $('menu').querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>{sfx('card');showWorld(+b.dataset.w)});
@@ -177,7 +177,7 @@ function levelNode(){
   return{type:L.boss?'chefe':'batalha',map:w.arena&&L.boss?w.arena:w.map,waves,night:L.night,level:L.id};
 }
 function startLevelBattle(){META.lastDeck=RUN.deck.map(c=>c.k);saveMeta();const L=LEVELS[RUN.level];if(L.rule==='poucas')RUN.handSize=3;RUN.handSize=Math.min(RUN.handSize,RUN.deck.length);hideMenu();clearInterval(wmapTimer);const node=levelNode();startBattle(node);
-  if(L.rule==='sempisao')S.noSlam=true;if(L.rule==='trevas')S.trevas=true;if(L.rule)banner('Regra da fase',RULES[L.rule].name+': '+RULES[L.rule].desc)}
+  if(L.rule==='sempisao')S.noSlam=true;if(L.rule==='trevas')S.trevas=true;if(L.rule)banner('Regra da fase',RULES[L.rule].name+': '+RULES[L.rule].desc);goalStart()}
 function levelWon(){
   const L=LEVELS[RUN.level],first=!META.done[L.id],treeBonus=1+(META.garden.tree.lvl||0)*.05;
   const reward=Math.round((first?60+L.n*20:30+L.n*5)*treeBonus),picked=Math.round(S.coins*treeBonus);

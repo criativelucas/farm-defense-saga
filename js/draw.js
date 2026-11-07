@@ -260,7 +260,7 @@ function draw(){
   const gc=S.wet>.3?'#8affb0':MAP.pal.top1;
   for(const t of MAP.tufts){if(t.x<cam-4||t.x>cam+W+4)continue;const l=Math.sin(S.t*2.2+t.x*.07)>.25?1:0;r(t.x,t.y-t.h,1,t.h,gc);r(t.x+l,t.y-t.h-1,1,1,gc)}
   for(const v of MAP.vines)for(let i=0;i<v.len;i++){const px=v.x+Math.sin(S.t*1.3+v.x+i*.3)*i*.08;r(px,v.y+i,1,1,'#2f9a5a');if(i%3===1)r(px+1,v.y+i,1,1,gc)}
-  drawProps();drawPuddles();drawHomeDyn();drawLinks();drawStoryWorld();drawBarriers();
+  drawProps();drawPuddles();drawHomeDyn();drawLinks();drawStoryWorld();drawGoal();drawBarriers();
   MAP.slots.forEach((s,i)=>{const t=S.tw[i];drawSoil(s);
     if(!t){r(s.x,s.y-6,1,3,'#5fe08a');r(s.x-1,s.y-6,1,1,'#5fe08a');r(s.x+1,s.y-5,1,1,'#5fe08a');if(S.sel>=0&&live&&(S.t*4|0)%2)ring(s.x,s.y-6,6,'#f7c948')}
     if(live&&Math.abs(s.x-P.x)<12&&Math.abs(s.y-P.y)<3){const b=(S.t*4|0)%2;r(s.x-8,s.y-4-b,2,1,'#f7c948');r(s.x+6,s.y-4-b,2,1,'#f7c948');

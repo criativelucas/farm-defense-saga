@@ -64,7 +64,7 @@ function updHUD(){
   if(S.babelOn>0)sh.push('Confusão de línguas!');
   if(S.bank)sh.push('Celeiro: '+Math.floor(S.bank)+' maná');
   if(S.pstones)sh.push('Pedras: '+S.pstones);
-  $('storyhud').innerHTML=sh.filter(Boolean).join('<br>');
+  sh.unshift(goalHud());$('storyhud').innerHTML=sh.filter(Boolean).join('<br>');
   const tal=$('tal');tal.hidden=!(S.talents||S.talentsDue);
   tal.textContent=S.talents?`Talentos: ${S.talents}${S.fullT>1?' · gaste maná!':''}`:`Talentos a receber: ${S.talentsDue}`;tal.classList.toggle('warn',S.fullT>1);
   const boss=S.en.find(e=>EN[e.k].boss||EN[e.k].elite),bb=$('boss');bb.hidden=!boss;
@@ -186,13 +186,14 @@ function showChoose(){
     if(d.fly===1)e.y=gy(x0)-20;if(d.fly===2)e.y=e.base;S.en.push(e)}});
   S.en.sort((a,b)=>a.y-b.y);
   const sel=RUN.deck.slice(0,max),locked=UNLOCK_ORDER.filter(k=>k&&!META.unlocked.includes(k)).length;
-  const render=()=>{const ok=sel.length>=Math.min(mn,RUN.coll.length);
+  const goal=LEVELS[n].goal;
+  const render=()=>{const ok=goal==='esteira'||sel.length>=Math.min(mn,RUN.coll.length);
     menu(`<div class="choose"><div class="bank"><div class="bmana"><canvas width="32" height="32" id="bmana"></canvas><b>${6+2*((META.upg&&META.upg.mana)||0)+tl('mana')}</b></div>
       ${Array.from({length:max},(_,i)=>sel[i]?`<button type="button" class="bslot full" data-out="${i}" title="Tirar ${info(sel[i]).name}"><canvas width="${MINI_W*CK}" height="${MINI_H*CK}" data-mini="${sel[i].uid}"></canvas></button>`:`<span class="bslot"></span>`).join('')}</div>
       <div class="cpanel"><h2>Escolha suas sementes</h2>
         <div class="cgrid">${RUN.coll.map(c=>{const on=sel.includes(c);return`<button type="button" class="cpick ${on?'used':''}" data-in="${c.uid}" title="${info(c).name}: ${info(c).desc}"><canvas width="${MINI_W*CK}" height="${MINI_H*CK}" data-mini="${c.uid}"></canvas></button>`}).join('')}
           ${Array.from({length:Math.max(0,Math.min(locked,24-RUN.coll.length))},()=>'<span class="cpick lock"></span>').join('')}</div>
-        <p class="cinfo" id="cinfo">${LEVELS[n].id} · ${LEVELS[n].night?'Noite':'Dia'} · escolha de ${Math.min(mn,RUN.coll.length)} a ${max} cartas. A bolsa cresce conforme você avança.</p>
+        <p class="cinfo" id="cinfo">${goal?`<b class="goalt">${GOALS[goal].name}:</b> ${GOALS[goal].desc} `:''}${LEVELS[n].id} · ${LEVELS[n].night?'Noite':'Dia'} · escolha de ${Math.min(mn,RUN.coll.length)} a ${max} cartas. A bolsa cresce conforme você avança.</p>
         <button class="btn plantar" id="go" ${ok?'':'disabled'}>Plantar!</button></div>
       <div class="cside"><button class="btn ghost" id="backmap">‹ Mapa</button><button class="btn ghost" id="cshop">Quitanda</button><button class="btn ghost" id="ccodex">Códex</button></div></div>`);
     S.state='choose';

@@ -107,6 +107,7 @@ function unlocksAfter(n){const L=[],lv=LEVELS[n];if(!lv)return L;
     levelPool(n+1).filter(k=>!levelPool(n).includes(k)).forEach(k=>L.push(['pest','Praga nova: '+EN[k].name]))}
   for(const k in SYS_AT)if(SYS_AT[k]===n+1)L.push(['sys','Novidade: '+SYS_TXT[k][0]]);
   for(const k in SHOP_AT)if(SHOP_AT[k]===n+1)L.push(['shop','Quitanda: '+SHOP_NAME[k]]);
+  const nx=LEVELS[n+1];if(nx&&nx.goal)L.push(['sys','Fase especial: '+GOALS[nx.goal].name]);
   if(lv.id==='1-4')L.push(['mode','Estufa do jardim']);if(lv.id==='2-4')L.push(['mode','Modo Jornada']);if(lv.l===3)L.push(['mode','Modo infinito: '+WORLDS[lv.wi].name]);
   return L}
 function roadHTML(){return `<p class="help">O que cada fase vencida libera. Você já venceu ${winsN()} de ${LEVELS.length}.</p><div class="road">${LEVELS.map(l=>{const done=META.done[l.id],U=unlocksAfter(l.n);

@@ -632,3 +632,4 @@ body.big #menu{font-size:max(12px,1.85cqw)}body.big .hud{font-size:max(12px,2.3c
 #cardtip{position:absolute;z-index:9;width:min(11em,22%);transform:translateX(-50%);pointer-events:none;filter:drop-shadow(0 8px 0 #0008);animation:cardin .15s}
 #cardtip canvas{width:100%;height:auto;display:block}
 @media (pointer:coarse){#cardtip{display:none}}
+.cinfo .goalt{color:#ffcb3a}
