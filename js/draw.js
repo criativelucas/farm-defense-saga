@@ -7,6 +7,7 @@ function drawEnemy(e){
   x.save();x.translate(e.x,e.y);x.scale(sp*(1+hq*.2),sp*(1-hq*.16));x.translate(-e.x,-e.y);
   OV=e.flash>0?'#ffffff':e.frz>0?'#a8ecff':null;enemyBody(e);OV=null;x.restore();
   if(e.shield){x.globalAlpha=.35+Math.sin(S.t*6)*.1;ring(e.x,ecy(e),Math.max(d.w,d.h)/2+3,'#9ab0ff');x.globalAlpha=1}
+  drawTelegraph(e);
   if(e.hp<e.max&&!d.boss){const w=Math.min(24,d.w+2),top=(d.fly?e.y-d.h/2:e.y-d.h)-6;r(e.x-w/2,top,w,2,'#2a0c14');r(e.x-w/2,top,Math.max(0,w*e.hp/e.max),2,d.elite?'#f7c948':'#ff4f7b')}
 }
 // every work of the flesh, the elite and the bosses live in sprites.js (SPR)
@@ -203,7 +204,7 @@ function drawTree(t,s,i){
   if(t.grow<.35){const h=1+t.grow*12|0;r(s.x,s.y-2-h,1,h,'#5fe08a');r(s.x-1,s.y-3-h,1,1,'#9ff7b8');r(s.x+1,s.y-2-h,1,1,'#5fe08a');return}
   if(t.joio){drawJoio(s.x,s.y,S.t);return}
   const e=easeBack(Math.min(1,(t.grow-.35)/.65)),lv=1;t.szv=(t.szv??.55)+((.55+.45*Math.min(3,t.water||0)/3)-(t.szv??.55))*.05;
-  x.save();x.translate(s.x,s.y);const sway=Math.sin(S.t*1.6+i*1.3)*.035+t.pulse*.1*Math.sin(S.t*30);x.transform(1,0,-sway,1,0,0);
+  x.save();x.translate(s.x,s.y);const sway=Math.sin(S.t*1.6+i*1.3)*.035+t.pulse*.1*Math.sin(S.t*30)+t.pulse*.14;x.transform(1,0,-sway,1,0,0);
   x.scale((.55+.45*e)*(1-t.pulse*.05)*lv,(.35+.65*e)*(1+t.pulse*.1)*lv);x.translate(-s.x,-s.y);
   if(t.stun>0)OV='#6a7a9a';else if(t.seduced)OV='#d9a521';else if(t.sleep)OV='#4a5070';
   const z=k=>TREE[k].b*t.szv;
@@ -212,6 +213,7 @@ function drawTree(t,s,i){
   else drawTower(t.kinds[0],s.x,s.y,t.t,t,z(t.kinds[0]));
   OV=null;x.restore();
   if(t.sleep)for(let i=0;i<3;i++){const zx=s.x+6+i*3,zy=s.y-30-i*5-((S.t*6)%4);r(zx,zy,3,1,'#c0d0ff');r(zx+1,zy+1,1,1,'#c0d0ff');r(zx,zy+2,3,1,'#c0d0ff')}
+  if(t.branch){const bx=s.x+7,by=s.y+3;if(t.branch==='a'){r(bx,by-1,1,3,'#f7c948');r(bx-1,by,3,1,'#f7c948');r(bx,by,1,1,'#fff6c0')}else{r(bx-1,by,3,1,'#5ab0ff');r(bx,by-1,2,1,'#9ad8ff')}}
   if(t.ark>0){x.globalAlpha=.4+Math.sin(S.t*5)*.2;ring(s.x,s.y-14,16,'#f7c948');x.globalAlpha=1}
 }
 // enemies leave a quick squash-and-fade instead of vanishing
@@ -270,7 +272,7 @@ function draw(){
     if(t.dcd<=0){const b=Math.sin(S.t*6)>0?1:0;r(s.x-1,top-b,3,1,'#f7c948');r(s.x,top+1-b,1,2,'#f7c948')}
     else{r(s.x-6,s.y+2,12,1,'#2a0c14');r(s.x-6,s.y+2,12*(1-t.dcd/6),1,'#f7c948')}
   });
-  drawCorpses();for(const e of S.en)drawEnemy(e);
+  drawRanges();drawCorpses();for(const e of S.en)drawEnemy(e);
   drawSea();drawDragPreview();
   if(S.state!=='title')drawGardener(P);
   drawProj();drawBeams();drawDrops();drawFruitDrops();drawParts();drawVfx();

@@ -1,6 +1,9 @@
 <meta charset="utf-8">
 <title>Farm Defense Saga</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2f6a2a">
+<link rel="icon" href="assets/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&display=swap">
@@ -482,10 +485,46 @@ body.lite #glow{display:none}
 .flip .ff{transform:rotateY(180deg)}.flip.on .fb{transform:rotateY(-180deg)}.flip.on .ff{transform:rotateY(0)}
 .endscr .late{opacity:0;transform:translateY(8px);transition:.3s;pointer-events:none}.endscr.done .late{opacity:1;transform:none;pointer-events:auto}
 .endscr:not(.done){cursor:pointer}
+/* ---- pause, speed, tree sheet ---- */
+.hudbtns{display:flex;gap:.3em;pointer-events:auto}.hudbtns button{font:inherit;font-weight:700;font-size:.8em;min-width:2.4em;color:#fbe9d0;border:8px solid transparent;border-image:var(--f-btnDark) 4 fill / 8px repeat;background:none;padding:0 .2em;cursor:pointer}
+.hudbtns button.on{border-image:var(--f-btn) 4 fill / 8px repeat;color:#2a1408}
+#pause{position:absolute;inset:0;display:grid;place-items:center;background:#0a0610bb;z-index:13;font-size:max(10px,1.5cqw)}
+#pause .fi{box-sizing:border-box;width:min(92%,20em);display:grid;justify-items:center;gap:.5em;text-align:center;border:32px solid transparent;border-image:var(--f-parch) 16 fill / 32px repeat;color:#3a2012}
+#pause h3{margin:0;font-size:1.8em;color:#6a1a10}#pause small{letter-spacing:.2em;text-transform:uppercase;color:#9a3a10;font-weight:700}#pause .btn small{letter-spacing:0;text-transform:none;font-weight:400;color:#6a4a10}
+#pause .col{width:100%}.pvol{display:grid;grid-template-columns:5em 1fr;align-items:center;width:100%;font-size:.85em}.pvol input{accent-color:#c8442a}
+#treeinfo{position:absolute;left:50%;top:13%;transform:translateX(-50%);z-index:9;width:min(90%,19em);box-sizing:border-box;display:grid;gap:.25em;border:20px solid transparent;border-image:var(--f-parch) 16 fill / 20px repeat;color:#3a2012;font-size:max(9px,1.3cqw);filter:drop-shadow(0 6px 0 #0007)}
+#treeinfo b{font-size:1.2em;color:#6a1a10;padding-right:1.2em}#treeinfo>small{color:#7a5434}
+#treeinfo .tx{position:absolute;right:-.4em;top:-.6em;font:inherit;font-weight:700;font-size:1.2em;background:none;border:0;color:#6a1a10;cursor:pointer}
+.trow{display:flex;gap:.4em;align-items:center;font-size:.85em}.trow>span:first-child{min-width:3.4em}
+.pips{display:flex;gap:2px}.pips em{width:.8em;height:.5em;background:#c8a06a;box-shadow:0 0 0 1px #6a4220}.pips em.on{background:#f7c948}
+.wbar{flex:1;height:.5em;background:#0a1a30;box-shadow:0 0 0 1px #2a3a50}.wbar em{display:block;height:100%;background:linear-gradient(#9ad8ff,#3a90e0)}
+.tbtns{display:grid;grid-template-columns:1fr 1fr;gap:.3em}.tbtns .btn{display:grid;font-size:.75em;line-height:1.1}.tbtns .btn small{font-weight:400;font-size:.8em}
+.tbr{margin:0;font-size:.8em;color:#2a6a2a}.tbr.dim{color:#7a5434}
+
+/* ---- ability, boss splash, dialogue, wipe ---- */
+.itm.abil{position:relative;overflow:hidden;border-color:#f7c948}.itm.abil .cdm{position:absolute;left:0;right:0;bottom:0;height:calc(var(--cd,0)*100%);background:#000a;pointer-events:none}
+.itm.abil.ready{box-shadow:0 0 8px #f7c948}
+#bossintro{position:absolute;left:0;right:0;top:30%;z-index:11;pointer-events:none}
+#bossintro .bi{display:flex;align-items:center;gap:1em;justify-content:center;background:linear-gradient(90deg,transparent,#1a0808ee 15%,#1a0808ee 85%,transparent);padding:.6em 0;font-size:max(10px,1.6cqw);border-block:3px solid #c8442a}
+#bossintro canvas{width:5em;height:5em;image-rendering:pixelated}#bossintro small{display:block;color:#ff9a7a;letter-spacing:.2em;text-transform:uppercase}
+#bossintro b{display:block;font-size:2.4em;color:#ffd23a;text-shadow:0 3px 0 #6a1a08;line-height:1}#bossintro span{color:#fbe9d0;font-size:.85em}
+#bossintro.show .bi{animation:bossin 3.2s ease-in-out forwards}@keyframes bossin{0%{transform:translateX(-110%)}12%,85%{transform:none}100%{transform:translateX(110%)}}
+#dialog{position:absolute;left:50%;bottom:24%;transform:translateX(-50%);width:min(92%,34em);z-index:12;cursor:pointer;font-size:max(10px,1.5cqw)}
+#dialog .dl{display:grid;grid-template-columns:4.4em 1fr;gap:.7em;align-items:center;border:24px solid transparent;border-image:var(--f-parch) 16 fill / 24px repeat;color:#3a2012;filter:drop-shadow(0 8px 0 #0007);animation:panelin .3s}
+#dialog .dp{width:4.4em;aspect-ratio:1;background:linear-gradient(#86c4f2,#bfe4ff);box-shadow:0 0 0 2px #1a0c06,0 0 0 4px #d0782e;overflow:hidden;display:grid;place-items:end center}
+#dialog .dp canvas{width:100%;image-rendering:pixelated;transform:scale(1.8);transform-origin:50% 62%}
+#dialog b{color:#8a1e10}#dialog p{margin:.15em 0;min-height:2.6em;line-height:1.3}#dialog small{color:#9a5a20;float:right}
+#wipe{position:absolute;inset:0;z-index:20;pointer-events:none;transform:translateX(-101%);background:
+  radial-gradient(circle at 20% 30%,#5fae4a 0 8%,transparent 9%),radial-gradient(circle at 70% 60%,#4a9a3a 0 10%,transparent 11%),radial-gradient(circle at 40% 80%,#7ac050 0 7%,transparent 8%),#2f6a2a}
+#wipe.go{animation:wipe .7s ease-in-out}@keyframes wipe{0%{transform:translateX(-101%)}45%,55%{transform:none}100%{transform:translateX(101%)}}
+@media (prefers-reduced-motion:reduce){#wipe.go{animation:none}#bossintro.show .bi{animation-duration:.01s}}
+body.big #menu{font-size:max(12px,1.85cqw)}body.big .hud{font-size:max(12px,2.3cqw)}body.big #hand{font-size:max(11px,1.55cqw)}body.big #treeinfo,body.big #dialog{font-size:max(11px,1.75cqw)}
 /* Touch controls */
 #touch{position:absolute;inset:auto 0 22% 0;display:none;justify-content:space-between;padding:0 2%;pointer-events:none}
 #touch div{display:flex;gap:.5em;pointer-events:auto}
-#touch button{font:inherit;font-size:max(11px,1.8cqw);color:var(--ink);background:#0007;border:2px solid #fff4;border-radius:8px;min-width:3.2em;min-height:2.4em;touch-action:none}
+#touch button{font:inherit;font-weight:700;font-size:max(12px,2cqw);color:#fbe9d0;background:none;border:10px solid transparent;border-image:var(--f-btnDark) 4 fill / 10px repeat;min-width:3.6em;min-height:2.8em;touch-action:none;opacity:.85}
+#touch button:active{border-image:var(--f-btn) 4 fill / 10px repeat;color:#2a1408}
+@media (pointer:coarse){#hand{font-size:max(11px,1.6cqw)}.hc2{width:6.6em}}
 @media (pointer:coarse){#touch{display:flex}}
 @media (prefers-reduced-motion:reduce){#banner.show,#toast.show{animation-duration:.01s;opacity:1}.hc.enter,.hc.ready{animation:none}}
 </style>
@@ -500,7 +539,7 @@ body.lite #glow{display:none}
       <div id="fruits"></div><div id="setb"></div><div id="tal" hidden></div><div id="storyhud"></div>
     </div>
     <div class="hud" id="hudR">
-      <div id="wname">Onda 1</div><div id="wbar"><i id="wfill"></i></div>
+      <div class="hudbtns"><button type="button" id="bpause" title="Pausa (Esc)">II</button><button type="button" id="bspeed" title="Velocidade (F)">1x</button></div><div id="wname">Onda 1</div><div id="wbar"><i id="wfill"></i></div>
       <div id="timer" role="button" tabindex="0" hidden></div><div id="preview" hidden></div>
     </div>
     <div id="boss" hidden><span id="bname"></span><b><i id="bfill"></i></b></div>
@@ -513,11 +552,16 @@ body.lite #glow{display:none}
   <div id="itembar"></div>
   <div id="touch">
     <div><button data-k="ArrowLeft">←</button><button data-k="ArrowRight">→</button></div>
-    <div><button data-k="KeyX">Golpe</button><button data-k="ArrowDown">Pisão</button><button data-k="ArrowUp">Pular</button></div>
+    <div><button data-k="KeyC">Poder</button><button data-k="KeyX">Golpe</button><button data-k="ArrowDown">Pisão</button><button data-k="ArrowUp">Pular</button></div>
   </div>
   <div id="menu"></div>
   <div id="toast" hidden></div>
   <div id="foeintro" hidden></div>
+  <div id="pause" hidden></div>
+  <div id="bossintro" hidden></div>
+  <div id="dialog" hidden></div>
+  <div id="wipe"></div>
+  <div id="treeinfo" hidden></div>
 </div></div>
 
 <script src="js/engine.js"></script>
@@ -532,4 +576,7 @@ body.lite #glow{display:none}
 <script src="js/ui.js"></script>
 <script src="js/cards.js"></script>
 <script src="js/meta.js"></script>
+<script src="js/td.js"></script>
+<script src="js/extras.js"></script>
+<script src="js/platform.js"></script>
 <script src="js/garden.js"></script>

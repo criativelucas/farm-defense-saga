@@ -28,6 +28,7 @@ function hubIconTo(cvs,k){const g=hdCtx(cvs,32,32);C=g;
   if(k==='jornada'){NICONS.chefe()}
   if(k==='arvore'){r(15,14,3,16,'#7a4a2e');blob(16,11,12,8,'#2a7a3a','#5fc060','#b0f090',77);[[8,10],[22,9],[14,6],[19,15],[10,15]].forEach(([a,b],i)=>r(a,b,2,2,['#ff4f7b','#c58cff','#f7c948','#5af0ff','#ffa64a'][i]))}
   if(k==='codex'){ICONS.profecia()}
+  if(k==='missoes'){r(8,5,16,22,'#e8d8b0');r(8,5,16,2,'#a88a5a');r(8,25,16,2,'#a88a5a');for(let j=10;j<24;j+=5){r(11,j,3,3,'#5fae4a');r(16,j+1,6,1,'#a88a5a')}r(12,10,1,2,'#ffffff')}
   if(k==='config'){disc(16,16,10,'#9aa0b0');disc(16,16,4,'#3a2a2a');for(let i=0;i<8;i++){const a=i/8*Math.PI*2;r(15+Math.cos(a)*11,15+Math.sin(a)*11,3,3,'#9aa0b0')}}
   if(k==='intro'){disc(16,16,11,'#2a5bd7');disc(16,16,9,'#4a8af0');r(15,9,3,3,'#fff');r(15,14,3,9,'#fff')}
   if(k==='conquistas'){disc(16,14,8,'#f7c948');disc(16,14,6,'#ffe08a');r(11,21,4,8,'#e0284a');r(17,21,4,8,'#2a5bd7');r(15,11,2,6,'#c9921a')}
@@ -48,13 +49,14 @@ function showHub(){
       ${item('jornada','Jornada',jornadaOpen()?'Modo desafio em 3 atos':'Libera ao vencer Jericó 2-4',!jornadaOpen())}
       ${item('jardim','Jardim',gardenOpen()?'Plante, regue e venda':'Libera ao vencer Éden 1-4',!gardenOpen())}
       ${treeOwned()?item('arvore','Árvore da Vida',META.garden.tree.planted?'Nível '+META.garden.tree.lvl+'/10':'Semente pronta para plantar'):''}
+      ${item('missoes','Missões do dia',missionsReady()?missionsReady()+' pronta'+(missionsReady()>1?'s':'')+' para receber!':'3 novas por dia')}
       ${item('loja','Loja','Ferramentas, barreiras, sementes')}
       ${item('personagem','Lavrador',CHARS[META.char].name+' · '+WEAPONS[META.weapon].name)}
     </div><div class="minis">${mini('codex','Códex')}${mini('conquistas','Conquistas')}${mini('intro','Como jogar')}${mini('config','Ajustes')}</div></div>
-    <p class="keys">← → andar · ↑ pular · ↓ no ar: pisão · parado ao lado da árvore: regar · X golpe · 1 a 4 cartas · Enter chama a onda · M som</p></div>`);
+    <p class="keys">← → andar · ↑ pular · ↓ no ar: pisão · parado ao lado da árvore: regar · X golpe · C poder · 1 a 4 cartas · Enter chama a onda · F 2x · Esc pausa · M som</p></div>`);
   $('menu').classList.add('scene');
   $('menu').querySelectorAll('canvas[data-hubicon]').forEach(c=>hubIconTo(c,c.dataset.hubicon));paintCoins();
-  $('menu').querySelectorAll('[data-hub]').forEach(b=>{b.onmouseenter=()=>sfx('hit');b.onclick=()=>{initAudio();sfx('card');({aventura:showWorld,jardim:showGarden,arvore:showTree,intro:()=>showIntro(0),config:showConfig,loja:()=>showShop2('ferramentas'),personagem:showLavrador,jornada:showJornada,codex:()=>showCodex('cartas'),conquistas:showAchs})[b.dataset.hub]()}});
+  $('menu').querySelectorAll('[data-hub]').forEach(b=>{b.onmouseenter=()=>sfx('hit');b.onclick=()=>{initAudio();sfx('card');({aventura:showWorld,jardim:showGarden,arvore:showTree,intro:()=>showIntro(0),config:showConfig,loja:()=>showShop2('ferramentas'),personagem:showLavrador,jornada:showJornada,missoes:showMissions,codex:()=>showCodex('cartas'),conquistas:showAchs})[b.dataset.hub]()}});
 }
 GO.title=showHub;GO.hub=showHub;
 function showJornada(){
@@ -99,6 +101,7 @@ function drawWorldMap(){
     for(let k=0;k<=n;k++){const u=k/n,px=a.x+(b.x-a.x)*u,py=a.y+(b.y-a.y)*u+Math.sin(u*Math.PI)*10;if(k%2)r(px-1,py,3,2,open?'#c9a060':'#8a8a9a')}}
   WORLDS.forEach((w,i)=>islandAt(w,w.top,levelOpen(i*4),LANDMARK[w.id]));
   if(selWorld!=null){const w=WORLDS[selWorld];C.globalAlpha=.5+Math.sin(wt*4)*.3;ring(w.x,w.y-10,w.w/2+6,'#ffe36a');C.globalAlpha=1}
+  drawWalker(g);C=g;
   for(let i=0;i<7;i++){const cx=((hs(i,7)*560-wt*(6+i))%600+600)%600-60;blob(cx,294,40,12,'#c8d0e0','#dde4ee','#ffffff',i+80)}
   C=x;
 }
@@ -118,6 +121,9 @@ function showWorld(sel){
   $('menu').querySelectorAll('canvas[data-sky]').forEach(c=>{const g=c.getContext('2d');C=g;if(c.dataset.sky==='1'){disc(8,8,6,'#f8f0d8');disc(10,6,5,'#2a3060')}else{disc(8,8,5,'#ffd34a');for(let i=0;i<8;i++){const a=i/8*Math.PI*2;r(8+Math.cos(a)*7,8+Math.sin(a)*7,1,1,'#ffd34a')}}C=x});
   $('menu').querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>{sfx('card');showWorld(+b.dataset.w)});
   $('menu').querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{initAudio();startLevel(+b.dataset.l)});
+  const bossDone=META.done[LEVELS[selWorld*4+3].id],best=(META.endless||{})[selWorld]||0;
+  $('menu').querySelector('.lvpanel').insertAdjacentHTML('beforeend',`<div class="row" style="justify-content:flex-start"><button class="btn ${bossDone?'':'ghost'}" id="endless" ${bossDone?'':'disabled'}>Modo infinito${bossDone?' · recorde '+best+' ondas':' · vença o chefe deste mundo'}</button></div>`);
+  $('endless').onclick=()=>{initAudio();startEndless(selWorld)};
   clearInterval(wmapTimer);drawWorldMap();wmapTimer=setInterval(drawWorldMap,60);
 }
 
@@ -133,6 +139,7 @@ function startLevel(n){
   showDeck();
 }
 function levelNode(){
+  if(RUN.endless)return endlessNode();
   const L=LEVELS[RUN.level],w=WORLDS[L.wi];seedRng(9001+L.n*977);
   const nW=L.l===0?2:3,waves=[];
   for(let i=0;i<nW;i++)waves.push(genWave(w.act,i+L.l,'batalha',0,levelPool(L.n)));
@@ -147,7 +154,7 @@ function levelWon(){
   const reward=Math.round((first?60+L.n*20:30+L.n*5)*treeBonus),picked=Math.round(S.coins*treeBonus);
   META.coins+=reward+picked;META.done[L.id]=1;const stars=RUN.hp>=18?3:RUN.hp>=10?2:1;META.stars=META.stars||{};const newBest=stars>(META.stars[L.id]||0);META.stars[L.id]=Math.max(stars,META.stars[L.id]||0);
   let card=null;const unl=UNLOCK_ORDER[L.n];if(first&&unl&&!META.unlocked.includes(unl)){META.unlocked.push(unl);card=mk(unl)}
-  saveMeta();MUS.mode='calm';
+  saveMeta();MUS.mode='calm';mission('win',1);if(stars===3)mission('star3',1);
   const news=[];if(L.id==='1-4')news.push('O Jardim foi liberado! Plante, regue e venda. Junte moedas para a semente da Árvore da Vida.');
   if(L.id==='2-4')news.push('O modo Jornada foi liberado no menu.');
   const last=RUN.level===LEVELS.length-1,total=reward+picked;
@@ -160,6 +167,7 @@ function levelWon(){
   if($('fim'))$('fim').onclick=()=>startEpilogue();
 }
 function levelLost(){
+  if(RUN.endless)return endlessOver();
   const picked=Math.round(S.coins*.5);META.coins+=picked;saveMeta();MUS.mode='calm';
   const worst=Object.entries(S.leaks||{}).sort((a,b)=>b[1]-a[1])[0],w=worst&&EN[worst[0]];
   endScreen({win:false,eyebrow:LEVELS[RUN.level].id,title:'O jardim secou',stars:0,coins:picked,coinNote:'metade das moedas recolhidas',
@@ -220,13 +228,14 @@ function showLavrador(){
       <canvas width="32" height="40" data-char="${k}"></canvas><b>${c.name}</b><small>${ok?c.desc:'Bloqueado: '+c.hint}</small>${ok&&c.card?`<small>Carta: ${CARDS[c.card].name}</small>`:''}</button>`}).join('')}</div></div>
     <div class="sec"><h3>Ferramenta (X)</h3><div class="grid g5">${Object.entries(WEAPONS).map(([k,w])=>{const own=META.weapons[k];return`<button type="button" class="pick ${META.weapon===k?'on':''} ${own?'':'locked'}" data-wp="${k}" ${own?'':'disabled'}>
       <canvas width="32" height="32" data-tool="${k}"></canvas><b>${w.name}</b><small>${w.desc}</small><small>Dano ${w.dmg} · alcance ${w.rng}</small>${own?'':'<i>compre na loja</i>'}</button>`}).join('')}</div></div>
-    <p class="help">Corações: ${3+META.upg.hearts+META.upg.treeHearts} · Encostar nas pragas tira um coração. Sem corações, você desmaia por 3s e perde maná.</p></div>`);
+    ${talentsHTML()}
+    <p class="help">Corações: ${3+META.upg.hearts+META.upg.treeHearts+tl('hearts')} · Encostar nas pragas tira um coração. Sem corações, você desmaia por 3s e perde maná.</p></div>`);
     paintCoins();
     $('menu').querySelectorAll('canvas[data-char]').forEach(c=>charIconTo(c,c.dataset.char));
     $('menu').querySelectorAll('canvas[data-tool]').forEach(c=>toolIconTo(c,c.dataset.tool));
     $('menu').querySelectorAll('canvas[data-bar]').forEach(c=>barrierIconTo(c,c.dataset.bar));
     $('menu').querySelectorAll('[data-ch]').forEach(b=>b.onclick=()=>{META.char=b.dataset.ch;saveMeta();sfx('card');render()});
-    $('menu').querySelectorAll('[data-wp]').forEach(b=>b.onclick=()=>{META.weapon=b.dataset.wp;saveMeta();sfx('card');render()})};render();
+    $('menu').querySelectorAll('[data-wp]').forEach(b=>b.onclick=()=>{META.weapon=b.dataset.wp;saveMeta();sfx('card');render()});bindTalents(render)};render();
 }
 
 // ---------- shop
@@ -244,7 +253,8 @@ function shopIconTo(cvs,k){const g=cvs.getContext('2d');g.clearRect(0,0,32,32);C
   if(k==='arvore'){disc(16,18,8,'#c9921a');disc(16,18,6,'#f7c948');r(15,6,2,8,'#5fe08a');r(12,6,3,2,'#5fe08a');r(17,5,3,2,'#5fe08a');for(let i=0;i<6;i++){const a=i/6*Math.PI*2+wt;r(16+Math.cos(a)*12,18+Math.sin(a)*12,1,1,'#fff6c0')}}
   C=x}
 function showShop2(tab){
-  const tabs={ferramentas:'Ferramentas',barreiras:'Barreiras',melhorias:'Melhorias',jardim:'Jardim',arvore:'Árvore da Vida'};let items=[];
+  const tabs={ferramentas:'Ferramentas',barreiras:'Barreiras',melhorias:'Melhorias',cartas:'Cartas',jardim:'Jardim',arvore:'Árvore da Vida'};let items=[];
+  if(tab==='cartas')items=META.unlocked.filter(k=>CARDS[k].type==='semente').map(k=>{const lv=cardLv(k);return{id:'c:'+k,icon:['card',k],name:CARDS[k].name+' · nível '+(lv+1)+'/4',desc:'Cada nível: +15% de dano desta árvore.',price:CARD_LV_PRICE[lv],owned:lv>=3}});
   if(tab==='ferramentas')items=Object.entries(WEAPONS).filter(([k])=>k!=='enxada').map(([k,w])=>({id:'w:'+k,icon:['tool',k],name:w.name,desc:w.desc,price:w.price,owned:!!META.weapons[k]}));
   if(tab==='barreiras')items=Object.entries(ITEMS).map(([k,it])=>({id:'i:'+k,icon:['bar',k],name:it.name+' ×'+it.qty,desc:it.desc+' Tecla '+it.key+'. Você tem '+(META.items[k]||0)+'.',price:it.price}));
   if(tab==='melhorias')items=Object.entries(UPGRADES).map(([k,u])=>{const lv=META.upg[k]||0;return{id:'u:'+k,icon:['shop',k],name:u.name+' ('+lv+'/'+u.prices.length+')',desc:u.desc,price:u.prices[lv],owned:lv>=u.prices.length}});
@@ -260,12 +270,13 @@ function showShop2(tab){
       <button class="btn ${it.owned?'ghost':''}" data-buy="${it.id}" ${it.owned||META.coins<it.price?'disabled':''}>${it.owned?'Já tem':it.price+' moedas'}</button></div>`).join('')}</div>
     ${tab==='jardim'&&!gardenOpen()?'<p class="help">O jardim abre ao vencer a fase 1-4. Você já pode comprar sementes.</p>':''}${tab==='arvore'&&!treeOwned()?'<p class="help">Adubo e fertilizante aparecem depois que você comprar a semente.</p>':''}</div>`);
   paintCoins();
-  $('menu').querySelectorAll('canvas[data-si]').forEach(c=>{const[t,...k]=c.dataset.si.split(':');const kk=k.join(':');if(t==='tool')toolIconTo(c,kk);else if(t==='bar')barrierIconTo(c,kk);else shopIconTo(c,kk)});
+  $('menu').querySelectorAll('canvas[data-si]').forEach(c=>{const[t,...k]=c.dataset.si.split(':');const kk=k.join(':');if(t==='tool')toolIconTo(c,kk);else if(t==='bar')barrierIconTo(c,kk);else if(t==='card'){const g=hdCtx(c,32,32);C=g;drawTower(kk,16,30,1,null,1);C=x}else shopIconTo(c,kk)});
   $('menu').querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>showShop2(b.dataset.tab));
   $('menu').querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{const[t,k]=b.dataset.buy.split(':');let price=0;
     if(t==='w'){price=WEAPONS[k].price;META.weapons[k]=1;META.weapon=k}
     if(t==='i'){price=ITEMS[k].price;META.items[k]=(META.items[k]||0)+ITEMS[k].qty}
     if(t==='u'){const lv=META.upg[k]||0;price=UPGRADES[k].prices[lv];META.upg[k]=lv+1}
+    if(t==='c'){price=CARD_LV_PRICE[cardLv(k)];if(META.coins<price)return;META.cardLv=META.cardLv||{};META.cardLv[k]=cardLv(k)+1}
     if(t==='s'){price=GPLANTS[k].price;META.garden.seeds[k]=(META.garden.seeds[k]||0)+1}
     if(t==='g'){if(k==='vaso'){price=150+META.garden.potsN*40;META.garden.potsN++}if(k==='adubo'){price=100;META.garden.adubo++}if(k==='fertil'){price=400;META.garden.fertil++}if(k==='arvore'){price=TREE_SEED_PRICE;if(META.coins<price)return;META.garden.treeSeed=1;toast('A Árvore da Vida apareceu no menu','Gênesis 2:9')}}
     if(META.coins<price)return;META.coins-=price;saveMeta();sfx('coin');showShop2(tab)});
@@ -283,11 +294,15 @@ function showConfig(){let armed=false;
     <div class="cfg"><label>Música <input type="range" id="cmus" min="0" max="1" step="0.05" value="${CFG.mus}"></label>
     <label>Efeitos <input type="range" id="csfx" min="0" max="1" step="0.05" value="${CFG.sfx}"></label>
     <label class="chk"><input type="checkbox" id="clite" ${CFG.lite?'checked':''}> Modo leve <small>sem brilho, neblina e distorção; para aparelhos mais fracos</small></label>
-    <label class="chk"><input type="checkbox" id="cmute" ${muted?'checked':''}> Silenciar tudo (M)</label></div>
+    <label class="chk"><input type="checkbox" id="cmute" ${muted?'checked':''}> Silenciar tudo (M)</label>
+    <label class="chk"><input type="checkbox" id="cbig" ${CFG.big?'checked':''}> Texto maior <small>aumenta letras dos menus e do painel</small></label>
+    <label class="chk"><input type="checkbox" id="cshake" ${CFG.noShake?'':'checked'}> Tremor de tela <small>desligue se a tela tremendo incomoda</small></label></div>
+    <div class="sec"><h3>Guardar progresso</h3><p class="help">Salve um arquivo com seu progresso para levar a outro aparelho ou navegador.</p>
+    <div class="row" style="justify-content:flex-start"><button class="btn ghost" id="cexp">Salvar arquivo</button><label class="btn ghost">Carregar arquivo<input type="file" id="cimp" accept="application/json,.json" hidden></label></div></div>
     <div class="sec"><h3>Progresso</h3><p class="help">Apaga fases, moedas, jardim, árvore, cartas e conquistas deste navegador.</p>
     <button class="btn ${armed?'act':'ghost'}" id="creset">${armed?'Tem certeza? Clique de novo para apagar tudo':'Reiniciar progresso'}</button></div></div>`);
     $('cmus').oninput=e=>{CFG.mus=+e.target.value;saveCfg()};$('csfx').oninput=e=>{CFG.sfx=+e.target.value;saveCfg();sfx('coin')};
-    $('clite').onchange=e=>{CFG.lite=e.target.checked;saveCfg()};$('cmute').onchange=e=>{initAudio();setMuted(e.target.checked)};
+    $('clite').onchange=e=>{CFG.lite=e.target.checked;saveCfg()};$('cshake').onchange=e=>{CFG.noShake=!e.target.checked;saveCfg()};$('cbig').onchange=e=>{CFG.big=e.target.checked;saveCfg()};$('cexp').onclick=exportSave;$('cimp').onchange=e=>{if(e.target.files[0])importSave(e.target.files[0])};$('cmute').onchange=e=>{initAudio();setMuted(e.target.checked)};
     $('creset').onclick=()=>{if(!armed){armed=true;return render()}['fds-meta','fds-run','jardim-do-fruto-celeiro'].forEach(k=>store.del(k));location.reload()}};render()}
 // ---------- show which works of the flesh come, on the seed screen
 function wavePreviewHTML(){if(!RUN||RUN.mode!=='level')return'';const node=levelNode(),cnt={};node.waves.forEach(w=>w.list.forEach(([k])=>{if(!EN[k].hide)cnt[k]=(cnt[k]||0)+1}));

@@ -67,6 +67,7 @@ function cardCanvas(c,mini=false){
     if(rare){C=g;for(let i=0;i<5;i++)r(hs(i,7)*W,hs(i,8)*H,1,1,'#fff6c0');C=x}
     if(c.plus){g.fillStyle='#1a4a8a';g.fillRect(W-12,4,9,9);pxText(g,'+',W-7.5,12,'700 10px "Pixelify Sans", monospace','#bfe8ff')}
     return cv2}
+  if(CARDS[c.k]&&cardLv(c.k))pxText(g,'Nv '+(cardLv(c.k)+1),W-18,H-6,'700 9px "Pixelify Sans", monospace','#7fc8ff','#000');
   // cost gem
   if(cat==='semente'||cat==='hibrida')gemDraw(g,W/2,10,10,st.gem,String(I.cost));else gemDraw(g,15,16,10,st.gem,String(I.cost));
   // fruit suits under the art

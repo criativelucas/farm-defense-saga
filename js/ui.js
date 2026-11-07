@@ -71,7 +71,9 @@ function updHUD(){
   const fr=$('fruits');if(!fr.children.length)fr.innerHTML=FRUIT_ORDER.map(f=>`<span data-f="${f}" style="--c:${FRUIT_COL[f]}">${f}</span>`).join('');
   [...fr.children].forEach(s=>s.classList.toggle('on',S.fruits.has(s.dataset.f)));
   $('setb').textContent=S.setMult>1?'Fruto em cacho: +'+Math.round((S.setMult-1)*100)+'% de dano':'';
-  const sh=['Cesto '+S.basket+'/5'+(S.basket>=5?' · pisão de colheita!':'')];
+  const ab=$('abilbtn');if(ab){const f=(S.abil||0)/ABIL_CD;ab.style.setProperty('--cd',f);ab.classList.toggle('ready',f<=0)}
+  $('fruits').hidden=!sysOn('fruitset');
+  const sh=[sysOn('basket')?'Cesto '+S.basket+'/5'+(S.basket>=5?' · pisão de colheita!':''):''];
   if(MAPID==='jerico')sh.push(S.fallen?'As muralhas caíram':'Voltas pela torre: '+S.laps+'/7');
   if(S.folk)sh.push(S.folk.saved?'O povo atravessou':'Leve o povo à outra margem');
   if(S.idol)sh.push(S.idol.hp>0?'Ídolo: faltam '+S.idol.hp+' pisões':'Ídolo destruído');
@@ -80,7 +82,7 @@ function updHUD(){
   if(S.babelOn>0)sh.push('Confusão de línguas!');
   if(S.bank)sh.push('Celeiro: '+Math.floor(S.bank)+' maná');
   if(S.pstones)sh.push('Pedras: '+S.pstones);
-  $('storyhud').innerHTML=sh.join('<br>');
+  $('storyhud').innerHTML=sh.filter(Boolean).join('<br>');
   const tal=$('tal');tal.hidden=!(S.talents||S.talentsDue);
   tal.textContent=S.talents?`Talentos: ${S.talents}${S.fullT>1?' · gaste maná!':''}`:`Talentos a receber: ${S.talentsDue}`;tal.classList.toggle('warn',S.fullT>1);
   const boss=S.en.find(e=>EN[e.k].boss||EN[e.k].elite),bb=$('boss');bb.hidden=!boss;
@@ -415,24 +417,28 @@ function showAchs(){
 // ---------- loop and boot
 let last=performance.now();
 function frame(now){
+  pollPad();
   const rdt=Math.min(.033,(now-last)/1000);last=now;
   if(S){
-    const dt=rdt*(S.slow>0?.28:1);S.slow=Math.max(0,S.slow-rdt);S.t+=dt;
+    if(live()&&pr('Escape','KeyP')&&!S.intro&&!S.dialog)togglePause();if(live()&&pr('KeyF'))toggleSpeed();
+    if(S.paused&&live()){draw();updHUD();hit.clear();requestAnimationFrame(frame);return}
+    const dt=rdt*(S.slow>0?.28:1)*(live()?S.speed||1:1);S.slow=Math.max(0,S.slow-rdt);S.t+=dt;
     if(S.state==='title'){S.cam=(Math.sin(S.t*.035-1.2)*.5+.5)*(MAP.ww-W);for(const t of S.tw)if(t)t.t+=dt}
     S.zoom+=((S.slow>0?1.7:1)-S.zoom)*Math.min(1,rdt*4);
     if(pr('KeyM'))setMuted(!muted);
-    if(S.state==='prep'||S.state==='wave'){if(S.intro){if(pr('Enter','Space','KeyX'))closeFoeIntro()}else if(S.stop>0)S.stop-=rdt;else update(dt)}
+    if(S.state==='prep'||S.state==='wave'){if(S.dialog){if(pr('Enter','Space','KeyX'))dialogNext()}else if(S.intro){if(pr('Enter','Space','KeyX'))closeFoeIntro()}else if(S.stop>0)S.stop-=rdt;else update(dt)}
     else if(S.state==='epilogue'){updPlayer(dt);if(Math.random()<dt*4)S.parts.push({x:S.cam+rnd(0,W+60),y:rnd(-10,60),vx:rnd(-22,-8),vy:rnd(8,16),g:0,life:9,max:9,c:pick(['#ffb0c8','#ffffff','#ffe36a']),s:1,sway:1});if(S.p.x>MAP.ww-70){S.state='menu';showWin()}}
     updFx(dt);draw();updHUD();
   }
   hit.clear();requestAnimationFrame(frame);
 }
-$('timer').addEventListener('click',()=>{if(S&&S.state==='prep')startWave()});
+$('timer').addEventListener('click',()=>callWave());
 (document.fonts?document.fonts.load('8px "Pixelify Sans"'):Promise.resolve()).catch(()=>{}).finally(()=>requestAnimationFrame(frame));
 
 function startEpilogue(){hideMenu();blankBattle('tumulo');S.state='epilogue';MUS.mode='calm';banner('A manhã do primeiro dia','João 20:1');showStory()}
 
-function renderItems(){const el=$('itembar');if(!el)return;el.innerHTML=Object.entries(ITEMS).map(([k,it])=>`<button type="button" class="itm ${META.items[k]?'':'empty'}" data-itm="${k}" title="${it.name}: ${it.desc}"><canvas width="32" height="32" data-bar="${k}"></canvas><b>${META.items[k]||0}</b><small>${it.key}</small></button>`).join('')+
-  `<button type="button" class="itm atk" id="atkbtn" title="Golpe com a ferramenta (X)"><canvas width="32" height="32" data-tool="${META.weapon}"></canvas><b>X</b><small>golpe</small></button>`;
+function renderItems(){const el=$('itembar');if(!el)return;const A=ABIL[(RUN&&RUN.char)||META.char]||ABIL.lavrador;el.innerHTML=Object.entries(ITEMS).filter(()=>sysOn('barriers')).map(([k,it])=>`<button type="button" class="itm ${META.items[k]?'':'empty'}" data-itm="${k}" title="${it.name}: ${it.desc}"><canvas width="32" height="32" data-bar="${k}"></canvas><b>${META.items[k]||0}</b><small>${it.key}</small></button>`).join('')+
+  `<button type="button" class="itm atk" id="atkbtn" title="Golpe com a ferramenta (X)"><canvas width="32" height="32" data-tool="${META.weapon}"></canvas><b>X</b><small>golpe</small></button>`+
+  `<button type="button" class="itm abil" id="abilbtn" title="${A[0]}: ${A[1]} (C)"><canvas width="32" height="32" data-hubicon="personagem"></canvas><b>C</b><small>${A[0]}</small><i class="cdm"></i></button>`;
   el.querySelectorAll('canvas[data-bar]').forEach(c=>barrierIconTo(c,c.dataset.bar));el.querySelectorAll('canvas[data-tool]').forEach(c=>toolIconTo(c,c.dataset.tool));
-  el.querySelectorAll('[data-itm]').forEach(b=>b.onclick=e=>{e.currentTarget.blur();placeItem(b.dataset.itm)});$('atkbtn').onclick=e=>{e.currentTarget.blur();playerAttack()}}
+  el.querySelectorAll('[data-itm]').forEach(b=>b.onclick=e=>{e.currentTarget.blur();placeItem(b.dataset.itm)});el.querySelectorAll('canvas[data-hubicon]').forEach(c=>hubIconTo(c,'personagem'));$('abilbtn').onclick=e=>{e.currentTarget.blur();useAbility()};$('atkbtn').onclick=e=>{e.currentTarget.blur();playerAttack()}}
