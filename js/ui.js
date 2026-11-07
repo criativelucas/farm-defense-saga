@@ -1,23 +1,5 @@
 // ---------- HUD and hand
 const garble=s=>s.replace(/\S/g,()=>pick([...'ʘΔλΣЖЊѮᚠᚢᚦ϶']));
-function renderHand(){
-  const el=$('cards');el.innerHTML='';const n=S.hand.length,conf=S.babelOn>0;
-  for(let j=0;j<n;j++){
-    const i=conf&&S.perm[j]!=null?S.perm[j]:j,c=S.hand[i],b=document.createElement('button');b.type='button';
-    b.style.setProperty('--rot',((j-(n-1)/2)*5)+'deg');b.style.setProperty('--lift',(Math.abs(j-(n-1)/2)*4)+'px');
-    if(!c){b.className='hc empty';b.disabled=true;b.innerHTML='<b>vazio</b>';el.append(b);continue}
-    const I=info(c);b.className='hc c-'+catOf(c)+' t-'+I.type+(c.rare?' rare':'')+(c.plus?' plus':'')+(S.sel===i?' sel':'')+(conf?' garbled':'');
-    b.innerHTML=`<span class="gem">${conf?'?':I.cost}</span><span class="key">${j+1}</span>${conf?'':I.fruits.map(f=>`<canvas class="emb" width="12" height="12" data-emb="${f}"></canvas>`).join('')}<span class="art"><canvas width="64" height="44"></canvas></span><b>${conf?garble(I.name):I.name}</b>`;
-    b.title=conf?'':I.name+': '+I.desc;
-    const art=b.querySelector('.art canvas');if(conf){const g=art.getContext('2d');g.fillStyle='#3a1e4a';g.fillRect(0,0,64,44);g.fillStyle='#e0c0ff';g.font='20px serif';g.fillText(garble('??'),18,30)}else cardArtTo(art,c);
-    b.querySelectorAll('canvas[data-emb]').forEach(e=>embTo(e,e.dataset.emb));
-    b.addEventListener('pointerdown',e=>startDrag(e,i,b));
-    b.addEventListener('click',e=>{e.currentTarget.blur();if(e.detail===0)onCardClick(i)});
-    if(i===S.newIdx)b.classList.add('enter');el.append(b)}
-  const nx=S.draw[0];
-  $('pilecount').textContent=S.draw.length;renderItems();
-  const pv=$('nextc');pv.innerHTML='';if(nx&&!conf){const cv2=document.createElement('canvas');cv2.width=64;cv2.height=44;cardArtTo(cv2,nx);pv.append(cv2);pv.title='Próxima: '+info(nx).name}
-}
 function onCardClick(i){const c=S.hand[i];if(!c)return;const I=info(c);
   if(I.kinds&&slotAt()<0){S.sel=S.sel===i?-1:i;renderHand();if(S.sel>=0)pop(S.p.x,S.p.y-24,'toque num canteiro','#f7c948');return}
   playCard(i)}
@@ -66,10 +48,10 @@ function updHUD(){
   const w=S.waves[Math.min(S.wi,S.waves.length-1)];
   $('wname').textContent='Onda '+(Math.min(S.wi,S.waves.length-1)+1)+'/'+S.waves.length+' · '+(S.state==='wave'||S.reveal?w.name:'???');
   $('wfill').style.transform=`scaleX(${S.state==='wave'?S.done/S.total:0})`;
-  const tm=$('timer');tm.hidden=S.state!=='prep';if(S.state==='prep')tm.textContent=`Onda em ${Math.ceil(S.between)}s · Enter chama agora`;
-  const pv=$('preview');pv.hidden=S.state!=='prep';if(S.state==='prep')pv.textContent=S.reveal?'Próxima: '+waveSummary(w):'Próxima onda: ??? (use Profecia)';
-  const fr=$('fruits');if(!fr.children.length)fr.innerHTML=FRUIT_ORDER.map(f=>`<span data-f="${f}" style="--c:${FRUIT_COL[f]}">${f}</span>`).join('');
-  [...fr.children].forEach(s=>s.classList.toggle('on',S.fruits.has(s.dataset.f)));
+  const tm=$('timer');tm.hidden=S.state!=='prep';if(S.state==='prep')tm.textContent=S.between>99?'Enter chama a onda':`Onda em ${Math.ceil(S.between)}s · Enter`;
+  const pv=$('preview');pv.hidden=S.state!=='prep'||!S.reveal;if(S.state==='prep')pv.textContent=S.reveal?'Próxima: '+waveSummary(w):'Próxima onda: ??? (use Profecia)';
+  const fr=$('fruits');if(!fr.children.length)fr.innerHTML='<b>Frutos</b>'+FRUIT_ORDER.map(f=>`<span data-f="${f}" title="${f}" style="--c:${FRUIT_COL[f]}"></span>`).join('');
+  fr.querySelectorAll('span').forEach(s=>s.classList.toggle('on',S.fruits.has(s.dataset.f)));
   $('setb').textContent=S.setMult>1?'Fruto em cacho: +'+Math.round((S.setMult-1)*100)+'% de dano':'';
   const ab=$('abilbtn');if(ab){const f=(S.abil||0)/ABIL_CD;ab.style.setProperty('--cd',f);ab.classList.toggle('ready',f<=0)}
   $('fruits').hidden=!sysOn('fruitset');
@@ -105,22 +87,8 @@ function endTutorial(){tutStep=-1;META.tut=1;saveMeta();$('tut').hidden=true}
 function tutCheck(){if(tutStep===0&&S.p.moved>30)tutNext();else if(tutStep===1&&S.p.jumped)tutNext()}
 
 // ---------- menus
-const SVGI={dmg:'<svg viewBox="0 0 8 8" aria-hidden="true"><path d="M1 7 5 3 6 1 7 2 5 3 1 7z" stroke="currentColor" fill="currentColor"/></svg>',
-  rng:'<svg viewBox="0 0 8 8" aria-hidden="true"><circle cx="4" cy="4" r="3" fill="none" stroke="currentColor"/><circle cx="4" cy="4" r="1" fill="currentColor"/></svg>',
-  cd:'<svg viewBox="0 0 8 8" aria-hidden="true"><circle cx="4" cy="4" r="3" fill="none" stroke="currentColor"/><path d="M4 2v2h2" stroke="currentColor" fill="none"/></svg>'};
-const strongVs=I=>I.kinds?Object.keys(EN).filter(k=>!EN[k].hide&&I.kinds.includes(EN[k].weak)):[];
 const catOf=c=>c.hyb?'hibrida':CARDS[c.k]&&CARDS[c.k].own?'propria':info(c).type;
 const CAT_LABEL={semente:'Semente',hibrida:'Enxerto',propria:'Carta de personagem',bencao:'Bênção',parabola:'Parábola',joio:'Joio'};
-function cardHTML(c,cls=''){const I=info(c),st=I.kinds&&STATS[I.key],vs=strongVs(I),cat=catOf(c),own=CARDS[c.k]&&CARDS[c.k].own;
-  return `<button type="button" class="card t-${I.type} c-${cat}${c.rare?' rare':''}${c.plus?' plus':''} ${cls}" data-uid="${c.uid}" title="${I.desc.replace(/"/g,'&quot;')}"><span class="face">
-    <span class="gem">${I.cost}</span><span class="embs">${I.fruits.map(f=>`<canvas class="emb" width="12" height="12" data-emb="${f}" title="${f}"></canvas>`).join('')}</span>
-    <span class="plate">${I.name}</span>
-    <span class="art"><canvas width="64" height="44" data-art="${c.uid}"></canvas></span>
-    <i>${own?'Carta de '+CHARS[own].name:CAT_LABEL[cat]}${I.fruit?' · '+I.fruit:''}</i>
-    ${st?`<span class="stats"><span title="dano">${SVGI.dmg}${st.dmg}</span><span title="alcance">${SVGI.rng}${st.rng}</span><span title="recarga">${SVGI.cd}${st.cd}</span></span>`:''}
-    <small>${I.short}</small>
-    ${vs.length?`<span class="vs">forte contra ${vs.map(k=>`<canvas width="48" height="48" data-enemy="${k}" title="${EN[k].name}"></canvas>`).join('')}</span>`:''}
-    <em>${I.ref||''}</em></span></button>`}
 // cards lean toward the pointer; consecrated cards catch the light
 addEventListener('pointermove',e=>{const c=e.target.closest&&e.target.closest('.card,.card2');if(!c)return;const b=c.getBoundingClientRect(),px=(e.clientX-b.left)/b.width-.5,py=(e.clientY-b.top)/b.height-.5;
   c.style.setProperty('--rx',(-py*12)+'deg');c.style.setProperty('--ry',(px*12)+'deg');c.style.setProperty('--mx',((px+.5)*100)+'%');c.style.setProperty('--my',((py+.5)*100)+'%')});

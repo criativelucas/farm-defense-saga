@@ -1,8 +1,14 @@
 // ---------- persistent profile, current journey (RUN) and current battle (S)
 let S=null,RUN=null;
-const META=Object.assign({celeiro:store.get('jardim-do-fruto-celeiro',[]),chars:{lavrador:1},ascMax:0,stats:{kills:0,podas:0,runs:0,wins:0},ach:{},tut:0,daily:{},
+// saved progress is merged over these defaults key by key (nested objects too), so saves from older versions gain new fields
+const META_DEFAULTS={celeiro:store.get('jardim-do-fruto-celeiro',[]),chars:{lavrador:1},ascMax:0,stats:{kills:0,podas:0,runs:0,wins:0},ach:{},tut:0,daily:{},
   coins:0,char:'lavrador',weapon:'enxada',weapons:{enxada:1},items:{cerca:2,espantalho:1,lama:2},upg:{hearts:0,bag:0,mana:0,treeHearts:0},done:{},unlocked:['videira','mana'],seen:{c:{},e:{},r:{}},
-  garden:{pots:[],potsN:8,seeds:{trigo:2,'t:videira':1},adubo:1,spray:3,mel:1,fertil:0,treeSeed:0,tree:{planted:false,lvl:0,xp:0,lastWater:0}}},store.get('fds-meta',{}));
+  garden:{pots:[],potsN:8,seeds:{trigo:2,'t:videira':1},adubo:1,spray:3,mel:1,fertil:0,treeSeed:0,tree:{planted:false,lvl:0,xp:0,lastWater:0},lastVisit:0},
+  stars:{},talents:{},cardLv:{},sysSeen:{},dlg:{},endless:{},missions:null,intro:0,v:2};
+function fillDefaults(t,d){for(const k in d){const dv=d[k];if(t[k]===undefined||t[k]===null&&dv!==null)t[k]=structuredClone(dv);
+  else if(dv&&typeof dv==='object'&&!Array.isArray(dv)&&t[k]&&typeof t[k]==='object'&&!Array.isArray(t[k]))fillDefaults(t[k],dv)}return t}
+const META=fillDefaults(store.get('fds-meta',{}),META_DEFAULTS);META.celeiro=store.get('jardim-do-fruto-celeiro',META.celeiro||[]);
+if(!Array.isArray(META.garden.pots))META.garden.pots=[];META.garden.pots=META.garden.pots.map(p=>p&&typeof p.k==='string'?p:null);META.v=2;
 function saveMeta(){store.set('fds-meta',META)}
 let UID=1;const mk=(k,o={})=>({uid:UID++,k,...o});
 const relic=k=>!!RUN&&RUN.relics.includes(k);

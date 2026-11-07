@@ -59,9 +59,10 @@ function cardCanvas(c,mini=false){
     g.fillStyle=plateCol[0];g.fillRect(px0-1,py-1,pw+2,ph+2);g.fillStyle=plateCol[2];g.fillRect(px0,py,pw,ph);g.fillStyle=plateCol[1];g.fillRect(px0,py,pw,1);
     pxText(g,name,px0+pw/2,py+(mini?8:12),(mini?'700 7px':'700 10px')+' "Pixelify Sans", monospace',st.plate==='gold'?'#2a1408':'#fbe9d0',st.plate==='gold'?null:'#000')}
   if(mini){
-    // short rule text in the lower field, so a card in hand says what it does
-    const sy=(cat==='semente'||cat==='hibrida')?ay+ah+19:ay+ah+8;g.font='600 7px "Pixelify Sans", monospace';
-    wrapLines(g,I.short,W-10,Math.max(1,Math.floor((H-6-sy)/8))).forEach((ln,i)=>pxText(g,ln,W/2,sy+i*8,'600 7px "Pixelify Sans", monospace',st.ink||'#fbe9d0',st.ink?null:'#000000aa'));
+    // the lower field shows big, readable marks instead of tiny rules: fruit emblems for seeds, the card's kind for the rest
+    const sy=(cat==='semente'||cat==='hibrida')?ay+ah+18:ay+ah+6;
+    if(I.fruits.length){I.fruits.forEach((f,k)=>{const e=mkHD(12,12,CK);embTo(e,f);g.drawImage(e,W/2-I.fruits.length*11+k*22+1,sy,20,20)})}
+    else pxText(g,(CAT_LABEL[cat]||'').toUpperCase(),W/2,sy+12,'700 9px "Pixelify Sans", monospace',st.ink||'#ffe9a0',st.ink?null:'#000');
     gemDraw(g,cat==='semente'||cat==='hibrida'?W/2:9,cat==='semente'||cat==='hibrida'?8:9,6,st.gem,'');
     pxText(g,String(I.cost),cat==='semente'||cat==='hibrida'?W/2:9,(cat==='semente'||cat==='hibrida'?8:9)+4,'700 10px "Pixelify Sans", monospace','#ffffff','#000');
     if(rare){C=g;for(let i=0;i<5;i++)r(hs(i,7)*W,hs(i,8)*H,1,1,'#fff6c0');C=x}
@@ -101,6 +102,7 @@ function cardBack(mini){const W=mini?MINI_W:CARD_W,H=mini?MINI_H:CARD_H,c=mkHD(W
   g.fillStyle='#3a2418';for(let y=10;y<H-10;y+=6)for(let xx=10+(y/6%2)*3;xx<W-10;xx+=6)g.fillRect(xx,y,2,2);
   pxText(g,'?',W/2,H/2+16,'700 46px "Pixelify Sans", monospace','#c9a24a','#000');pxText(g,'por descobrir',W/2,H-16,'9px "Pixelify Sans", monospace','#c9a99a');return c}
 function renderHand(){
+  cardTip(null);
   const el=$('cards');el.innerHTML='';const n=S.hand.length,conf=S.babelOn>0;
   for(let j=0;j<n;j++){
     const i=conf&&S.perm[j]!=null?S.perm[j]:j,c=S.hand[i],b=document.createElement('button');b.type='button';
@@ -110,9 +112,13 @@ function renderHand(){
     b.innerHTML=`<canvas width="${MINI_W*CK}" height="${MINI_H*CK}"></canvas><span class="key">${j+1}</span>`;b.title=conf?'':I.name+': '+I.desc;
     const g=b.querySelector('canvas').getContext('2d');
     if(conf){g.scale(CK,CK);g.fillStyle='#3a1e4a';g.fillRect(0,0,MINI_W,MINI_H);pxText(g,garble('????'),MINI_W/2,MINI_H/2,'16px serif','#e0c0ff')}else g.drawImage(cardCanvas(c,true),0,0);
-    b.addEventListener('pointerdown',e=>startDrag(e,i,b));
+    b.addEventListener('pointerdown',e=>{cardTip(null);startDrag(e,i,b)});b.onmouseenter=()=>{if(!conf&&!drag)cardTip(c,b)};b.onmouseleave=()=>cardTip(null);
     b.addEventListener('click',e=>{e.currentTarget.blur();if(e.detail===0)onCardClick(i)});
     if(i===S.newIdx)b.classList.add('enter');el.append(b)}
   $('pilecount').textContent=S.draw.length;renderItems();
   const pv=$('nextc');pv.innerHTML='';const nx=S.draw[0];if(nx&&!conf){const m=cardCanvas(nx,true);pv.append(m);pv.title='Próxima: '+info(nx).name}
 }
+
+// hovering a card in hand shows it full size above the hand, where its rules are readable
+function cardTip(c,btn){const el=$('cardtip');if(!c){el.hidden=true;return}el.innerHTML='';const cv2=cardCanvas(c);el.append(cv2);
+  const st=$('stage').getBoundingClientRect(),b=btn.getBoundingClientRect();el.style.left=(b.left+b.width/2-st.left)/st.width*100+'%';el.style.bottom=(st.bottom-b.top+8)/st.height*100+'%';el.hidden=false}

@@ -143,25 +143,6 @@ function buildMap(id,day=false){
     if(b-a>50&&!seaSeg&&!inWater(a+20)&&!inWater(b-20))MAP.puddles.push({x:a+12+(hs(a,7)*(b-a-34)|0),y,w:8+(hs(a,8)*8|0)})});
   if(MAP.pal.grass)MAP.plats.forEach((pl,k)=>{for(let j=0;j<3;j++)MAP.vines.push({x:Math.round(pl.x+4+hs(k,j+60)*(pl.w-8)),y:pl.y+14,len:5+(hs(k,j+70)*10|0)})});
 }
-function drawGround(){
-  const P=MAP.pal,seed=MAPID.length*97;
-  // Jericho's walls stand behind the path as brick columns under their platforms
-  MAP.plats.forEach(pl=>{if(!pl.wall)return;if(MAP._fallen){const g2=gy(pl.x+pl.w/2);for(let i=0;i<pl.w;i+=3)r(pl.x+i,g2-2-(hs(i,pl.x)*7|0),3,9,i%2?'#8a5c3a':'#6a4228');return}const gyv=gy(pl.x+pl.w/2);r(pl.x+2,pl.y,pl.w-4,gyv-pl.y,'#8a5c3a');
-    for(let j=pl.y+4;j<gyv;j+=5){r(pl.x+2,j,pl.w-4,1,'#6a4228');for(let i=pl.x+2+((j/5|0)%2)*5;i<pl.x+pl.w-2;i+=10)r(i,j-4,1,4,'#6a4228')}});
-  MAP.seg.forEach(([a,b,y],si)=>{
-    r(a,y,b-a,H-y,P.fill);
-    for(let i=a;i<b;i++)for(let j=y+4;j<H;j++){const n=hs(i+seed,j);if(n>.93)r(i,j,1,1,P.dark);else if(n<.03)r(i,j,1,1,P.lite)}
-    for(let j=y+8;j<H;j+=9){r(a,j,b-a,1,P.band);if(P.bricks)for(let i=a+((j/9|0)%2)*6;i<b;i+=12)r(i,j-8,1,8,P.band)}
-    r(a,y,b-a,3,P.top2);r(a,y,b-a,1,P.top1);
-    if(!P.grass)for(let i=a;i<b;i+=3)if(hs(i,si)>.6)r(i,y-1,2,1,P.dark);
-    const prev=MAP.seg[si-1];if(prev&&prev[2]>y)r(a,y,2,prev[2]-y+3,P.dark);
-    const next=MAP.seg[si+1];if(next&&next[2]>y)r(b-2,y,2,next[2]-y+3,P.dark);
-  });
-  if(MAP.water){const[a,b]=MAP.water,y=gy(a);r(a,y,b-a,H-y,'#0e1a30');r(a-1,y,1,8,P.dark);r(b,y,1,8,P.dark)}
-  MAP.plats.forEach(pl=>{r(pl.x,pl.y,pl.w,6,P.lite);for(let i=0;i<pl.w;i++)r(pl.x+i,pl.y+6,1,(hs(i,pl.y)*4|0),P.fill);
-    r(pl.x,pl.y,pl.w,2,P.top2);r(pl.x,pl.y,pl.w,1,P.top1);r(pl.x-1,pl.y+1,1,3,P.top2);r(pl.x+pl.w,pl.y+1,1,3,P.top2)});
-}
-
 const STORY={
   eden:['Gênesis 3:6','A serpente está enrolada na árvore do conhecimento. Um pisão nela dá poder, mas custa 2 de Vida a cada onda.'],
   jerico:['Josué 6:15','Passe 7 vezes pela torre do meio e as muralhas cairão sobre os inimigos.'],

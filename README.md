@@ -21,3 +21,11 @@ Abra `jardim-do-fruto.html` num navegador (ou sirva a pasta com `python3 -m http
 - `js/cards.js` — cartas desenhadas por categoria
 - `js/meta.js` — menu principal, aventura, loja
 - `js/garden.js` — jardim, Árvore da Vida, tutorial
+
+## Teste antes de publicar
+
+```bash
+node tools/smoke.mjs
+```
+
+Abre o jogo no Google Chrome sem janela e passa por todas as telas e por uma batalha em cada mundo, como jogador novo, com progresso e com o controle bloqueado (como no artifact). Sai com erro se alguma tela quebrar.

@@ -225,7 +225,10 @@ function drawCorpses(){for(const f of S.fx){if(f.k!=='corpse')continue;const k=f
 let SUBPX=-1;function subpixel(f){f=Math.round(f*8)/8;if(f===SUBPX)return;SUBPX=f;const t=`translateX(${(-f*100/(W+1)).toFixed(3)}%)`;cv.style.transform=t;gl.style.transform=t}
 function drawParts(){for(const p of S.parts){x.globalAlpha=Math.min(1,p.life/p.max*1.5)*(p.a??1);r(p.x,p.y,p.s,p.s,p.c)}x.globalAlpha=1}
 const PCOL={grape:['#7b2fbf','#c58cff'],oil:['#d9c24a','#fff3a0'],seed:['#e8e070','#fff'],mustard:['#c9c040','#fff8a0'],sow:['#e8c86a','#fff'],fig:['#6a2a5a','#c070b0'],date:['#d9802a','#ffc080'],almond:['#e8d0b0','#fff'],pstone:['#9a9aa8','#e0e0e8']};
-function drawProj(){for(const p of S.proj){const c=PCOL[p.kind],s=p.kind==='mustard'||p.kind==='fig'?4:3;r(p.x-1,p.y-1,s,s,c[0]);r(p.x-1,p.y-1,1,1,c[1])}
+// fruit shots: a short fading trail, a dark rim so they read on any background, a bright core
+function drawProj(){for(const p of S.proj){const c=PCOL[p.kind],s=p.kind==='mustard'||p.kind==='fig'?4:3;
+    if(C===x)for(let k=3;k>=1;k--){x.globalAlpha=.18*(4-k);r(p.x-1-p.vx*k*.016,p.y-1-p.vy*k*.016,s-1,s-1,c[1])}x.globalAlpha=1;
+    if(C===x)r(p.x-1.5,p.y-1.5,s+1,s+1,'#1a0806');r(p.x-1,p.y-1,s,s,c[0]);r(p.x-1,p.y-1,1,1,c[1])}
   for(const s of S.eproj){r(s.x-2,s.y-2,4,4,'#7a7a80');r(s.x-2,s.y-2,2,1,'#c9c9d0')}}
 function drawBeams(){for(const f of S.fx){
   if(f.k==='beam'){const a=1-f.t/f.max,w=f.w*a;x.globalAlpha=a;r(f.x-w,0,w*2,gy(f.x),'#ff4f7b');r(f.x-w/3,0,w*2/3,gy(f.x),'#fff0f4');x.globalAlpha=1;
