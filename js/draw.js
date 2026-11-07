@@ -9,40 +9,8 @@ function drawEnemy(e){
   if(e.shield){x.globalAlpha=.35+Math.sin(S.t*6)*.1;ring(e.x,ecy(e),Math.max(d.w,d.h)/2+3,'#9ab0ff');x.globalAlpha=1}
   if(e.hp<e.max&&!d.boss){const w=Math.min(24,d.w+2),top=(d.fly?e.y-d.h/2:e.y-d.h)-6;r(e.x-w/2,top,w,2,'#2a0c14');r(e.x-w/2,top,Math.max(0,w*e.hp/e.max),2,d.elite?'#f7c948':'#ff4f7b')}
 }
-function frog(X,Y,t,c1,c2){const hop=Math.max(0,Math.sin(t*5))*4,yy=Y-hop;
-  r(X-5,yy-6,10,5,c1);r(X-4,yy-2,8,1,c2);r(X-5,yy-8,3,3,c1);r(X-1,yy-8,3,3,c1);r(X-4,yy-7,1,1,'#111');r(X,yy-7,1,1,'#111');r(X+3,yy-2,3,2,c2)}
-// common works of the flesh live in sprites.js (SPR); the elite and bosses are drawn here
-function enemyBody(e){
-  if(SPR[e.k])return SPR[e.k](e);
-  const X=e.x,Y=e.y,t=e.t;
-  switch(e.k){
-    case 'bezerro':{const w=(t*4|0)%2;
-      [-10,-6,3,7].forEach((lx,i)=>r(X+lx,Y-9,3,9-((i+w)%2)*2,'#c9921a'));
-      r(X-12,Y-19,22,11,'#f7c948');r(X-12,Y-19,22,2,'#fff0a0');r(X-11,Y-10,20,2,'#c9921a');
-      r(X-19,Y-24,8,9,'#f7c948');r(X-19,Y-24,8,1,'#fff0a0');r(X-21,Y-19,3,4,'#e0b030');r(X-21,Y-17,1,1,'#7a5010');
-      r(X-19,Y-27,1,3,'#fff0a0');r(X-13,Y-27,1,3,'#fff0a0');r(X-20,Y-28,1,1,'#fff0a0');r(X-12,Y-28,1,1,'#fff0a0');
-      r(X-16,Y-21,2,1,'#ff3d3d');r(X+10,Y-18,1,7,'#c9921a');r(X+10,Y-11,2,2,'#c9921a');break}
-    case 'golias':{const w=(t*3|0)%2,rage=e.ph2;
-      r(X-6,Y-12,4,12-w,'#8a6a3a');r(X+2,Y-12,4,11+w,'#8a6a3a');r(X-6,Y-6,4,3,'#c9a24a');r(X+2,Y-6,4,3,'#c9a24a');
-      r(X-8,Y-26,16,15,'#8a7a5a');for(let j=0;j<14;j+=3)r(X-8,Y-25+j,16,1,'#a8986a');r(X-8,Y-14,16,2,'#5a3a20');
-      r(X-5,Y-34,10,8,'#d9a07a');r(X-6,Y-36,12,4,'#c9a24a');r(X-1,Y-38,2,2,'#e0284a');r(X-4,Y-31,2,1,rage?'#ff2020':'#2a1810');r(X+1,Y-31,2,1,rage?'#ff2020':'#2a1810');r(X-4,Y-28,8,2,'#5a3a20');
-      r(X-12,Y-24,4,12,'#a07a3a');r(X-12,Y-24,4,1,'#c9a24a');r(X+8,Y-40,1,32,'#6a4a2a');r(X+7,Y-44,3,5,'#c9c9d0');
-      r(X-11,Y-30+Math.sin(t*4)*1,3,3,'#8a8a8a');break}
-    case 'farao':{
-      frog(X-28,Y,t,'#4cc46e','#2d8a4a');frog(X-19,Y,t+.6,'#4cc46e','#2d8a4a');r(X-22,Y-7,10,1,'#7a4b2a');
-      r(X-12,Y-17,24,10,'#d9a521');r(X-12,Y-17,24,2,'#ffe08a');r(X-12,Y-12,24,1,'#2a5bd7');r(X-12,Y-9,24,1,'#2a5bd7');
-      const cx=X+3,cy=Y-6;for(let i=0;i<24;i++){const a=i/24*Math.PI*2;r(cx+Math.cos(a)*6,cy+Math.sin(a)*6,1,1,'#ffe08a')}
-      for(let k=0;k<4;k++){const a=-t*4+k*Math.PI/4;for(let j=1;j<6;j++){r(cx+Math.cos(a)*j,cy+Math.sin(a)*j,1,1,'#b07a1a');r(cx-Math.cos(a)*j,cy-Math.sin(a)*j,1,1,'#b07a1a')}}
-      r(X-6,Y-26,7,9,'#c78b5a');r(X-8,Y-29,11,4,'#f7c948');r(X-8,Y-28,11,1,'#2a5bd7');r(X-8,Y-26,2,7,'#f7c948');r(X+1,Y-26,2,7,'#f7c948');
-      r(X-8,Y-24,2,1,'#2a5bd7');r(X+1,Y-24,2,1,'#2a5bd7');r(X-5,Y-24,1,1,e.ph2?'#ff2020':'#111');r(X-5,Y-19,2,4,'#2a5bd7');r(X-3,Y-31,2,2,'#ff4f7b');
-      r(X-12,Y-24,1,7,'#7a4b2a');r(X-16+Math.sin(t*6)*2,Y-25,4,1,'#7a4b2a');break}
-    case 'leviata':{
-      for(let i=9;i>=0;i--){const cx=X+4+i*5,cy=Y-8-Math.sin(t*3+i*.8)*5,rad=Math.max(2,6-i*.4)|0;disc(cx,cy,rad,i%2?'#2a6a7a':'#1e5260');r(cx-1,cy+rad-1,3,1,'#7ac0b0')}
-      r(X-14,Y-18,16,10,'#2a6a7a');r(X-14,Y-18,16,2,'#3a8a9a');r(X-18,Y-13,6,5,'#2a6a7a');
-      for(let i=0;i<4;i++)r(X-17+i*2,Y-9,1,2,'#ffffff');r(X-10,Y-16,2,2,e.ph2?'#ff2020':'#ffd34a');
-      for(let i=0;i<4;i++)r(X-8+i*4,Y-21-(i%2),2,3,'#5af0c0');break}
-  }
-}
+// every work of the flesh, the elite and the bosses live in sprites.js (SPR)
+function enemyBody(e){SPR[e.k]&&SPR[e.k](e)}
 
 // ---------- sprites: trees. sz is the size factor: each species has its own build and grows as it is watered.
 // Shapes scale with sz but fruit and leaf pixels stay 1:1, so a grown tree reads as bigger, not blurrier.

@@ -110,6 +110,54 @@ const SPR={
     P(-12,-14,5,9,'#7a9aff');P(-12,-14,5,1,'#c0d0ff');P(-11,-11,3,3,'#2a3a7a');
     P(5,-22,1,20,'#6a4a2a');P(4,-24,3,3,'#c9c9d0');P(6,-21,4,3,'#e0284a')}
 };
+// ---------- the golden calf and the three bosses
+const H2=e=>(dx,dy,w,h,c)=>r(e.x+dx/2,e.y+dy/2,w/2,h/2,c);
+function frogH(P,cx,t,c1,c2){const hop=Math.round(Math.max(0,Math.sin(t*5))*8),y=-hop;
+  P(cx+3,y-4,7,4,c2);P(cx-9,y-3,5,3,c2);ball(P,cx,y-9,9,6,c2,c1,shade(c1,.35));
+  for(const ex of[-8,-1]){P(cx+ex,y-18,6,5,c1);P(cx+ex+1,y-17,4,3,'#ffffff');P(cx+ex+1,y-16,2,2,'#111')}
+  P(cx-9,y-8,9,1,shade(c2,-.4));P(cx-6,y-5,8,2,shade(c1,.45))}
+Object.assign(SPR,{
+  bezerro(e){const t=e.t,w=(t*4|0)%2,P=H2(e),gl=Math.sin(t*3);
+    [[-20,0],[-12,1],[6,0],[14,1]].forEach(([lx,o])=>{const lift=(o+w)%2*3;P(lx,-20,5,18-lift,'#b07a14');P(lx,-20,2,18-lift,'#8a5a10');P(lx-1,-3-lift,7,3,'#5a3a08')});
+    ball(P,0,-28,24,11,'#a06a10','#f0b838','#fff4b0');P(-20,-22,40,2,'#c9921a');for(let i=-16;i<18;i+=8)P(i,-34,3,1,'#c9921a');
+    P(23,-34,3,14,'#c9921a');P(22,-21,5,5,'#a06a10');
+    ball(P,-28,-40,10,9,'#a06a10','#f7c948','#fff4b0');P(-40,-38,9,8,'#e0b030');P(-40,-35,2,2,'#7a5010');P(-37,-35,2,2,'#7a5010');P(-40,-31,9,1,'#a06a10');
+    P(-33,-55,3,8,'#fff0a0');P(-36,-57,4,3,'#fff0a0');P(-24,-55,3,8,'#fff0a0');P(-22,-57,4,3,'#fff0a0');
+    P(-33,-44,4,3,'#ff3d3d');P(-33,-44,1,1,'#ffd0d0');P(-22,-48,6,4,'#c9921a');
+    if(gl>.6){P(-10+Math.round(gl*20),-38,2,2,'#ffffff');P(-11+Math.round(gl*20),-37,4,1,'#fff6c0')}},
+  golias(e){const t=e.t,w=(t*3|0)%2,rage=e.ph2,P=H2(e),br=Math.round(Math.sin(t*2));
+    for(const[lx,o]of[[-12,w],[4,1-w]]){P(lx,-26,8,26-o*2,'#6a5030');P(lx,-16,8,10,'#c9a24a');P(lx,-16,8,2,'#f0d080');P(lx+1,-13,2,6,'#a8843a');P(lx-2,-2-o*2,11,2,'#4a3018')}
+    P(-17,-32,34,9,'#7a5a3a');for(let i=-15;i<17;i+=4)P(i,-31,1,8,'#5a4028');
+    P(-16,-58+br,32,27,'#7a6a4a');for(let j=0,row=0;j<24;j+=3,row++)for(let i=0;i<32;i+=4){P(-16+i+(row%2)*2,-57+br+j,3,2,'#a8986a');P(-16+i+(row%2)*2,-55+br+j,3,1,'#5a4a30')}
+    P(-16,-33,32,3,'#5a3a20');P(-2,-33,4,3,'#f7c948');P(-21,-60+br,9,7,'#c9a24a');P(12,-60+br,9,7,'#c9a24a');P(-21,-60+br,9,2,'#f0d080');P(12,-60+br,9,2,'#f0d080');
+    P(-9,-72+br,18,14,'#d9a07a');P(-9,-72+br,2,14,'#b07a5a');P(-9,-63+br,18,7,'#3a2414');P(-5,-61+br,9,2,'#1a0a04');P(-4,-60+br,2,1,'#ffffff');
+    P(-7,-67+br,4,2,rage?'#ff2020':'#1a0e0a');P(1,-67+br,4,2,rage?'#ff2020':'#1a0e0a');P(-8,-69+br,6,1,'#2a1810');P(0,-69+br,6,1,'#2a1810');
+    P(-11,-79+br,22,9,'#c9a24a');P(-11,-79+br,22,2,'#f0d080');P(-11,-71+br,3,9,'#a8843a');P(8,-71+br,3,9,'#a8843a');P(-1,-71+br,2,5,'#a8843a');
+    P(-3,-88+br,7,10,'#e0284a');P(-2,-88+br,2,9,'#ff6a7a');P(4,-86+br,3,6,'#a01a2a');
+    P(18,-92,2,88,'#6a4a2a');P(16,-100,6,9,'#d0d0d8');P(17,-102,4,2,'#ffffff');P(15,-52+br,6,5,'#d9a07a');
+    ball(P,-24,-44+br,11,13,'#7a5018','#c9a24a','#f8e0a0');P(-26,-46+br,4,4,'#fff0a0');for(let k=0;k<6;k++){const a=k/6*Math.PI*2;P(-24+Math.round(Math.cos(a)*8),-44+br+Math.round(Math.sin(a)*10),2,2,'#7a5018')}
+    if(rage&&(t*6|0)%2){P(-14,-82,2,3,'#ffffff');P(12,-84,2,3,'#ffffff')}},
+  farao(e){const t=e.t,rage=e.ph2,P=H2(e),wave=Math.sin(t*6);
+    frogH(P,-58,t,'#4cc46e','#2d8a4a');frogH(P,-38,t+.6,'#4cc46e','#2d8a4a');
+    for(let i=0;i<30;i++)P(-50+i,-20+Math.round(Math.sin(i*.2+t*3)*1),1,1,'#7a4b2a');
+    P(-22,-36,48,20,'#a07010');P(-22,-36,48,18,'#d9a521');P(-22,-36,48,3,'#ffe08a');P(-22,-28,48,2,'#2a5bd7');P(-22,-22,48,2,'#2a5bd7');for(let i=-18;i<24;i+=8)P(i,-33,2,2,'#e0284a');
+    const cx=8,cy=-14;for(let i=0;i<48;i++){const a=i/48*Math.PI*2;P(cx+Math.round(Math.cos(a)*13),cy+Math.round(Math.sin(a)*13),2,2,'#7a5010')}
+    for(let k=0;k<4;k++){const a=-t*4+k*Math.PI/4;for(let j=2;j<12;j++){P(cx+Math.round(Math.cos(a)*j),cy+Math.round(Math.sin(a)*j),1,1,'#c9921a');P(cx-Math.round(Math.cos(a)*j),cy-Math.round(Math.sin(a)*j),1,1,'#c9921a')}}
+    P(cx-2,cy-2,4,4,'#ffe08a');
+    P(-12,-54,16,18,'#c78b5a');P(-12,-54,3,18,'#a06a40');P(-14,-54,20,5,'#f7c948');P(-14,-52,20,1,'#2a5bd7');P(-14,-50,20,1,'#e0284a');
+    P(-10,-66,13,12,'#c78b5a');P(-14,-70,21,7,'#f7c948');for(let i=0;i<21;i+=3)P(-14+i,-70,1,7,'#2a5bd7');P(-14,-64,5,14,'#f7c948');P(3,-64,5,14,'#f7c948');P(-14,-60,5,1,'#2a5bd7');P(3,-60,5,1,'#2a5bd7');P(-14,-56,5,1,'#2a5bd7');
+    P(-8,-61,4,2,'#ffffff');P(-8,-61,2,2,rage?'#ff2020':'#111');P(-10,-62,6,1,'#111');P(-6,-55,3,6,'#2a5bd7');P(-5,-74,3,4,'#ff4f7b');P(-6,-76,2,2,'#ff4f7b');
+    P(-16,-50,4,4,'#c78b5a');for(let i=0;i<10;i++)P(-18-i,-52-i+Math.round(wave*i*.3),1,1,'#7a4b2a');P(-29,-62+Math.round(wave*3),3,3,'#f7c948')},
+  leviata(e){const t=e.t,rage=e.ph2,P=H2(e);
+    for(let i=9;i>=0;i--){const cx=10+i*10,cy=-16-Math.round(Math.sin(t*3+i*.8)*10),rad=Math.max(4,Math.round(12-i*.8));
+      ball(P,cx,cy,rad,rad,'#1a4250','#2a6a7a','#5ab0b0');P(cx-rad+2,cy+rad-3,rad*2-4,2,'#7ac0b0');P(cx-1,cy-rad-3,3,4,'#5af0c0');P(cx,cy-rad-5,1,2,'#bffff0')}
+    ball(P,-14,-30,16,13,'#1a4250','#2a6a7a','#6ac0c0');
+    P(-38,-34,26,9,'#2a6a7a');P(-38,-34,26,2,'#4a9aa0');P(-36,-24,22,6,'#1e5260');P(-36,-20,20,2,'#7ac0b0');
+    for(let i=0;i<6;i++){P(-37+i*4,-26,2,3,'#ffffff');P(-35+i*4,-24,2,2,'#e0f0f0')}
+    P(-22,-38,6,5,rage?'#ff2020':'#ffd34a');P(-20,-38,2,5,'#111');P(-24,-40,9,1,'#0e3a44');
+    for(let i=0;i<4;i++)P(-10+i*6,-46-(i%2)*3,4,6+(i%2)*3,'#5af0c0');P(-40,-30,2,1,'#0e3a44');
+    for(let i=0;i<5;i++)P(-38-i*2,-22+Math.round(Math.sin(t*4+i)*2),1,1,'#7ac0b0')}
+});
 function spark(e,dark,mid,lite,sc){const t=e.t,f=(t*16|0)%2,P=(dx,dy,w,h,c)=>r(e.x+dx*sc/2,e.y+dy*sc/2,Math.max(.5,w*sc/2),Math.max(.5,h*sc/2),c);
   P(-3,-2,2,2+f,shade(dark,-.3));P(1,-2,2,3-f,shade(dark,-.3));
   ball(P,0,-6,5,5,dark,mid,lite);P(-4,-12,1,2,dark);P(-1,-13,2,3,dark);P(2,-12,1,2,dark);
