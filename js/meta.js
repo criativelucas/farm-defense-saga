@@ -50,7 +50,7 @@ function showHub(){
       ${tile('config','Configurações','Som, modo leve, progresso')}
       ${tile('conquistas','Conquistas',Object.keys(META.ach).length+'/'+Object.keys(ACH).length)}
     </div>
-    <p class="keys">← → andar · ↑ pular · ↓ no ar: pisão · X golpe · Q cerca · E espantalho · R lama · 1 a 4 cartas (ou arraste) · Enter chama a onda · M som</p></div>`);
+    <p class="keys">← → andar · ↑ pular · ↓ no ar: pisão · parado ao lado da árvore: regar · X golpe · Q cerca · E espantalho · R lama · 1 a 4 cartas (ou arraste) · Enter chama a onda · M som</p></div>`);
   $('menu').querySelectorAll('canvas[data-hubicon]').forEach(c=>hubIconTo(c,c.dataset.hubicon));paintCoins();
   $('menu').querySelectorAll('[data-hub]').forEach(b=>b.onclick=()=>{initAudio();sfx('card');({aventura:showWorld,jardim:showGarden,arvore:showTree,intro:()=>showIntro(0),config:showConfig,loja:()=>showShop2('ferramentas'),personagem:showLavrador,jornada:showJornada,codex:()=>showCodex('cartas'),conquistas:showAchs})[b.dataset.hub]()});
 }
@@ -165,13 +165,23 @@ function levelLost(){
 }
 
 // ---------- the gardener: character and tool
+function sheetHTML(){
+  const ch=CHARS[META.char],w=WEAPONS[META.weapon],hearts=3+META.upg.hearts+META.upg.treeHearts,doneN=Object.keys(META.done).length,
+    stars=Object.values(META.stars||{}).reduce((a,b)=>a+b,0),mx=k=>Math.max(...Object.values(WEAPONS).map(v=>v[k])),
+    stat=(l,v,f,g)=>`<div class="stat"><b>${l}</b><span>${v}</span><div class="meter ${g||''}"><i style="width:${Math.round(clamp(f,0,1)*100)}%"></i></div></div>`;
+  const slot=(cv,name,sub,empty)=>`<div class="slotbox ${empty?'empty':''}">${cv}<b>${name}</b><small>${sub}</small></div>`;
+  return `<div class="sheetrow"><div class="sheet"><div class="who"><div class="portrait"><canvas width="32" height="40" data-char="${META.char}"></canvas></div><div><h4>${ch.name}</h4><small>${ch.desc}</small></div></div>
+    ${stat('Corações',hearts+' / '+Math.max(hearts,8),hearts/Math.max(hearts,8))}${stat('Dano · '+w.name,w.dmg,w.dmg/mx('dmg'))}${stat('Alcance',w.rng,w.rng/mx('rng'))}
+    ${stat('Fases vencidas',doneN+' / '+LEVELS.length,doneN/LEVELS.length,'g')}${stat('Estrelas',stars+' / '+LEVELS.length*3,stars/(LEVELS.length*3),'g')}</div>
+    <div class="sheet"><h4>Equipamento</h4><div class="slots">${slot(`<canvas width="32" height="32" data-tool="${META.weapon}"></canvas>`,w.name,'Golpe · X')}
+    ${Object.entries(ITEMS).map(([k,it])=>slot(`<canvas width="32" height="32" data-bar="${k}"></canvas>`,it.name,'×'+(META.items[k]||0)+' · tecla '+it.key,!META.items[k])).join('')}</div></div></div>`}
 function showLavrador(){
   const render=()=>{menu(`<div class="mbox"><div class="topbar"><button class="btn ghost" data-go="hub">‹ Menu</button><h2>O lavrador</h2>${coinsTag()}</div>
+    ${sheetHTML()}
     <div class="sec"><h3>Personagem</h3><div class="grid g5">${Object.entries(CHARS).map(([k,c])=>{const ok=META.chars[k];return`<button type="button" class="pick ${META.char===k?'on':''} ${ok?'':'locked'}" data-ch="${k}" ${ok?'':'disabled'}>
       <canvas width="32" height="40" data-char="${k}"></canvas><b>${c.name}</b><small>${ok?c.desc:'Bloqueado: '+c.hint}</small>${ok&&c.card?`<small>Carta: ${CARDS[c.card].name}</small>`:''}</button>`}).join('')}</div></div>
     <div class="sec"><h3>Ferramenta (X)</h3><div class="grid g5">${Object.entries(WEAPONS).map(([k,w])=>{const own=META.weapons[k];return`<button type="button" class="pick ${META.weapon===k?'on':''} ${own?'':'locked'}" data-wp="${k}" ${own?'':'disabled'}>
       <canvas width="32" height="32" data-tool="${k}"></canvas><b>${w.name}</b><small>${w.desc}</small><small>Dano ${w.dmg} · alcance ${w.rng}</small>${own?'':'<i>compre na loja</i>'}</button>`}).join('')}</div></div>
-    <div class="sec"><h3>Barreiras na bolsa</h3><div class="row" style="justify-content:flex-start">${Object.entries(ITEMS).map(([k,it])=>`<span class="relic"><canvas width="32" height="32" data-bar="${k}"></canvas>${it.name} ×${META.items[k]||0} · tecla ${it.key}</span>`).join('')}</div></div>
     <p class="help">Corações: ${3+META.upg.hearts+META.upg.treeHearts} · Encostar nas pragas tira um coração. Sem corações, você desmaia por 3s e perde maná.</p></div>`);
     paintCoins();
     $('menu').querySelectorAll('canvas[data-char]').forEach(c=>charIconTo(c,c.dataset.char));

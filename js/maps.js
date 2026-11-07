@@ -1,5 +1,5 @@
 // ---------- scenarios. Each is wider than the screen; slots are [x, y, soil].
-function skyGrad(stops){const g=C.createLinearGradient(0,0,0,H);stops.forEach(([p,c])=>g.addColorStop(p,c));C.fillStyle=g;C.fillRect(0,0,W,H)}
+function skyGrad(stops){const g=C.createLinearGradient(0,0,0,H);stops.forEach(([p,c])=>g.addColorStop(p,c));C.fillStyle=g;C.fillRect(0,0,C.canvas.width,H)}
 function stars(n,maxY,a,b){for(let i=0;i<n;i++)r(hs(i,11)*W,hs(i,12)*maxY,1,1,hs(i,13)>.8?a:b)}
 function moon(cx,cy,rad,c,d){for(let yy=-rad;yy<=rad;yy++){const w=Math.sqrt(rad*rad-yy*yy);r(cx-w,cy+yy,w*2,1,c)}r(cx-6,cy-6,4,3,d);r(cx+3,cy+3,3,3,d);r(cx-4,cy+6,2,2,d)}
 function oliveTree(tx,ty,c){r(tx-2,ty,4,26,c);r(tx-6,ty+8,4,2,c);r(tx+2,ty+4,5,2,c);blob(tx,ty-4,16,8,c,c,c,tx|0);blob(tx-10,ty+2,8,5,c,c,c,(tx|0)+3)}
@@ -35,7 +35,7 @@ const MAPS={
     blob(290,34,30,8,'#2a2448','#3a3260','#4a4278',61);blob(268,40,18,6,'#2a2448','#3a3260','#4a4278',62);blob(314,40,18,6,'#2a2448','#3a3260','#4a4278',63)},
   far(w){mount(w,146,8,.03,2,'#3a2448')},
   mid(w){mount(w,156,7,.035,5,'#4a2a48');
-    for(let tx=80,k=0;tx<w;tx+=95+hs(k,7)*60,k++){const ty=134+hs(k,8)*6;for(let j=0;j<14;j++)r(tx-j,ty+j,2*j+1,1,'#5a3458');r(tx-2,ty+8,5,6,'#ffb060');r(tx,ty-2,1,3,'#3a1d3e')}
+    for(let tx=80,k=0;tx<w;tx+=95+hs(k,7)*60,k++){const ty=134+hs(k,8)*6;for(let j=0;j<14;j++)r(tx-j,ty+j,2*j+1,1,'#5a3458');r(tx-2,ty+8,5,6,'#ffb060');MAP.midFires.push({x:tx,y:ty+8});r(tx,ty-2,1,3,'#3a1d3e')}
     for(let px=50,k=0;px<w;px+=150+hs(k,9)*80,k++)palm(px,146,'#2a1834')},
   near(w){mount(w,170,5,.05,9,'#24142c');for(let bx=30,k=0;bx<w;bx+=80+hs(k,41)*90,k++)blob(bx,166,10+(hs(k,42)*8|0),6,'#1c1024','#24142c','#2e1a38',k+80)},
   fg(w){const a=[];for(let x0=40,k=0;x0<w;x0+=90+hs(k,51)*120,k++){a.push({t:'rock',x:x0,s:k});if(hs(k,52)>.6)a.push({t:'frond',x:x0+50,s:k})}return a},
@@ -126,21 +126,21 @@ const inWater=px=>!!MAP.water&&px>=MAP.water[0]&&px<MAP.water[1];
 const inSea=px=>!!MAP.sea&&S&&!S.seaOpen&&px>=MAP.sea[0]&&px<MAP.sea[1];
 function buildMap(id){
   MAPID=id;MAP=MAPS[id];MUS.world=id;
-  const lw=f=>Math.ceil(W+(MAP.ww-W)*f);
-  SKY=mkCanvas(W,H);FAR=mkCanvas(lw(PAR[0]),H);MID=mkCanvas(lw(PAR[1]),H);NEAR=mkCanvas(lw(PAR[2]),H);GROUND=mkCanvas(MAP.ww,H);
+  const lw=f=>Math.ceil(W+2+(MAP.ww-W)*f);MAP.midFires=[];
+  SKY=mkCanvas(W+1,H);FAR=mkCanvas(lw(PAR[0]),H);MID=mkCanvas(lw(PAR[1]),H);NEAR=mkCanvas(lw(PAR[2]),H);GROUND=mkCanvas(MAP.ww,H);
   C=SKY.getContext('2d');MAP.sky();
   C=FAR.getContext('2d');MAP.far(FAR.width);
   C=MID.getContext('2d');MAP.mid(MID.width);
   C=NEAR.getContext('2d');MAP.near(NEAR.width);
   C=GROUND.getContext('2d');drawGround();MAP.homeDraw();
   C=x;
-  MAP.fgItems=MAP.fg(Math.ceil(MAP.ww*FGK+W));
+  MAP.fgItems=MAP.fg(Math.ceil(MAP.ww*FGK+W));buildProps();
   MAP.tufts=[];MAP.vines=[];MAP.puddles=[];
   MAP.seg.forEach(([a,b,y],si)=>{
     if(MAP.pal.grass)for(let i=a;i<b;i+=3)if(hs(i,si)>.55&&!inWater(i))MAP.tufts.push({x:i,y,h:1+(hs(i,9)*2|0)});
     const seaSeg=MAP.sea&&a>=MAP.sea[0]&&b<=MAP.sea[1];
     if(b-a>50&&!seaSeg&&!inWater(a+20)&&!inWater(b-20))MAP.puddles.push({x:a+12+(hs(a,7)*(b-a-34)|0),y,w:8+(hs(a,8)*8|0)})});
-  if(MAP.pal.grass)MAP.plats.forEach((pl,k)=>{for(let j=0;j<3;j++)MAP.vines.push({x:Math.round(pl.x+4+hs(k,j+60)*(pl.w-8)),y:pl.y+5,len:5+(hs(k,j+70)*10|0)})});
+  if(MAP.pal.grass)MAP.plats.forEach((pl,k)=>{for(let j=0;j<3;j++)MAP.vines.push({x:Math.round(pl.x+4+hs(k,j+60)*(pl.w-8)),y:pl.y+14,len:5+(hs(k,j+70)*10|0)})});
 }
 function drawGround(){
   const P=MAP.pal,seed=MAPID.length*97;

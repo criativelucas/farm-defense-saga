@@ -74,7 +74,7 @@ function spawn(k,xo){
   let sc=d.boss?1+a*.1:d.elite?1+a*.3:1+a*.45+S.wi*.08;
   if(ascN()>=1)sc*=1.15;if(d.boss&&ascN()>=4)sc*=1.3;
   const x0=xo??MAP.ww+12;
-  const e={k,x:x0,y:gy(Math.min(x0,MAP.ww-1)),hp:d.hp*sc,max:d.hp*sc,slow:0,frz:0,t:rnd(0,9),flash:0,base:rnd(90,122),st:3};
+  const e={k,born:S.t,x:x0,y:gy(Math.min(x0,MAP.ww-1)),hp:d.hp*sc,max:d.hp*sc,slow:0,frz:0,t:rnd(0,9),flash:0,base:rnd(90,122),st:3};
   if(d.fly===1)e.y=gy(Math.min(x0,MAP.ww-1))-20;if(d.fly===2)e.y=e.base;
   S.en.push(e);return e;
 }
@@ -115,6 +115,7 @@ function kill(e){
   if(META.stats.kills>=490)unlockAch('setenta');
 }
 function deathFx(e){
+  S.fx.push({k:'corpse',e:{...e},t:0,max:.3});
   const X=e.x,Y=ecy(e),P=(n,c,o)=>{for(let i=0;i<n;i++){const a=rnd(0,Math.PI*2),v=rnd(o.sp*.3,o.sp);
     S.parts.push({x:X+rnd(-3,3),y:Y+rnd(-3,3),vx:Math.cos(a)*v,vy:Math.sin(a)*v+(o.up||0),g:o.g,life:rnd(o.l*.5,o.l),max:o.l,c:pick(c),s:o.s||1,sway:o.sway,a:o.a})}};
   switch(e.k){
@@ -141,7 +142,7 @@ function updPlayer(dt){
   const L=p.stun>0?0:dn('ArrowLeft','KeyA'),R=p.stun>0?0:dn('ArrowRight','KeyD');
   const spd=inSea(p.x)?55:100;
   if(p.dash>0){p.dash-=dt;p.vx=p.face*240;if(Math.random()<.6)S.parts.push({x:p.x-p.face*4,y:p.y-1,vx:-p.face*30,vy:-20,g:100,life:.4,max:.4,c:'#8a5a3a',s:2})}
-  else if(!p.slam){p.vx+=((R-L)*spd-p.vx)*Math.min(1,dt*14);if(L!==R)p.face=R?1:-1}
+  else if(!p.slam){p.vx+=((R-L)*spd-p.vx)*Math.min(1,dt*14);if(L!==R){const nf=R?1:-1;if(nf!==p.face&&p.on)p.sq=Math.min(p.sq,.86);p.face=nf}}
   if(p.stun<=0&&pr('ArrowUp','KeyW','Space')&&p.on){p.vy=-240;p.on=false;p.sq=.7;p.jumped=1;sfx('jump');burst(p.x,p.y,4,['#c9a99a'],30,0,.3)}
   if(p.stun<=0&&pr('ArrowDown','KeyS')&&!p.on&&!p.slam&&S.noSlam){pop(p.x,p.y-24,'sem pisão nesta fase','#c9a99a')}
   else if(p.stun<=0&&pr('ArrowDown','KeyS')&&!p.on&&!p.slam){p.slam=true;p.vy=420;p.vx=0;p.sq=.75}
@@ -156,7 +157,8 @@ function updPlayer(dt){
   p.sq+=(1-p.sq)*Math.min(1,dt*12);p.anim+=Math.abs(p.vx)*dt*.25;
   if(p.on&&Math.abs(p.vx)>20){p.dust-=dt;if(p.dust<=0){p.dust=.12;const w=inWater(p.x)||inSea(p.x);
     S.parts.push({x:p.x-p.face*3,y:p.y-1,vx:-p.face*rnd(5,15),vy:rnd(w?-40:-12,-4),g:w?200:-5,life:.4,max:.4,c:w?'#9ad0ff':'#c9a99a',s:1,a:.7})}}
-  S.cam+=(clamp(p.x-W*.42,0,MAP.ww-W)-S.cam)*Math.min(1,dt*6);
+  p.look=(p.look||0)+(p.face*20-(p.look||0))*Math.min(1,dt*1.6);// look a little ahead of where the gardener faces
+  S.cam+=(clamp(p.x-W*.42+p.look,0,MAP.ww-W)-S.cam)*Math.min(1,dt*5);
 }
 function doSlam(){
   const p=S.p,harvest=S.basket>=5;shake(harvest?9:5);S.stop=.06;sfx('slam');flash(harvest?.4:.22,harvest?'255,220,120':'255,255,255');
@@ -217,12 +219,22 @@ function heartsHome(s,n){for(let i=0;i<n;i++)S.fx.push({k:'heart',x:s.x+rnd(-6,6
 function wind(s,rad,push,dmg,slow){sfx('wind');S.fx.push({k:'ring',x:s.x,y:s.y-8,r:4,max:rad,t:0,c:'#f4f4ff'});
   for(let i=0;i<10;i++)S.parts.push({x:s.x+rnd(-6,6),y:s.y-rnd(4,16),vx:rnd(60,140),vy:rnd(-10,10),g:0,life:.6,max:.6,c:'#f4f4ff',s:1,a:.7});
   for(const e of S.en)if(Math.abs(e.x-s.x)<rad&&Math.abs(ecy(e)-s.y)<40&&e.dive<=0){e.x+=EN[e.k].boss?push*.25:push;if(slow)e.slow=2;damage(e,dmg,'lirio')}}
+// watering grows a tree through 3 stages: bigger, and one level stronger each stage
+function water(t,s,amt){const was=t.water||0;t.water=Math.min(3,was+amt);const st=Math.floor(t.water);if(st>Math.floor(was)){
+  sfx('heal');burst(s.x,s.y-12,16,['#7ac0ff','#bfe8ff','#5fe08a'],60,120,.6);t.pulse=1;
+  if(st>(t.lvl||0)){t.lvl=st;S.fx.push({k:'ring',x:s.x,y:s.y-14,r:2,max:22,t:0,c:'#7ac0ff'})}
+  if(t.kinds.includes('mostarda'))t.age=Math.max(t.age,st>=3?2:st>=2?1:0);
+  pop(s.x,s.y-44,st>=3?'árvore adulta!':'cresceu! nível '+(t.lvl+1),'#9ad0ff',9)}}
 function updTowers(dt){
   const buffs=[];MAP.slots.forEach((s,i)=>{const t=S.tw[i];if(t&&t.grow>=1&&!t.joio&&t.kinds.includes('amendoeira'))buffs.push(s.x)});
   const P=S.p;
   MAP.slots.forEach((s,i)=>{const t=S.tw[i];if(!t)return;
     const was=t.grow;t.grow=Math.min(1,t.grow+dt*(t.soil==='pedra'?4:1.6));
     if(was<=0&&t.grow>0){burst(s.x,s.y-2,14,['#6a3a24','#8a5236','#4a2a1a'],60,300,.5);burst(s.x,s.y-6,8,['#5fe08a','#9ff7b8'],40,150,.5);shake(2);sfx('plant')}
+    if(t.grow>=1&&!t.joio&&(t.water||0)<3){const near=P.on&&Math.abs(P.x-s.x)<16&&Math.abs(P.y-s.y)<6&&Math.abs(P.vx)<30&&P.faint<=0;
+      const rate=(near?.19:0)+(S.rain>0?.08:0);if(rate>0)water(t,s,rate*dt*(t.soil==='espinho'?.6:t.soil==='pedra'?1.5:1));
+      if(near&&Math.random()<dt*14)S.parts.push({x:P.x+P.face*4,y:P.y-10,vx:(s.x-P.x)*1.5+P.face*20,vy:-30,g:240,life:.45,max:.45,c:Math.random()<.5?'#7ac0ff':'#bfe8ff',s:1});
+      if(near&&!S.waterHint){S.waterHint=1;pop(s.x,s.y-46,'regando: fique perto para crescer','#9ad0ff',7)}}
     t.t+=dt;t.dcd-=dt*(S.rain>0?3:1);t.pulse=Math.max(0,t.pulse-dt*2);t.stun=Math.max(0,t.stun-dt);t.ark=Math.max(0,(t.ark||0)-dt);
     if(t.ark>0){t.stun=0;t.joio=false;t.seduced=false;t.sleep=false}
     if(MAPID==='getsemani'&&t.grow>=1){
@@ -307,7 +319,7 @@ function blessing(k){
   if(k==='talentos'){S.talents+=6;pop(P.x,P.y-24,'investido: +6 na próxima onda','#f7c948')}
   if(k==='semeador'){for(let i=0;i<3;i++)S.proj.push({x:P.x,y:P.y-12,vx:rnd(-150,150),vy:rnd(-210,-130),g:300,kind:'sow',life:4})}
   if(k==='profecia'){S.reveal=true;S.mana+=2;pop(P.x,P.y-24,'a próxima onda foi revelada','#c58cff')}
-  if(k==='regar'){const si=nearestTreeSlot();if(si<0){pop(P.x,P.y-24,'nenhuma árvore perto','#c9a99a');return false}const t=S.tw[si],s=MAP.slots[si];t.lvl=Math.min(3,(t.lvl||0)+1);t.dcd=0;
+  if(k==='regar'){const si=nearestTreeSlot();if(si<0){pop(P.x,P.y-24,'nenhuma árvore perto','#c9a99a');return false}const t=S.tw[si],s=MAP.slots[si];t.lvl=Math.min(3,(t.lvl||0)+1);water(t,s,1);t.dcd=0;
     S.fx.push({k:'ring',x:s.x,y:s.y-14,r:2,max:24,t:0,c:'#7fc8ff'});pop(s.x,s.y-44,'nível '+(t.lvl+1),'#7fc8ff',9);for(let i=0;i<12;i++)S.parts.push({x:s.x+rnd(-8,8),y:s.y-30,vx:0,vy:rnd(40,80),g:200,life:.5,max:.5,c:'#7fc8ff',s:1})}
   if(k==='arca'){const ids=MAP.slots.map((s,i)=>[i,Math.hypot(s.x-P.x,s.y-P.y)]).filter(([i])=>S.tw[i]).sort((a,b)=>a[1]-b[1]).slice(0,3);
     ids.forEach(([i])=>{S.tw[i].ark=20;const s=MAP.slots[i];S.fx.push({k:'ring',x:s.x,y:s.y-14,r:2,max:22,t:0,c:'#c9a24a'})});banner('Noé','A Arca guarda as árvores')}

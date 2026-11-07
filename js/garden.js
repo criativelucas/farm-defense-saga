@@ -169,6 +169,7 @@ function showTree(){
 const INTRO=[
  ['Bem-vindo ao jardim','Você é o lavrador. As obras da carne (Ódio, Inveja, Discórdia...) querem chegar à árvore do lado esquerdo. Não deixe passar.','gard'],
  ['Plante com cartas','Sua mão tem 4 cartas. Pare sobre um canteiro (os brotinhos) e aperte 1 a 4, ou arraste a carta até ele. Cada carta custa maná, que recarrega sozinho.','card'],
+ ['Regue para crescer','Fique parado ao lado de uma árvore e o lavrador rega. A cada rega completa ela cresce e sobe de nível; com 3 vira árvore adulta. A chuva e a carta Regar também regam.','gardener'],
  ['Cada fruto vence uma praga','Romã vence Ódio, Videira vence Inveja, Oliveira vence Discórdia... O dano fica 2,5 vezes maior. Árvores vizinhas se fortalecem.','fruit'],
  ['Lute junto','← → anda, ↑ pula. No ar, ↓ dá um pisão: em cima de uma árvore, solta o poder dela. X golpeia com a ferramenta. Q, E e R põem cerca, espantalho e lama.','gardener'],
  ['Cuidado com as pragas','Encostar nelas tira corações. Sem corações você desmaia e perde maná. Pegue os frutos e as moedas que caem.','hurt'],

@@ -152,12 +152,12 @@ const SHORT={videira:'Atira uvas no inimigo mais perto.',roma:'Raio vertical qua
   figueira:'Guarda força enquanto espera.',tamareira:'Cura 1 de Vida a cada 12s.',amendoeira:'Vizinhas atiram 35% mais rápido.',lirio:'Sopro que empurra para trás.',
   mostarda:'Minúscula; em 2 ondas vira gigante.',talentos:'Invista 3, receba 6 na próxima onda.',semeador:'3 sementes ao acaso; o solo decide.',chuva:'Tudo atira mais rápido por 8s.',
   mana:'+5 de maná na hora.',jerico:'14 de dano em todos no chão.',profecia:'Revela a próxima onda. +2 de maná.',joio:'Ocupa a mão. Jogue para arrancar.',
-  regar:'A árvore mais perto sobe 1 nível.',arca:'Protege as 3 árvores mais perto por 20s.',respigar:'Frutos e maná do chão vêm até você.',pedras:'5 pedras de 8. Triplo em gigantes.',
+  regar:'Rega a árvore mais perto: ela cresce e sobe 1 nível.',arca:'Protege as 3 árvores mais perto por 20s.',respigar:'Frutos e maná do chão vêm até você.',pedras:'5 pedras de 8. Triplo em gigantes.',
   fogoceu:'Consome a árvore onde você está e queima a tela.',celeiro:'Guarda o maná; volta 50% maior na próxima onda.',palmeira:'Todas atiram já, e mais rápido por 6s.',maraberto:'Abre o mar por 12s, ou congela todos por 3s.'};
 const STATS={videira:{dmg:'2',rng:85,cd:'0,9s'},roma:{dmg:'9',rng:18,cd:'3,2s'},oliveira:{dmg:'1',rng:75,cd:'1,4s'},sarca:{dmg:'3/s',rng:38,cd:'sempre'},
   figueira:{dmg:'2-20',rng:95,cd:'espera'},tamareira:{dmg:'1',rng:60,cd:'1,2s'},amendoeira:{dmg:'1,5',rng:70,cd:'1s'},lirio:{dmg:'0,5',rng:55,cd:'3s'},mostarda:{dmg:'1-6',rng:125,cd:'1,5s'}};
 Object.assign(CARDS,{
-  regar:{type:'bencao',name:'Regar',cost:2,own:'lavrador',ref:'1 Coríntios 3:6',desc:'A árvore mais perto de você sobe 1 nível e recarrega o pisão.'},
+  regar:{type:'bencao',name:'Regar',cost:2,own:'lavrador',ref:'1 Coríntios 3:6',desc:'Rega a árvore mais perto: ela cresce um estágio, sobe 1 nível e recarrega o pisão.'},
   arca:{type:'bencao',name:'A Arca',cost:3,own:'noe',ref:'Gênesis 7:1',desc:'As 3 árvores mais perto ficam protegidas por 20s: nada as atordoa, adormece, seduz ou corrompe.'},
   respigar:{type:'bencao',name:'Respigar',cost:1,own:'rute',ref:'Rute 2:7',desc:'Todos os frutos e o maná do chão vêm até você.'},
   pedras:{type:'bencao',name:'Cinco Pedras Lisas',cost:4,own:'davi',ref:'1 Samuel 17:40',desc:'Você atira 5 pedras de 8 de dano. Contra gigantes, o triplo.'},

@@ -19,7 +19,7 @@ body{background:var(--night);color:var(--ink);font-family:var(--font);overflow:h
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:8px}
 #stage{position:relative;width:min(100%, calc((100dvh - 16px) * 16 / 9));aspect-ratio:16/9;max-width:100%;
   container-type:inline-size;box-shadow:0 0 0 2px #2a1830,0 20px 60px #000a;overflow:hidden;border-radius:4px}
-#stage>canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
+#stage>canvas{position:absolute;left:0;top:0;width:calc(100% * 385 / 384);height:100%;will-change:transform;image-rendering:pixelated;image-rendering:crisp-edges}
 #glow{filter:blur(4px) brightness(1.4) saturate(1.3);opacity:.9;mix-blend-mode:screen;pointer-events:none}
 
 /* HUD */
@@ -372,6 +372,53 @@ canvas.inl{width:1.6em;height:1.6em;image-rendering:pixelated}
 .cfg{display:grid;gap:.8em;width:min(100%,26em);text-align:left}.cfg label{display:grid;gap:.2em}.cfg .chk{display:flex;flex-wrap:wrap;gap:.4em;align-items:center}.cfg small{width:100%;color:var(--ink-dim);font-size:.75em}
 .cfg input[type=range]{accent-color:#f7c948;width:100%}.cfg input[type=checkbox]{accent-color:#f7c948;width:1.1em;height:1.1em}
 body.lite #glow{display:none}
+
+/* ================= skin: parchment & carved wood (frames are drawn in js/skin.js) ================= */
+#menu{background:radial-gradient(ellipse at 50% 45%,#2a160ccc,#0e0806f2 78%)}
+.mbox{box-sizing:border-box;border:32px solid transparent;border-image:var(--f-parch) 16 fill / 32px repeat;background:none!important;image-rendering:pixelated;
+  box-shadow:none!important;filter:drop-shadow(0 10px 0 #0007);padding:.2em .9em .7em;--ink:#3a2012;--ink-dim:#6e4a2c;color:var(--ink)}
+.mbox::before,.mbox::after{display:none}
+.mbox h2{border:16px solid transparent;border-image:var(--f-plaque) 8 fill / 16px repeat;background:none;clip-path:none;box-shadow:none;padding:0 .5em;color:#fff0d0;text-shadow:0 2px 0 #3a1408;font-size:1.45em;line-height:1.1;margin:-.2em 0 .1em}
+.mbox h1{margin-top:.1em}
+.hubtile,.shopcard,.pick,.entry,.relicpick,.node,.foe,.rw,.relic,.gtool,.gbar,.treepanel,.sheet,.slotbox,.cardback,.coins,.pot,.treebox{--ink:#fbe9d0;--ink-dim:#d8b896;color:var(--ink)}
+.hubtile,.shopcard,.pick,.entry,.relicpick,.node,.foe,.rw,.gtool,.gbar,.treepanel,.sheet,.slotbox{border:10px solid transparent!important;border-image:var(--f-slot) 5 fill / 10px repeat!important;
+  background:none!important;box-shadow:none!important;filter:drop-shadow(0 4px 0 #0006);image-rendering:pixelated;border-radius:0!important}
+.hubtile{padding:.4em .3em .5em}.hubtile::before,.hubtile::after{display:none}
+.hubtile:hover:not(:disabled),.pick:hover:not(.locked),.node:hover,.shopcard:hover{filter:drop-shadow(0 6px 0 #0006) brightness(1.12);transform:translateY(-2px)}
+.pick.on,.rw.got,.rw.next,.jrow.now .node{border-image:var(--f-slotOn) 5 fill / 10px repeat!important}
+.shopcard,.pick,.entry,.relicpick,.node{padding:.3em .25em}
+.pick.locked,.entry.locked,.hubtile.locked{opacity:1;filter:grayscale(.85) brightness(.5) drop-shadow(0 4px 0 #0006)}
+.coins{border-radius:999px;background:#2a140a;box-shadow:0 0 0 2px #1a0c06,0 0 0 4px #d0782e,0 3px 0 4px #0005}
+.btn{border:8px solid transparent!important;border-image:var(--f-btn) 4 fill / 8px repeat!important;background:none!important;box-shadow:none!important;padding:.05em .7em .2em!important;
+  image-rendering:pixelated;filter:drop-shadow(0 3px 0 #0007);border-radius:0!important}
+.btn:active:not(:disabled){transform:translateY(2px);filter:none;box-shadow:none!important}
+.btn.ghost{border-image:var(--f-btnDark) 4 fill / 8px repeat!important;color:#fbe9d0}
+.btn.act{border-image:var(--f-btnRed) 4 fill / 8px repeat!important;color:#fff}
+.mbox .runbar b,.mbox .score,.lvpanel h3{color:#9a3a10}
+.mbox .ginfo{color:#5a2a10!important}.mbox .epi{color:#5a3014}
+.mbox .stars{text-shadow:0 1px 0 #3a1408}
+.sec h3{color:#6a2e10;border-bottom:2px dashed #b88a56;padding-bottom:.15em}
+.wmap,.gscene,.gtree,.introart{box-shadow:0 0 0 2px #1a0c06,0 0 0 5px #d0782e,0 0 0 7px #1a0c06,0 6px 0 6px #0005}
+.lvl{box-shadow:0 0 0 2px #1a0c06,0 0 0 4px #d0782e,inset 0 3px 0 #ffffff44,inset 0 -4px 0 #00000055,0 5px 0 4px #0005}
+.lvl.done{box-shadow:0 0 0 2px #1a0c06,0 0 0 4px #5fe08a,inset 0 3px 0 #ffffff44,inset 0 -4px 0 #00000055,0 5px 0 4px #0005}
+.isle{border:8px solid transparent!important;border-image:var(--f-plaque) 8 fill / 8px repeat!important;background:none!important;box-shadow:none!important;padding:0 .25em!important;filter:drop-shadow(0 3px 0 #0006)}
+.isle.on{filter:drop-shadow(0 0 4px #ffe36a) drop-shadow(0 3px 0 #0006) brightness(1.15)}.isle.locked{filter:grayscale(.8) brightness(.75)}.isle.garden{filter:hue-rotate(60deg) drop-shadow(0 3px 0 #0006)}
+/* character sheet, after the reference's stat panel and equipment slots */
+.sheetrow{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:.8em;width:100%}
+@media (max-width:560px){.sheetrow{grid-template-columns:1fr}}
+.sheet{display:grid;gap:.25em;text-align:left;padding:.2em .3em}
+.sheet .who{display:grid;grid-template-columns:auto 1fr;gap:.6em;align-items:center;padding-bottom:.3em;border-bottom:2px solid #8a4a1e}
+.portrait{width:4.4em;aspect-ratio:1;background:linear-gradient(#7ac0f0,#4a8ad0);box-shadow:0 0 0 2px #1a0c06,0 0 0 4px #f0a050,0 0 0 6px #1a0c06;display:grid;place-items:end center;overflow:hidden}
+.portrait canvas{width:100%;height:auto;image-rendering:pixelated;transform:scale(2.1);transform-origin:50% 30%}
+.stat{display:grid;grid-template-columns:1fr auto;gap:0 .5em;align-items:center;padding:.15em 0;border-bottom:1px solid #8a4a1e}
+.stat:last-child{border-bottom:0}.stat b{font-weight:600;color:#fbe9d0}.stat span{color:#ffe9b0;font-weight:700}
+.stat .meter{grid-column:1/-1;height:.45em;background:#2a140a;box-shadow:0 0 0 1px #1a0c06;margin-top:.15em}
+.stat .meter i{display:block;height:100%;background:linear-gradient(#ffd070,#f0a030 60%,#c87018)}.stat .meter.g i{background:linear-gradient(#9ff7b8,#4cc46e 60%,#2a8a4a)}
+.slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.4em;align-content:start}
+.slotbox{display:grid;justify-items:center;gap:.1em;padding:.15em}
+.slotbox canvas{width:3.2em;height:3.2em;image-rendering:pixelated}.slotbox b{font-size:.8em}.slotbox small{font-size:.65em;color:var(--ink-dim)}
+.slotbox.empty{opacity:.5}
+.sheet h4{margin:0;color:#ffe9b0;font-size:1em;letter-spacing:.06em;text-transform:uppercase;text-shadow:0 2px 0 #1a0c06}.sheet .who small{font-size:.72em;color:var(--ink-dim);line-height:1.25}
 /* Touch controls */
 #touch{position:absolute;inset:auto 0 22% 0;display:none;justify-content:space-between;padding:0 2%;pointer-events:none}
 #touch div{display:flex;gap:.5em;pointer-events:auto}
@@ -381,8 +428,8 @@ body.lite #glow{display:none}
 </style>
 
 <div id="wrap"><div id="stage">
-  <canvas id="c" width="384" height="216"></canvas>
-  <canvas id="glow" width="384" height="216"></canvas>
+  <canvas id="c" width="385" height="216"></canvas>
+  <canvas id="glow" width="385" height="216"></canvas>
   <div id="hud" hidden>
     <div class="hud" id="hudL">
       <div id="hearts"></div>
@@ -410,8 +457,10 @@ body.lite #glow{display:none}
 </div></div>
 
 <script src="js/engine.js"></script>
+<script src="js/skin.js"></script>
 <script src="js/content.js"></script>
 <script src="js/maps.js"></script>
+<script src="js/tiles.js"></script>
 <script src="js/game.js"></script>
 <script src="js/draw.js"></script>
 <script src="js/ui.js"></script>
