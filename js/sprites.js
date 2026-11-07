@@ -156,7 +156,25 @@ Object.assign(SPR,{
     for(let i=0;i<6;i++){P(-37+i*4,-26,2,3,'#ffffff');P(-35+i*4,-24,2,2,'#e0f0f0')}
     P(-22,-38,6,5,rage?'#ff2020':'#ffd34a');P(-20,-38,2,5,'#111');P(-24,-40,9,1,'#0e3a44');
     for(let i=0;i<4;i++)P(-10+i*6,-46-(i%2)*3,4,6+(i%2)*3,'#5af0c0');P(-40,-30,2,1,'#0e3a44');
-    for(let i=0;i<5;i++)P(-38-i*2,-22+Math.round(Math.sin(t*4+i)*2),1,1,'#7ac0b0')}
+    for(let i=0;i<5;i++)P(-38-i*2,-22+Math.round(Math.sin(t*4+i)*2),1,1,'#7ac0b0')},
+  ira(e){const t=e.t,rg=e.rage?1:0,b=Math.round(Math.abs(Math.sin(t*(rg?9:5)))*2),P=(dx,dy,w,h,c)=>r(e.x+dx/2,e.y+dy/2-b/2,w/2,h/2,c);
+    P(-6,-2,4,2,'#5a1404');P(2,-2,4,2,'#5a1404');
+    ball(P,0,-10,9,9,'#8a2a08',rg?'#ff3a1a':'#ff5a1a','#ffc080');
+    for(let i=0;i<5;i++){const h=3+((Math.sin(t*14+i*1.9)+1)*(rg?3:2)|0);P(-7+i*3,-19-h,2,h,i%2?'#ffd34a':'#ff8a2a');P(-7+i*3,-19-h,1,1,'#fff6c0')}
+    P(-7,-14,4,1,'#2a0800');P(-1,-13,4,1,'#2a0800');P(-7,-13,3,2,'#ffffff');P(-1,-12,3,2,'#ffffff');P(-7,-12,2,1,'#c00000');P(-1,-11,2,1,'#c00000');
+    P(-6,-7,8,2,'#2a0800');for(let i=0;i<4;i++)P(-6+i*2,-7,1,1,'#ffffff');
+    P(-11,-10,3,3,'#c0401a');P(8,-9,3,3,'#c0401a');
+    if(rg&&(t*8|0)%2){P(-10,-22,2,2,'#c0c0c0');P(8,-23,2,2,'#c0c0c0')}},
+  ciume(e){const t=e.t,P=(dx,dy,w,h,c)=>r(e.x+dx/2,e.y+dy/2,w/2,h/2,c),side=Math.sin(t*1.5)>0?-1:1;
+    for(let i=0;i<5;i++){const yy=Math.round(Math.sin(t*6-i*.9)*2);P(6+i*2,yy+i,3,3-(i>2?1:0),i%2?'#2a8a6a':'#3aa88a')}P(16,4+Math.round(Math.sin(t*6)*2),2,2,'#8af0c8');
+    ball(P,0,0,8,7,'#1a5a4a','#3aa88a','#9af8d0');P(-6,-9,2,3,'#1a5a4a');P(3,-9,2,3,'#1a5a4a');
+    for(const ex of[-6,0]){P(ex,-3,5,4,'#f0fff0');P(ex+1+side,-2,2,3,'#6a2a8a');P(ex+1+side,-2,1,1,'#ffffff');P(ex,-3,5,1,'#1a5a4a')}
+    P(-4,3,6,1,'#0a2a20');P(1,4,1,1,'#0a2a20')},
+  heresia(e){const t=e.t,sw=Math.round(Math.sin(t*3)),P=(dx,dy,w,h,c)=>r(e.x+dx/2,e.y+dy/2,w/2,h/2,c),pulse=(Math.sin(t*5)+1)/2;
+    P(-8,-18,16,18,'#4a2a6a');P(-9,-6,18,6,'#3a1a5a');P(-8,-18,3,18,'#3a1a5a');P(4,-17,2,14,'#6a4a8a');P(-9,-1,18,1,'#2a1040');
+    ball(P,0,-23,7,7,'#2a1040','#5a3a7a','#9a7ac0');P(-5,-25,8,7,'#1a0a28');P(-4,-23,2,1,'#e0c0ff');P(0,-23,2,1,'#e0c0ff');
+    P(-12,-14+sw,5,4,'#e8d8b0');P(-12,-14+sw,5,1,'#c8a878');P(-11,-12+sw,3,1,'#6a4a8a');
+    P(8,-34,2,34,'#6a4a2a');P(7,-36,4,2,'#6a4a2a');P(6,-40,6,5,pulse>.5?'#d0a8ff':'#b08aff');P(7,-39,2,2,'#ffffff')}
 });
 function spark(e,dark,mid,lite,sc){const t=e.t,f=(t*16|0)%2,P=(dx,dy,w,h,c)=>r(e.x+dx*sc/2,e.y+dy*sc/2,Math.max(.5,w*sc/2),Math.max(.5,h*sc/2),c);
   P(-3,-2,2,2+f,shade(dark,-.3));P(1,-2,2,3-f,shade(dark,-.3));

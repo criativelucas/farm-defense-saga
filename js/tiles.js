@@ -101,7 +101,7 @@ function propLights(L){for(const p of MAP.props){
 
 // sky life: clouds drift, birds cross, the far sea sparkles, tent fires flicker on Sinai
 function drawSkyLife(){
-  if(MAP.clouds)for(let i=0;i<5;i++){const span=W+140,cx=((i*131-S.cam*.06+S.t*(1.5+i*.6))%span+span)%span-70,cy=10+i*11+hs(i,3)*12|0;x.globalAlpha=.85;dl(x,MAP.clouds[i%3],Math.round(cx),cy);x.globalAlpha=1}
+  if(MAP.clouds)for(let i=0;i<5;i++){const span=W+140,cx=((i*131-S.cam*.06+S.t*(1.5+i*.6))%span+span)%span-70,cy=10+i*11+hs(i,3)*12|0;x.globalAlpha=.85;dl(x,MAP.clouds[i%3],Math.round((cx+CAMF)*RS)/RS,cy);x.globalAlpha=1}
   if(!['getsemani','abismo','sinai'].includes(MAPID)){const per=26,ph=(S.t%per)/per;if(ph<.6){const k=ph/.6,bx=W+30-k*(W+90),by=34+Math.sin(S.t*.5)*6;
     for(let j=0;j<5;j++){const px=Math.round(bx+j*7),py=Math.round(by+Math.abs(j-2)*4+Math.sin(S.t*3+j)),w=(S.t*9+j|0)%2;r(px-2,py-w,2,1,'#2a1830');r(px,py,1,1,'#2a1830');r(px+1,py-w,2,1,'#2a1830')}}}
 }
@@ -109,8 +109,8 @@ function drawFarLife(){
   if(MAPID==='mar'||MAPID==='abismo')for(let i=0;i<16;i++){const sx=Math.round((hs(i,1)*W*1.4+S.t*(3+hs(i,2)*5))%(W+20))-10,sy=130+(hs(i,3)*24|0);if(Math.sin(S.t*2.5+i*1.7)>.35)r(sx,sy,2+(i%2),1,'#d8f0ff')}
 }
 function drawMidLife(){
-  if(!MAP.midFires)return;const off=Math.round(S.cam*PAR[1]);
-  for(const f of MAP.midFires){const sx=f.x-off;if(sx<-10||sx>W+10)continue;x.globalAlpha=.5+Math.sin(S.t*9+f.x)*.25+Math.random()*.15;r(sx-2,f.y,5,6,'#ffe0a0');x.globalAlpha=1}
+  if(!MAP.midFires)return;
+  for(const f of MAP.midFires){const sx=f.x+lay(PAR[1]);if(sx<-10||sx>W+10)continue;x.globalAlpha=.5+Math.sin(S.t*9+f.x)*.25+Math.random()*.15;r(sx-2,f.y,5,6,'#ffe0a0');x.globalAlpha=1}
 }
 
 // ---------- day levels: a blue sky with a real sun, and the parallax silhouettes washed in daylight haze

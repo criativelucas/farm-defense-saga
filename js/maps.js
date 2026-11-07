@@ -16,9 +16,9 @@ const MAPS={
   far(w){mount(w,118,22,.018,1,'#7a3552');mount(w,136,18,.025,4,'#5a2850')},
   mid(w){mount(w,150,10,.04,7,'#33183a');
     for(let tx=70,k=0;tx<w;tx+=110+hs(k,3)*50,k++){const ty=48+hs(k,4)*18;r(tx-3,ty,7,130,'#22142b');blob(tx,ty,24,15,'#22142b','#22142b','#2a1934',k+40);blob(tx-16,ty+10,13,8,'#22142b','#22142b','#2a1934',k+50)}
-    for(let px=30,k=0;px<w;px+=90+hs(k,5)*60,k++)palm(px,138+hs(k,6)*8,'#1c1024')},
+    for(let px=30,k=0;px<w;px+=90+hs(k,5)*60,k++)palm(px,160+hs(k,6)*4,'#1c1024')},
   near(w){for(let bx=10,k=0;bx<w;bx+=34+hs(k,21)*46,k++)blob(bx,166,12+(hs(k,22)*10|0),9+(hs(k,23)*6|0),'#140a1a','#1a0e22','#24122e',k+70);
-    for(let px=60,k=0;px<w;px+=140+hs(k,24)*90,k++)palm(px,150,'#170c1e')},
+    for(let px=60,k=0;px<w;px+=140+hs(k,24)*90,k++)palm(px,170,'#170c1e')},
   fg(w){const a=[];for(let x0=20,k=0;x0<w;x0+=70+hs(k,31)*110,k++){a.push({t:'vine',x:x0,len:10+(hs(k,32)*28|0),s:k});if(hs(k,33)>.55)a.push({t:'fern',x:x0+40,s:k})}return a},
   homeDraw(){r(12,124,9,46,'#7a4a2e');r(10,160,13,10,'#7a4a2e');r(14,130,2,30,'#9a6040');
     blob(16,112,22,16,'#2a6b3a','#4faa50','#9fe870',5);blob(4,124,10,7,'#2a6b3a','#4faa50','#9fe870',9);
@@ -36,7 +36,7 @@ const MAPS={
   far(w){mount(w,146,8,.03,2,'#3a2448')},
   mid(w){mount(w,156,7,.035,5,'#4a2a48');
     for(let tx=80,k=0;tx<w;tx+=95+hs(k,7)*60,k++){const ty=134+hs(k,8)*6;for(let j=0;j<14;j++)r(tx-j,ty+j,2*j+1,1,'#5a3458');r(tx-2,ty+8,5,6,'#ffb060');MAP.midFires.push({x:tx,y:ty+8});r(tx,ty-2,1,3,'#3a1d3e')}
-    for(let px=50,k=0;px<w;px+=150+hs(k,9)*80,k++)palm(px,146,'#2a1834')},
+    for(let px=50,k=0;px<w;px+=150+hs(k,9)*80,k++)palm(px,162,'#2a1834')},
   near(w){mount(w,170,5,.05,9,'#24142c');for(let bx=30,k=0;bx<w;bx+=80+hs(k,41)*90,k++)blob(bx,166,10+(hs(k,42)*8|0),6,'#1c1024','#24142c','#2e1a38',k+80)},
   fg(w){const a=[];for(let x0=40,k=0;x0<w;x0+=90+hs(k,51)*120,k++){a.push({t:'rock',x:x0,s:k});if(hs(k,52)>.6)a.push({t:'frond',x:x0+50,s:k})}return a},
   homeDraw(){// the Tabernacle: curtains of blue, purple and scarlet (Ex 26:1)
@@ -67,7 +67,7 @@ const MAPS={
     for(let yy=-22;yy<=22;yy++){const w=Math.sqrt(484-yy*yy);r(250-w,110+yy,w*2,1,'#fff0b0')}},
   far(w){mount(w,140,10,.02,2,'#a0604a')},
   mid(w){for(let bx=0,k=0;bx<w;bx+=26+hs(k,5)*20,k++){const h=18+hs(k,6)*26;r(bx,150-h,20,h+60,'#6a3a30');for(let i=0;i<20;i+=4)r(bx+i,150-h-3,2,3,'#6a3a30')}},
-  near(w){for(let px=40,k=0;px<w;px+=110+hs(k,9)*70,k++)palm(px,156,'#3a1e1a')},
+  near(w){mount(w,172,4,.05,5,'#3a1e1a');for(let px=40,k=0;px<w;px+=110+hs(k,9)*70,k++)palm(px,174,'#3a1e1a')},
   fg(w){const a=[];for(let x0=40,k=0;x0<w;x0+=90+hs(k,71)*110,k++){a.push({t:'rock',x:x0,s:k});if(hs(k,72)>.6)a.push({t:'frond',x:x0+50,s:k})}return a},
   homeDraw(){// Rahab's house on the wall, with the scarlet cord in the window (Js 2:18)
     r(4,134,28,36,'#b88a5a');r(4,134,28,2,'#ecd090');r(12,144,8,8,'#2a1408');r(19,148,1,22,'#e0284a');r(18,168,3,2,'#e0284a');r(8,160,6,10,'#5a3420')}
@@ -82,7 +82,7 @@ const MAPS={
     for(let i=0;i<5;i++)blob(60+i*80,30+hs(i,2)*30,26,5,'#5a3050','#6a3a5a','#8a4a6a',i+5)},
   far(w){for(let bx=30,k=0;bx<w;bx+=120+hs(k,3)*80,k++){for(let j=0;j<5;j++)r(bx-30+j*6,150-j*9,60-j*12,9,'#4a2a40')}},
   mid(w){mount(w,160,6,.04,4,'#3a1e30')},
-  near(w){for(let px=50,k=0;px<w;px+=150+hs(k,9)*90,k++)palm(px,158,'#24121e')},
+  near(w){mount(w,172,4,.05,6,'#24121e');for(let px=50,k=0;px<w;px+=150+hs(k,9)*90,k++)palm(px,174,'#24121e')},
   fg(w){const a=[];for(let x0=30,k=0;x0<w;x0+=100+hs(k,81)*120,k++){a.push({t:'rock',x:x0,s:k})}return a},
   homeDraw(){r(6,156,24,14,'#8a8a9a');r(4,154,28,3,'#b0b0c0');r(10,148,16,6,'#7a7a8a');r(14,144,8,4,'#5a5a6a')}
  },

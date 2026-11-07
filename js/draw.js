@@ -191,9 +191,10 @@ function drawHomeDyn(){
 }
 function drawPuddles(){if(S.wet<.05)return;x.globalAlpha=S.wet*.85;
   for(const p of MAP.puddles){r(p.x,p.y-1,p.w,2,'#3a6aa0');r(p.x+1,p.y-1,p.w-3,1,'#9ad0ff');if(Math.sin(S.t*4+p.x)>.6)r(p.x+((S.t*10)%p.w),p.y-1,1,1,'#ffffff')}x.globalAlpha=1}
+let CAMF=0;const lay=k=>Math.round((-S.cam*k+CAMF)*RS)/RS;
 function drawFG(){const c=MAP.day?'#1c3424':'#0a0410';
-  for(const f of MAP.fgItems){const fx=Math.round(f.x-S.cam*FGK);if(fx<-50||fx>W+50)continue;
-    if(f.t==='vine'){for(let i=0;i<f.len;i++){const px=fx+Math.sin(S.t*1.1+f.s+i*.15)*i*.06;r(px,i,2,1,c);if(i%4===2){r(px-3,i,3,2,c);r(px+2,i+1,3,1,c)}}blob(fx,0,12,7,c,c,MAP.day?'#2a4a30':'#16081e',f.s+90)}
+  for(const f of MAP.fgItems){const fx=f.x+lay(FGK);if(fx<-50||fx>W+50)continue;
+    if(f.t==='vine'){if(MAP.day)continue;for(let i=0;i<f.len;i++){const px=fx+Math.sin(S.t*1.1+f.s+i*.15)*i*.06;r(px,i,2,1,c);if(i%4===2){r(px-3,i,3,2,c);r(px+2,i+1,3,1,c)}}blob(fx,0,12,7,c,c,MAP.day?'#2a4a30':'#16081e',f.s+90)}
     else if(f.t==='fern'){for(let b=0;b<6;b++){const an=Math.PI*(.25+b*.08)+Math.sin(S.t*1.4+f.s+b)*.05,dir=b%2?1:-1;for(let j=0;j<22;j++)r(fx+Math.cos(an)*j*dir,H-Math.sin(an)*j+j*j*.02,2,1,c)}}
     else if(f.t==='rock')blob(fx,H,18,12,c,c,MAP.day?'#2a4a30':'#16081e',f.s+95);
     else if(f.t==='frond'){for(let b=0;b<4;b++){const an=.3+b*.25,dir=b%2?1:-1;for(let j=0;j<26;j++)r(fx+j*Math.cos(an)*dir,j*Math.sin(an)+j*j*.03+Math.sin(S.t+b)*j*.03,2,1,c)}}}
@@ -242,9 +243,10 @@ function draw(){
   if(MAP.storm&&S.bolt>0){x.fillStyle=`rgba(220,220,255,${S.bolt*.6})`;x.fillRect(0,0,W,H);let lx=290,ly=26;
     for(let i=0;i<8;i++){const nx=lx+rnd(-6,6);x.fillStyle='#fffbe0';x.fillRect(Math.round(Math.min(lx,nx)),ly,Math.abs(nx-lx)+1,1);x.fillRect(Math.round(nx),ly,1,5);lx=nx;ly+=5}}
   drawRays();drawSkyLife();
-  dl(x,FAR,-Math.round(S.cam*PAR[0]),0);drawFarLife();if(!CFG.lite)fog(128,.16,.3);
-  dl(x,MID,-Math.round(S.cam*PAR[1]),0);drawMidLife();if(!CFG.lite)fog(150,.12,.6);
-  dl(x,NEAR,-Math.round(S.cam*PAR[2]),0);
+  // the canvas itself slides by the camera's fraction, so every layer adds that fraction back; otherwise slow layers jitter
+  CAMF=S.cam-cam;dl(x,FAR,lay(PAR[0]),0);drawFarLife();if(!CFG.lite)fog(128,.16,.3);
+  dl(x,MID,lay(PAR[1]),0);drawMidLife();if(!CFG.lite)fog(150,.12,.6);
+  dl(x,NEAR,lay(PAR[2]),0);
   if(!MAP.day)for(let i=0;i<18;i++){const fx=(hs(i,5)*W+S.t*(6+hs(i,6)*8))%W,fy=60+hs(i,7)*90+Math.sin(S.t*1.5+i)*6;if(Math.sin(S.t*3+i*2)>-.2)r(fx,fy,1,1,'#fff4a0')}
   x.save();x.translate(-cam,0);
   dl(x,GROUND,0,0);
@@ -271,7 +273,7 @@ function draw(){
   drawCorpses();for(const e of S.en)drawEnemy(e);
   drawSea();drawDragPreview();
   if(S.state!=='title')drawGardener(P);
-  drawProj();drawBeams();drawDrops();drawFruitDrops();drawParts();
+  drawProj();drawBeams();drawDrops();drawFruitDrops();drawParts();drawVfx();
   for(const e of S.en)if(!(e.dive>0))drawIntent(e);
   x.textAlign='center';
   for(const p of S.pops){const k=p.size>8?1+Math.max(0,.14-p.t)*5:1;x.globalAlpha=Math.min(1,(1-p.t/.9)*2);x.save();x.translate(p.x,p.y-p.t*22);x.scale(k,k);

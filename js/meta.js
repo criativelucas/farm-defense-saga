@@ -42,7 +42,7 @@ function showHub(){
   const item=(k,label,sub,locked,main)=>`<button type="button" class="mi ${main?'main':''} ${locked?'locked':''}" data-hub="${k}" ${locked?'disabled':''}><canvas width="32" height="32" data-hubicon="${k}"></canvas><span><b>${label}</b><small>${sub}</small></span><em>▸</em></button>`;
   const mini=(k,label)=>`<button type="button" class="mini" data-hub="${k}" title="${label}"><canvas width="32" height="32" data-hubicon="${k}"></canvas><small>${label}</small></button>`;
   menu(`<div class="title">
-    <div class="logo"><small>O fruto do Espírito · Gálatas 5:22-23</small><h1>Farm<br>Defense<br><span>Saga</span></h1>${coinsTag()}</div>
+    <div class="logo"><img src="assets/logo.png" alt="Farm Defense Saga" width="720" height="606"><small>O fruto do Espírito · Gálatas 5:22-23</small>${coinsTag()}</div>
     <div class="sign"><div class="plank">O Jardim</div><div class="scroll">
       ${item('aventura','Jogar',doneN?'Aventura · '+doneN+'/'+LEVELS.length+' fases':'Comece pela Aventura',false,true)}
       ${item('jornada','Jornada',jornadaOpen()?'Modo desafio em 3 atos':'Libera ao vencer Jericó 2-4',!jornadaOpen())}
@@ -122,23 +122,25 @@ function showWorld(sel){
 }
 
 // ---------- playing a level
-function advColl(){const c=[];const cc=CHARS[META.char].card;if(cc)c.push(mk(cc),mk(cc));META.unlocked.forEach(k=>{c.push(mk(k));if(CARDS[k].type==='semente'||k==='mana')c.push(mk(k))});return c}
+function advColl(){const c=[];const cc=CHARS[META.char].card;if(cc)c.push(mk(cc));META.unlocked.forEach(k=>{c.push(mk(k));if(CARDS[k].type==='semente')c.push(mk(k))});return c}
+// the bag grows with the adventure: 3 to 5 cards on the first level, up to 8 to 10 later
+const levelBag=n=>{const mn=Math.min(8,3+Math.floor(n/3));return[mn,Math.min(deckMax(),mn+2)]};
 function startLevel(n){
   const L=LEVELS[n],w=WORLDS[L.wi];UID=1;
   RUN={mode:'level',level:n,char:META.char,asc:0,daily:false,seed:0,act:w.act,row:0,rows:[],path:[],hp:20,maxhp:20,siclos:0,coll:advColl(),deck:[],relics:[],handSize:4,esau:-1,samaritano:0,seenEv:[],stats:{kills:0,bosses:0},podas:0};
   const prev=META.lastDeck&&META.lastDeck.length?META.lastDeck:null;
-  RUN.deck=prev?RUN.coll.filter((c,i,a)=>prev.includes(c.k)&&a.findIndex(o=>o.k===c.k)===i).concat(RUN.coll.filter((c,i,a)=>prev.includes(c.k)&&a.findIndex(o=>o.k===c.k)!==i)).slice(0,deckMax()):RUN.coll.slice(0,deckMax());
+  RUN.deck=prev?RUN.coll.filter((c,i,a)=>prev.includes(c.k)&&a.findIndex(o=>o.k===c.k)===i).concat(RUN.coll.filter((c,i,a)=>prev.includes(c.k)&&a.findIndex(o=>o.k===c.k)!==i)).slice(0,levelBag(n)[1]):RUN.coll.slice(0,levelBag(n)[1]);
   showDeck();
 }
 function levelNode(){
   const L=LEVELS[RUN.level],w=WORLDS[L.wi];seedRng(9001+L.n*977);
   const nW=L.l===0?2:3,waves=[];
-  for(let i=0;i<nW;i++)waves.push(genWave(w.act,i+L.l,'batalha',0));
+  for(let i=0;i<nW;i++)waves.push(genWave(w.act,i+L.l,'batalha',0,levelPool(L.n)));
   if(L.boss){waves[waves.length-1].list.unshift([L.boss,2.5]);waves[waves.length-1].name=EN[L.boss].name}
   RNG=Math.random;
   return{type:L.boss?'chefe':'batalha',map:w.arena&&L.boss?w.arena:w.map,waves,night:L.night,level:L.id};
 }
-function startLevelBattle(){META.lastDeck=RUN.deck.map(c=>c.k);saveMeta();const L=LEVELS[RUN.level];if(L.rule==='poucas')RUN.handSize=3;hideMenu();clearInterval(wmapTimer);const node=levelNode();startBattle(node);
+function startLevelBattle(){META.lastDeck=RUN.deck.map(c=>c.k);saveMeta();const L=LEVELS[RUN.level];if(L.rule==='poucas')RUN.handSize=3;RUN.handSize=Math.min(RUN.handSize,RUN.deck.length);hideMenu();clearInterval(wmapTimer);const node=levelNode();startBattle(node);
   if(L.rule==='sempisao')S.noSlam=true;if(L.rule==='trevas')S.trevas=true;if(L.rule)banner('Regra da fase',RULES[L.rule].name+': '+RULES[L.rule].desc)}
 function levelWon(){
   const L=LEVELS[RUN.level],first=!META.done[L.id],treeBonus=1+(META.garden.tree.lvl||0)*.05;

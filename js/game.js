@@ -95,7 +95,7 @@ function damage(e,d,src){
   const strong=src&&EN[e.k].weak===src;if(strong)d*=2.5;
   if(e.shield)d*=.5;
   d*=1+Math.min(S.combo,25)*.02;
-  e.hp-=d;e.flash=.07;sfx('hit');
+  e.hp-=d;e.flash=.07;sfx('hit');vfx('spark',e.x,ecy(e),{n:2});
   if(d>=8)S.stop=Math.max(S.stop,.035);
   pop(e.x+rnd(-3,3),ecy(e)-6,(d<1?d.toFixed(1):Math.round(d))+(strong?'!':''),strong?'#ffe14a':e.shield?'#9ab0ff':'#fff4dc',strong?11:d>=6?9:7);
   const D=EN[e.k];
@@ -117,7 +117,7 @@ function kill(e){
   if(META.stats.kills>=490)unlockAch('setenta');
 }
 function deathFx(e){
-  S.fx.push({k:'corpse',e:{...e},t:0,max:.3});
+  S.fx.push({k:'corpse',e:{...e},t:0,max:.3});vfx('puff',e.x,ecy(e),{n:5});vfx('spark',e.x,ecy(e),{n:6});
   const X=e.x,Y=ecy(e),P=(n,c,o)=>{for(let i=0;i<n;i++){const a=rnd(0,Math.PI*2),v=rnd(o.sp*.3,o.sp);
     S.parts.push({x:X+rnd(-3,3),y:Y+rnd(-3,3),vx:Math.cos(a)*v,vy:Math.sin(a)*v+(o.up||0),g:o.g,life:rnd(o.l*.5,o.l),max:o.l,c:pick(c),s:o.s||1,sway:o.sway,a:o.a})}};
   switch(e.k){
@@ -153,7 +153,7 @@ function updPlayer(dt){
   let floor=gy(p.x);
   if(p.vy>=0)for(const pl of MAP.plats)if(p.x>pl.x-3&&p.x<pl.x+pl.w+3&&py<=pl.y+.5&&p.y>=pl.y)floor=Math.min(floor,pl.y);
   if(p.y>=floor){
-    if(!p.on){p.sq=p.slam?1.6:1.3;if(p.slam)doSlam();else burst(p.x,floor,3,['#c9a99a'],25,0,.25)}
+    if(!p.on){p.sq=p.slam?1.6:1.3;vfx('dust',p.x,floor-1,{n:p.slam?8:2});if(p.slam)doSlam();else burst(p.x,floor,3,['#c9a99a'],25,0,.25)}
     p.y=floor;p.vy=0;p.on=true;p.slam=false;
   }else p.on=false;
   p.sq+=(1-p.sq)*Math.min(1,dt*12);p.anim+=Math.abs(p.vx)*dt*.25;
@@ -223,7 +223,7 @@ function wind(s,rad,push,dmg,slow){sfx('wind');S.fx.push({k:'ring',x:s.x,y:s.y-8
   for(const e of S.en)if(Math.abs(e.x-s.x)<rad&&Math.abs(ecy(e)-s.y)<40&&e.dive<=0){e.x+=EN[e.k].boss?push*.25:push;if(slow)e.slow=2;damage(e,dmg,'lirio')}}
 // watering grows a tree through 3 stages: bigger, and one level stronger each stage
 function water(t,s,amt){const was=t.water||0;t.water=Math.min(3,was+amt);const st=Math.floor(t.water);if(st>Math.floor(was)){
-  sfx('heal');burst(s.x,s.y-12,16,['#7ac0ff','#bfe8ff','#5fe08a'],60,120,.6);t.pulse=1;
+  sfx('heal');burst(s.x,s.y-12,16,['#7ac0ff','#bfe8ff','#5fe08a'],60,120,.6);t.pulse=1;vfx('heal',s.x,s.y-22,{c:'#7ac0ff'});vfx('sparkle',s.x+6,s.y-28,{s:3});
   if(st>(t.lvl||0)){t.lvl=st;S.fx.push({k:'ring',x:s.x,y:s.y-14,r:2,max:22,t:0,c:'#7ac0ff'})}
   if(t.kinds.includes('mostarda'))t.age=Math.max(t.age,st>=3?2:st>=2?1:0);
   pop(s.x,s.y-44,st>=3?'árvore adulta!':'cresceu! nível '+(t.lvl+1),'#9ad0ff',9)}}
@@ -232,7 +232,7 @@ function updTowers(dt){
   const P=S.p;
   MAP.slots.forEach((s,i)=>{const t=S.tw[i];if(!t)return;
     const was=t.grow;t.grow=Math.min(1,t.grow+dt*(t.soil==='pedra'?4:1.6));
-    if(was<=0&&t.grow>0){burst(s.x,s.y-2,14,['#6a3a24','#8a5236','#4a2a1a'],60,300,.5);burst(s.x,s.y-6,8,['#5fe08a','#9ff7b8'],40,150,.5);shake(2);sfx('plant')}
+    if(was<=0&&t.grow>0){vfx('puff',s.x,s.y-2,{n:4,c:'#8a5a3a'});vfx('sparkle',s.x,s.y-12,{s:3});burst(s.x,s.y-2,14,['#6a3a24','#8a5236','#4a2a1a'],60,300,.5);burst(s.x,s.y-6,8,['#5fe08a','#9ff7b8'],40,150,.5);shake(2);sfx('plant')}
     if(t.grow>=1&&!t.joio&&(t.water||0)<3){const near=P.on&&Math.abs(P.x-s.x)<16&&Math.abs(P.y-s.y)<6&&Math.abs(P.vx)<30&&P.faint<=0;
       const rate=(near?.19:0)+(S.rain>0?.08:0);if(rate>0)water(t,s,rate*dt*(t.soil==='espinho'?.6:t.soil==='pedra'?1.5:1));
       if(near&&Math.random()<dt*14)S.parts.push({x:P.x+P.face*4,y:P.y-10,vx:(s.x-P.x)*1.5+P.face*20,vy:-30,g:240,life:.45,max:.45,c:Math.random()<.5?'#7ac0ff':'#bfe8ff',s:1});
@@ -310,7 +310,7 @@ function playCard(i,si=null){
   else if(c.k==='joio'){RUN.deck=RUN.deck.filter(k=>k!==c);RUN.coll=RUN.coll.filter(k=>k!==c);pop(P.x,P.y-24,'joio arrancado da bolsa','#ffffff')}
   else{if(c.k==='chuva'){tx=W/2;ty=30}if(blessing(c.k)===false)return}
   flyCard(i,c,tx,ty);
-  S.mana-=I.cost;if(c.k!=='joio')S.draw.push(c);S.hand[i]=S.draw.shift();S.sel=-1;S.newIdx=i;renderHand();S.newIdx=-1;
+  S.mana-=I.cost;if(CARDS[c.k]&&CARDS[c.k].type==='bencao')vfx('holy',S.p.x,0);if(c.k!=='joio')S.draw.push(c);S.hand[i]=S.draw.shift();S.sel=-1;S.newIdx=i;renderHand();S.newIdx=-1;
 }
 function blessing(k){
   const P=S.p;sfx('card');
@@ -438,6 +438,9 @@ function update(dt){
     if(d.boss&&e.ph2&&e.k==='golias')m*=1.6;
     let sp=d.spd*1.2*m;
     if(d.ai==='zigzag')sp*=.7+Math.sin(e.t*2.3)*1.1;
+    if(d.ai==='rage'){if(!e.rage&&e.hp<e.max*.6){e.rage=1;pop(e.x,e.y-16,'fúria!','#ff6a1a',9);vfx('puff',e.x,e.y-6,{n:5,c:'#5a4a4a'})}if(e.rage)sp*=2}
+    if(d.ai==='blink'){e.bt=(e.bt??rnd(2,3.5))-dt;if(e.bt<=0){e.bt=rnd(2.5,4);vfx('blink',e.x,e.y);e.x-=26;vfx('blink',e.x,e.y)}}
+    if(d.ai==='heal'){e.ht=(e.ht??3)-dt;if(e.ht<=0){e.ht=3;for(const o of S.en)if(o!==e&&o.hp>0&&!EN[o.k].boss&&Math.abs(o.x-e.x)<40&&o.hp<o.max){o.hp=Math.min(o.max,o.hp+3);vfx('heal',o.x,ecy(o),{c:'#b08aff'})}vfx('ring2',e.x,e.y-8,{c:'#b08aff',r:40})}}
     e.x-=sp*dt*(!d.fly&&S.muds.some(m=>Math.abs(e.x-m.x)<16)?.4:1);
     if(!d.fly)for(const f of S.fences)if(f.hp>0&&e.x>f.x&&e.x-f.x<d.w/2+5){e.x=f.x+d.w/2+5;f.hp-=dt*(d.boss?40:d.elite?20:6)}
     if(d.fly)for(const sc of S.scares)if(e.x>sc.x-10&&e.x-sc.x<60)e.x+=(sp+30)*dt;
@@ -491,7 +494,7 @@ function hitProj(p,e){
   else if(p.kind==='oil'){for(const f of S.en)if(Math.hypot(f.x-p.x,ecy(f)-p.y)<16){f.slow=2.6;damage(f,p.dmg,p.src)}burst(p.x,p.y,10,['#d9c24a','#fff3a0','#a89020'],60,300,.5,2)}
   else if(p.kind==='mustard'){for(const f of S.en)if(Math.hypot(f.x-p.x,ecy(f)-p.y)<20)damage(f,p.dmg,p.src);burst(p.x,p.y,18,['#e8e070','#fff','#9aaa3a'],90,220,.5,2);shake(2);flash(.08,'255,240,150')}
 }
-function updFx(dt){
+function updFx(dt){updVfx(dt);
   for(const p of S.parts){p.vy+=p.g*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;if(p.sway)p.x+=Math.sin(p.life*4+p.vx)*.45}
   S.parts=S.parts.filter(p=>p.life>0);if(CFG.lite&&S.parts.length>120)S.parts.splice(0,S.parts.length-120);
   for(const p of S.pops)p.t+=dt;S.pops=S.pops.filter(p=>p.t<.9);

@@ -38,6 +38,9 @@ const EN={
   contendinha:{name:'Contenda',hp:3,spd:34,rew:2,dmg:1,fly:0,w:6,h:6,c:'#d06a2a',glow:'#ffb060',weak:'oliveira',hide:1,desc:'Metade de uma contenda.'},
   impureza:{name:'Impureza',hp:12,spd:16,rew:8,dmg:1,fly:0,w:12,h:9,c:'#6a6a2a',glow:'#d8d860',weak:'amendoeira',ai:'corrupt',desc:'Quando passa por uma árvore, ela vira joio. Um pisão limpa.'},
   faccoes:{name:'Facções',hp:7,spd:20,rew:4,dmg:1,fly:0,w:8,h:9,c:'#4a5aa0',glow:'#7a9aff',weak:'roma',desc:'Andam em trio. Quem está perto delas leva metade do dano.'},
+  ira:{name:'Ira',hp:9,spd:17,rew:6,dmg:2,fly:0,w:10,h:11,c:'#ff5a1a',glow:'#ff8a3a',weak:'oliveira',ai:'rage',desc:'Quando apanha, se enfurece e corre o dobro.'},
+  ciume:{name:'Ciúmes',hp:6,spd:22,rew:5,dmg:1,fly:1,w:10,h:8,c:'#3aa88a',glow:'#5af0c0',weak:'roma',ai:'blink',desc:'Some e reaparece mais à frente.'},
+  heresia:{name:'Heresias',hp:14,spd:13,rew:8,dmg:1,fly:0,w:10,h:15,c:'#6a4a8a',glow:'#b08aff',weak:'mostarda',ai:'heal',desc:'Cura as pragas ao redor. Derrube primeiro.'},
   bezerro:{name:'Bezerro de Ouro',hp:220,spd:7,rew:40,dmg:8,fly:0,w:34,h:26,c:'#f7c948',glow:'#fff08a',weak:null,elite:1,ref:'Êxodo 32:4',desc:'Elite. O ídolo de ouro.'},
   golias:{name:'Golias',hp:420,spd:8,rew:60,dmg:12,fly:0,w:22,h:36,c:'#a08a5a',glow:'#ffd34a',weak:null,boss:1,ref:'1 Samuel 17:4',desc:'Chefe. Atira pedras que atordoam você. Com metade da vida, se enfurece.'},
   farao:{name:'Faraó',hp:520,spd:7,rew:60,dmg:12,fly:0,w:40,h:30,c:'#f7c948',glow:'#5a8aff',weak:null,boss:1,ref:'Êxodo 14:9',desc:'Chefe. Chama pragas de reforço. Furioso, chama ainda mais.'},
@@ -51,12 +54,15 @@ const ACTS=[
   {name:'Ato II',title:'O Êxodo',pool:['mar','sinai'],boss:'farao',arena:'mar'},
   {name:'Ato III',title:'A Vigília',pool:['babel','getsemani'],boss:'leviata',arena:'abismo'}
 ];
-const WAVE_POOL=[['odio','inveja','discordia','gula','embriaguez'],
-  ['odio','inveja','discordia','gula','embriaguez','feitico','contenda','faccoes','ambicao'],
-  ['odio','inveja','discordia','gula','embriaguez','feitico','contenda','faccoes','ambicao','impureza']];
-const COST={odio:2,inveja:2,discordia:1,gula:6,embriaguez:3,feitico:3,contenda:4,faccoes:3,ambicao:8,impureza:5};
-function genWave(act,i,kind,ascN){
-  const pool=WAVE_POOL[act],L=[],theme=rpick(pool);
+const WAVE_POOL=[['odio','inveja','discordia','gula','embriaguez','ira'],
+  ['odio','inveja','discordia','gula','embriaguez','feitico','contenda','faccoes','ambicao','ira','ciume'],
+  ['odio','inveja','discordia','gula','embriaguez','feitico','contenda','faccoes','ambicao','impureza','ciume','heresia']];
+// adventure levels meet the works of the flesh one at a time, in this order; each level mixes the six newest it knows
+const PEST_ORDER=['odio','discordia','inveja','embriaguez','ira','gula','feitico','contenda','ciume','faccoes','impureza','heresia','ambicao'];
+const levelPool=n=>{const k=Math.min(PEST_ORDER.length,2+Math.floor(n*.6));return PEST_ORDER.slice(Math.max(0,k-6),k)};
+const COST={odio:2,inveja:2,discordia:1,gula:6,embriaguez:3,feitico:3,contenda:4,faccoes:3,ambicao:8,impureza:5,ira:3,ciume:3,heresia:4};
+function genWave(act,i,kind,ascN,only){
+  const pool=only||WAVE_POOL[act],L=[],theme=rpick(pool);
   let budget=(16+act*15+i*7+(kind==='elite'?8:0))*(ascN>=5?1.2:1);
   while(budget>0){
     const k=RNG()<.45?theme:rpick(pool),c=COST[k];

@@ -210,8 +210,8 @@ function saveRun(){if(RUN&&RUN.mode==='level')return;store.set('fds-run',{RUN,UI
 function showDeck(){
   RUN.needDeck=true;saveRun();
   const cel=META.celeiro.map(o=>o.hyb?mk('hyb',{hyb:o.hyb,rare:true,cel:true}):mk(o.k,{rare:true,cel:true}));
-  const max=deckMax(),sel=new Set(RUN.deck.slice(-max).map(c=>c.uid));
-  const lvl=RUN.mode==='level',mn=Math.min(8,RUN.coll.length+cel.length);
+  const lvl=RUN.mode==='level',bag=lvl?levelBag(RUN.level):[8,deckMax()],max=bag[1],sel=new Set(RUN.deck.slice(-max).map(c=>c.uid));
+  const mn=Math.min(bag[0],RUN.coll.length+cel.length);
   const render=()=>{const n=sel.size,ok=n>=mn&&n<=max;
     menu(`<div class="mbox">${lvl?`<div class="row" style="justify-content:space-between;width:100%"><button class="btn ghost" id="backmap">‹ Mapa</button><small class="eyebrow">Fase ${LEVELS[RUN.level].id} · ${LEVELS[RUN.level].night?'Noite':'Dia'}</small><span></span></div>`:`<small class="eyebrow">${ACTS[RUN.act].name} · ${ACTS[RUN.act].title}</small>`}<h2>${lvl?'Escolha suas sementes':'Monte sua bolsa de sementes'}</h2>
       ${lvl?wavePreviewHTML():''}<p>Escolha de ${mn} a ${max} cartas. Na batalha você segura ${RUN.handSize} na mão; jogou uma, compra a próxima.</p>

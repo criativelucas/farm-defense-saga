@@ -1,5 +1,5 @@
 // ---------- menu skin: pixel-art frames drawn once and handed to CSS as border-images.
-// Parchment panels in a carved wooden frame, dark slots with an orange rim, a wooden title plaque, pill buttons.
+// Parchment panels in a carved wooden frame, dark slots with an orange rim, a caramel title ribbon like the logo, pill buttons.
 (function(){
   const keep=C,out={};
   const make=(n,w,h,draw)=>{const c=mkCanvas(w,h);C=c.getContext('2d');draw(w,h,C);out[n]=`url(${c.toDataURL()})`};
@@ -20,13 +20,13 @@
   make('slot',16,16,(w,h,g)=>{r(0,0,w,h,'#4a2616');for(let j=6;j<h-5;j+=3)r(5,j,w-10,1,'#52301c');
     rings(w,h,['#1a0c06','#f0a050','#d0782e','#8a4a1e','#2a140a']);nip(w,h,g);r(1,1,1,1,'#1a0c06');r(w-2,1,1,1,'#1a0c06');r(1,h-2,1,1,'#1a0c06');r(w-2,h-2,1,1,'#1a0c06')});
   make('slotOn',16,16,(w,h,g)=>{r(0,0,w,h,'#5a3418');rings(w,h,['#1a0c06','#fff3b0','#f7c948','#c9921a','#2a140a']);nip(w,h,g)});
-  // wooden title plaque: 32x20, slice 8
-  make('plaque',32,20,(w,h,g)=>{r(0,0,w,h,'#8a4622');for(let j=4;j<h-4;j+=3)for(let i=6;i<w-6;i++)if(hs(i,j)>.4)r(i,j,1,1,'#7a3c1c');
-    rings(w,h,['#24100a','#e8a860','#b8692e','#5a2a12']);nip(w,h,g,2);r(1,1,1,1,'#24100a');r(w-2,1,1,1,'#24100a');r(1,h-2,1,1,'#24100a');r(w-2,h-2,1,1,'#24100a');
-    for(const X of[5,w-6]){r(X-1,h/2-2,3,4,'#e8a860');r(X,h/2-1,1,2,'#fff0c0');r(X-1,h/2+2,3,1,'#5a2a12')}});
+  // title ribbon in the colors of the logo's SAGA banner: caramel cloth, dark seams, silver diamond studs
+  make('plaque',32,20,(w,h,g)=>{r(0,0,w,h,'#b8834e');for(let j=4;j<h-4;j+=2)for(let i=6;i<w-6;i++)if(hs(i,j)>.55)r(i,j,1,1,'#a87444');
+    rings(w,h,['#2a1808','#e0b07a','#c08a52','#7a5030']);nip(w,h,g,2);r(1,1,1,1,'#2a1808');r(w-2,1,1,1,'#2a1808');r(1,h-2,1,1,'#2a1808');r(w-2,h-2,1,1,'#2a1808');
+    for(const X of[5,w-6]){r(X,h/2-3,1,1,'#f0f0ff');r(X-1,h/2-2,3,1,'#c8c8d8');r(X-2,h/2-1,5,2,'#e0e0f0');r(X-1,h/2+1,3,1,'#8a8aa0');r(X,h/2+2,1,1,'#6a6a80')}});
   // pill buttons: 16x16, slice 4
   const pill=(n,hi,mid,lo)=>make(n,16,16,(w,h,g)=>{r(0,0,w,h,mid);rings(w,h,['#24100a']);r(1,1,w-2,2,hi);r(1,h-4,w-2,3,lo);nip(w,h,g,2);r(1,1,1,1,'#24100a');r(w-2,1,1,1,'#24100a');r(1,h-2,1,1,'#24100a');r(w-2,h-2,1,1,'#24100a')});
-  pill('btn','#fff3b0','#f0b838','#b07a1a');pill('btnDark','#9a6448','#6a3e2a','#3a2018');pill('btnRed','#ff9a9a','#c8403a','#801c24');
+  pill('btn','#fff0a0','#f8b830','#c0661a');pill('btnDark','#9a6448','#6a3e2a','#3a2018');pill('btnRed','#ff9a7a','#d0502a','#7a2410');
   C=keep;
   const st=document.documentElement.style;Object.entries(out).forEach(([k,v])=>st.setProperty('--f-'+k,v));
 })();
