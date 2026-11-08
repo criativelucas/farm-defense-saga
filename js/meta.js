@@ -35,45 +35,45 @@ function hubIconTo(cvs,k){const g=hdCtx(cvs,32,32);C=g;
   C=x}
 function showHub(){
   if(!S||S.state!=='title'){blankBattle('eden',true);S.state='title';
-    [['roma',1],['tamareira',4],['oliveira',6],['videira',9],['amendoeira',11]].forEach(([k,i])=>{if(!MAP.slots[i])return;plantAt(i,[k],false,0);Object.assign(S.tw[i],{grow:1,water:3,szv:1,lvl:3})});S.pops=[]}
+    [['roma',1],['tamareira',4],['oliveira',6],['videira',9],['amendoeira',11]].forEach(([k,i])=>{if(!MAP.slots[i])return;plantAt(i,[k],false,0);Object.assign(S.tw[i],{grow:1,water:3,szv:1,lvl:3})});S.pops=[];S.wx='petals'}
   MUS.mode='calm';MUS.scene='titulo';RUN=null;
   if(!META.intro){META.intro=1;saveMeta();return showIntro(0)}
   const next=LEVELS.find(l=>!META.done[l.id]),mr=missionsReady();
-  const plank=(k,label,sub,locked)=>`<button type="button" class="plank2 ${locked?'locked':''}" data-hub="${k}" ${locked?'disabled':''}><b>${label}</b>${sub?`<small>${sub}</small>`:''}</button>`;
-  const prop=(k,label,cls,badge)=>`<button type="button" class="prop ${cls}" data-hub="${k}" title="${label}"><canvas width="48" height="48" data-prop="${k}"></canvas><span>${label}</span>${badge?`<i>${badge}</i>`:''}</button>`;
+  let pn=0,qn=0;const plank=(k,label,sub,locked)=>`<button type="button" class="plank2 ${locked?'locked':''}" style="--n:${pn++}" data-hub="${k}" ${locked?'disabled':''}><b>${label}</b>${sub?`<small>${sub}</small>`:''}</button>`;
+  const prop=(k,label,tc,badge)=>`<button type="button" class="prop" style="--tc:${tc};--n:${qn++}" data-hub="${k}" title="${label}"><canvas width="48" height="48" data-prop="${k}"></canvas><span>${label}</span>${badge?`<i>${badge}</i>`:''}</button>`;
   menu(`<div class="farmhub">
-    <div class="logo"><img src="assets/logo.png" alt="Farm Defense Saga" width="720" height="606"></div>
+    <div class="logo"><img src="assets/logo.png" alt="Farm Defense Saga" width="720" height="606">${[[18,22,0],[78,14,.7],[90,52,1.4],[8,62,2.1],[52,6,1.1],[66,78,1.8]].map(([a,b,d])=>`<i class="spk" style="--x:${a}%;--y:${b}%;--d:${d}s"></i>`).join('')}</div>
     <div class="welcome"><b>Bem-vindo de volta,</b><span>${CHARS[META.char].name}!</span>${coinsTag()}</div>
-    <div class="barn"><canvas id="barnc" width="600" height="780"></canvas><div class="planks">
+    <div class="barn"><canvas id="barnc" width="400" height="520"></canvas><div class="planks">
       ${plank('aventura','Aventura',next?'fase '+next.id:'tudo vencido!')}
       ${plank('jornada','Jornada',jornadaOpen()?'desafio em 3 atos':'vença Jericó 2-4',!jornadaOpen())}
       ${plank('jardim','Estufa',gardenOpen()?'plante e colha':'vença Éden 1-4',!gardenOpen())}
       ${plank('minijogos','Minijogos',miniOpen('raposas')?trophies()+'/6 troféus':'vença 2 fases',!miniOpen('raposas'))}
       ${treeOwned()?plank('arvore','Árvore da Vida','nível '+META.garden.tree.lvl+'/10'):''}</div></div>
-    <div class="props">${prop('codex','Códex','book')}${prop('loja','Quitanda','crate')}${prop('personagem','Lavrador','hat')}${prop('missoes','Missões','scroll',mr||'')}${prop('conquistas','Conquistas','medal')}${prop('intro','Ajuda','sack')}${prop('config','Ajustes','sack')}</div>
+    <div class="props">${prop('codex','Códex','#c8403a')}${prop('loja','Quitanda','#e8902a')}${shopOpen('cartas')?prop('pacotes','Pacotes','#9b5ae0','✦'):''}${prop('personagem','Lavrador','#e8b830')}${prop('missoes','Missões','#4faa4a',mr||'')}${prop('conquistas','Conquistas','#2aa8a0')}${prop('intro','Ajuda','#3a7ad8')}${prop('config','Ajustes','#7a8094')}</div>
   </div>`);
   $('menu').classList.add('scene');paintCoins();barnArt();
   $('menu').querySelectorAll('canvas[data-prop]').forEach(c=>propIconTo(c,c.dataset.prop));
-  $('menu').querySelectorAll('[data-hub]').forEach(b=>{b.onmouseenter=()=>sfx('hit');b.onclick=()=>{initAudio();sfx('card');({aventura:showWorld,jardim:showGarden,arvore:showTree,intro:()=>showIntro(0),config:showConfig,loja:()=>showShop2('ferramentas'),personagem:showLavrador,jornada:showJornada,minijogos:showMinis,missoes:showMissions,codex:()=>showCodex('caminho'),conquistas:showAchs})[b.dataset.hub]()}});
+  $('menu').querySelectorAll('[data-hub]').forEach(b=>{b.onmouseenter=()=>sfx('hit');b.onclick=()=>{initAudio();sfx('card');({aventura:showWorld,jardim:showGarden,arvore:showTree,intro:()=>showIntro(0),config:showConfig,loja:()=>showShop2('ferramentas'),pacotes:()=>showShop2('cartas'),personagem:showLavrador,jornada:showJornada,minijogos:showMinis,missoes:showMissions,codex:()=>showCodex('caminho'),conquistas:showAchs})[b.dataset.hub]()}});
 }
 // a two-storey red barn seen from the front: the red wall rises into the gambrel gable, a band of slate shingles
 // caps it with a white fascia, hayloft door and pulley up top, braced doors below; dark outline all around
-function barnArt(){const g=hdCtx($('barnc'),200,260,3);C=g;
-  const red='#c0362c',dk='#8e2622',lt='#d84a3a',wh='#f6eedc',wd='#cfc2aa',ol='#2a1216',sl='#46465e',sl2='#5a5a78',sl3='#74749a';
+function barnArt(){const g=hdCtx($('barnc'),200,260,2);C=g;
+  const red='#c0362c',dk='#8e2622',lt='#d84a3a',wh='#f6eedc',wd='#cfc2aa',ol='#2a1216',sl='#2e2a3e',sl2='#463e5a',sl3='#5e5478';
   // the gable edge: ridge at the middle, a break, steep lower slopes down to the eaves
   const gable=x0=>{const d=Math.abs(x0-100);return d<56?16+d*.39:16+56*.39+(d-56)*1.18};
   const top=x0=>gable(x0)+9;   // the red wall starts under the roof band
   const W0=18,W1=182;
   // outline first, one unit wider than everything
   for(let x0=4;x0<196;x0+=.5){const y0=gable(x0)-2.5;if(y0<80)r(x0,y0,.5,(Math.abs(x0-100)<82?260:Math.min(260,gable(x0)+12))-y0,ol)}
-  r(W0-1.5,60,W1-W0+3,200,ol);
+  r(W0-1.5,gable(W0)+4,W1-W0+3,200,ol);
   // red wall with vertical boards, lit from the left
   for(let x0=W0;x0<W1;x0+=.5){const y0=Math.max(top(x0),0),k=(x0-W0)%6;r(x0,y0,.5,260-y0,k<.5?dk:k<1?lt:red)}
   for(let x0=W0;x0<W0+10;x0+=.5){const t=top(x0);r(x0,t,.5,260-t,lt)}
   // the roof band: shingle rows that follow the slope, lighter on the left, a highlight along the outer edge
   for(let x0=5;x0<195;x0+=.5){const y0=gable(x0),h=Math.min(9,Math.abs(x0-100)>82?14:9);
     for(let j=0;j<h;j+=.5){const row=Math.floor(j/3),edge=(x0+row*3)%7<.6||j%3<.5;r(x0,y0+j,.5,.5,edge?sl:x0<100?sl3:sl2)}
-    r(x0,y0,.5,.5,'#9a9ac0')}
+    r(x0,y0,.5,.5,'#8a80a8')}
   // white fascia under the shingles, ending at the eaves; a shadow line on the wall below it
   for(let x0=W0-4;x0<W1+4;x0+=.5){const y0=top(x0)-1.5;r(x0,y0,.5,2,wh);if(x0>W0&&x0<W1)r(x0,y0+2,.5,1.5,dk)}
   // ridge cap and weathervane with a rooster
@@ -94,12 +94,19 @@ function barnArt(){const g=hdCtx($('barnc'),200,260,3);C=g;
   for(const hx of[36,150]){r(hx-1,245,20,15,ol);r(hx,246,18,14,'#e8c050');r(hx,246,18,2,'#fff0a0');for(let i=hx+2;i<hx+18;i+=4)r(i,248,1,12,'#c8a030')}
   C=x}
 function propIconTo(cvs,k){const g=hdCtx(cvs,48,48,3);C=g;
-  if(k==='codex'){r(8,14,32,26,'#6a2a1a');r(10,12,30,26,'#9a3a24');r(10,12,30,2,'#c05a3a');r(36,14,4,24,'#e8d8b0');r(14,18,18,3,'#f7c948');r(14,24,14,2,'#e8c890');r(14,28,16,2,'#e8c890');r(8,38,32,3,'#4a1a10')}
+  if(k==='codex'){r(9,10,30,30,'#3a0e0a');r(10,9,28,30,'#a8302a');r(10,9,28,2,'#d85a48');r(10,9,3,30,'#7a1e1a');r(34,11,4,27,'#f0e0c0');for(let j=13;j<37;j+=3)r(35,j,3,1,'#c8b088');
+    r(10,9,5,5,'#f7c948');r(33,9,5,3,'#f7c948');r(10,34,5,5,'#f7c948');r(15,16,16,15,'#7a1e1a');disc(23,24,5,'#e0284a');r(22,17,2,3,'#4a8a3a');r(21,22,2,2,'#ff8a9a');r(26,38,3,8,'#2a6ad8');r(26,44,1,2,'#1a4a9a');return C=x}
   if(k==='loja'){r(6,24,36,18,'#c8925a');r(6,24,36,3,'#e0b07a');r(6,32,36,1,'#8a5a30');for(let i=0;i<8;i++)disc(9+i*4.2,22+(i%2),3,i%3?'#e0284a':'#f7c948');r(30,8,14,10,'#f4ecdc');r(36,4,1,4,'#8a6a4a');r(31,10,12,1,'#c8302a')}
-  if(k==='personagem'){r(6,32,36,10,'#e8c050');for(let i=6;i<42;i+=3)r(i,32,1,10,'#c8a030');r(10,26,28,4,'#d9b45a');r(16,18,16,8,'#c8a040');r(16,22,16,2,'#8a2a1a');r(12,26,24,1,'#f0d488')}
+  if(k==='personagem'){r(10,37,28,2,'#0005');r(3,30,42,6,'#2a1608');r(4,30,40,5,'#c89a3a');r(6,29,36,2,'#e8c060');r(4,34,40,1,'#8a6020');
+    for(let j=0;j<16;j++){const w2=14+j*.45;r(24-w2/2-1,15+j,w2+2,1,'#2a1608')}for(let j=1;j<16;j++){const w2=14+j*.45;r(24-w2/2,15+j,w2,1,j<3?'#f6d880':'#e0b450');r(24+w2/2-3,15+j,3,1,'#b08030')}r(14,25,20,4,'#c8302a');r(14,25,20,1,'#f06050');r(14,28,20,1,'#8a1a18');
+    for(let i=0;i<5;i++)r(16+i*3.5,19+(i%2)*3,1,1,'#b08030');for(let i=0;i<9;i++)r(7+i*4,31+(i%2),2,1,'#b08030');return C=x}
   if(k==='missoes'){r(10,8,28,32,'#e8d8b0');r(8,6,32,4,'#c8a878');r(8,38,32,4,'#c8a878');for(let j=14;j<34;j+=7){r(13,j,4,4,'#5fae4a');r(19,j+1,14,2,'#a88a5a')}}
   if(k==='conquistas'){r(16,30,6,14,'#e0284a');r(26,30,6,14,'#2a5bd7');disc(24,22,11,'#c9921a');disc(24,22,9,'#f7c948');r(22,15,4,14,'#fff6c0')}
-  if(k==='intro'||k==='config'){blob(24,30,15,13,'#a8885a','#c8a878','#e8d0a8',k.length);r(18,12,12,6,'#a8885a');r(17,16,14,2,'#6a4a2a');for(let i=0;i<5;i++)r(19+i*2,8+(i%2),2,5,'#e8c050')}
+  if(k==='intro'){r(22,22,4,22,'#3a1a08');r(23,22,2,22,'#8a5228');r(7,7,34,19,'#3a1a08');r(8,8,32,17,'#c8884a');r(8,8,32,2,'#e8b070');r(8,23,32,2,'#8a5228');
+    [[0,1,1,1,0],[1,0,0,0,1],[0,0,0,1,0],[0,0,1,0,0],[0,0,0,0,0],[0,0,1,0,0]].forEach((row,j)=>row.forEach((v,i)=>v&&r(19+i*2,10+j*2,2,2,'#1e4aa8')));r(15,43,18,2,'#4faa4a');r(17,41,2,2,'#4faa4a');r(29,41,2,2,'#4faa4a');return C=x}
+  if(k==='config'){const cog=(cx,cy,R,n,c1,c2,c3)=>{for(let i=0;i<n;i++){const a=i/n*Math.PI*2;r(cx+Math.cos(a)*R-2,cy+Math.sin(a)*R-2,4,4,c1)}disc(cx,cy,R-1,c1);disc(cx,cy,R-2,c2);disc(cx-1,cy-1,R-4,c3);disc(cx,cy,R/3,'#2a1a1a')};
+    cog(20,21,13,10,'#3a4050','#8a94a8','#c8d0e0');cog(34,34,8,8,'#6a3a08','#c88a1a','#f7c948');return C=x}
+  if(k==='pacotes'){C.save();C.translate(9,0);C.scale(.75,.75);packDraw('bencao',false);C.restore();return C=x}
   C=x}
 GO.title=showHub;GO.hub=showHub;
 function showJornada(){
@@ -182,7 +189,7 @@ function showWorld(sel){
 }
 
 // ---------- playing a level
-function advColl(){const c=[];const cc=CHARS[META.char].card;if(cc)c.push(mk(cc));META.unlocked.forEach(k=>{c.push(mk(k));if(CARDS[k].type==='semente')c.push(mk(k))});return c}
+function advColl(){const c=[];const cc=CHARS[META.char].card;if(cc)c.push(mk(cc));META.unlocked.forEach(k=>{c.push(mk(k,(META.foil||{})[k]?{rare:true}:{}));if(CARDS[k].type==='semente')c.push(mk(k))});return c}
 // the bag grows with the adventure: 3 to 5 cards on the first level, up to 8 to 10 later
 const levelBag=n=>{const mn=Math.min(8,3+Math.floor(n/3));return[mn,Math.min(RUN?deckMax():10,mn+2)]};
 function startLevel(n){
@@ -314,7 +321,7 @@ const GPLANTS={trigo:{name:'Trigo',price:20,stage:40,sell:50,col:'#e8c86a'},uva:
 const TREE_SEED_PRICE=2000;
 // ---------- the shop is Boaz's market stall: shelves of goods, price tags, pages like a catalogue
 function shopItems(tab){let items=[];
-  if(tab==='cartas')items=META.unlocked.filter(k=>CARDS[k].type==='semente').map(k=>{const lv=cardLv(k);return{id:'c:'+k,icon:['card',k],name:CARDS[k].name+' nv '+(lv+1)+'/4',desc:'Cada nível dá +15% de dano a esta árvore.',price:CARD_LV_PRICE[lv],owned:lv>=3}});
+  if(tab==='cartas')items=Object.entries(PACKS).map(([k,p])=>({id:'p:'+k,icon:['pack',k],name:p.name,desc:p.desc+' Cópias repetidas sobem o nível das árvores.',price:p.price,rare:k!=='semeador'})).concat(META.unlocked.filter(k=>CARDS[k].type==='semente').map(k=>{const lv=cardLv(k);return{id:'c:'+k,icon:['card',k],name:CARDS[k].name+' nv '+(lv+1)+'/4',desc:'Cada nível dá +15% de dano a esta árvore.',price:CARD_LV_PRICE[lv],owned:lv>=3}}));
   if(tab==='ferramentas')items=Object.entries(WEAPONS).filter(([k])=>k!=='enxada').map(([k,w])=>({id:'w:'+k,icon:['tool',k],name:w.name,desc:w.desc,price:w.price,owned:!!META.weapons[k]}));
   if(tab==='barreiras')items=Object.entries(ITEMS).map(([k,it])=>({id:'i:'+k,icon:['bar',k],name:it.name+' ×'+it.qty,desc:it.desc+' Tecla '+it.key+'. Você tem '+(META.items[k]||0)+'.',price:it.price}));
   if(tab==='melhorias')items=Object.entries(UPGRADES).map(([k,u])=>{const lv=META.upg[k]||0;return{id:'u:'+k,icon:['shop',k],name:u.name+' '+lv+'/'+u.prices.length,desc:u.desc,price:u.prices[lv],owned:lv>=u.prices.length}});
@@ -325,7 +332,7 @@ function shopItems(tab){let items=[];
     if(treeOwned())items.push({id:'g:fertil',icon:['shop','fertil'],name:'Fertilizante',desc:'+70 de crescimento para a Árvore da Vida. Você tem '+META.garden.fertil+'.',price:400})}
   return items.map(it=>({...it,tab}))}
 function buyItem(id){const[t,k]=id.split(':');let price=0;
-  if(t==='w')price=WEAPONS[k].price;if(t==='i')price=ITEMS[k].price;if(t==='u')price=UPGRADES[k].prices[META.upg[k]||0];if(t==='c')price=CARD_LV_PRICE[cardLv(k)];if(t==='s')price=GPLANTS[k].price;
+  if(t==='w')price=WEAPONS[k].price;if(t==='i')price=ITEMS[k].price;if(t==='u')price=UPGRADES[k].prices[META.upg[k]||0];if(t==='c')price=CARD_LV_PRICE[cardLv(k)];if(t==='p')price=PACKS[k].price;if(t==='s')price=GPLANTS[k].price;
   if(t==='g')price={vaso:150+META.garden.potsN*40,adubo:100,spray:60,mel:150,fertil:400,arvore:TREE_SEED_PRICE}[k];
   if(!price||META.coins<price)return false;META.coins-=price;
   if(t==='w'){META.weapons[k]=1;META.weapon=k}if(t==='i')META.items[k]=(META.items[k]||0)+ITEMS[k].qty;if(t==='u')META.upg[k]=(META.upg[k]||0)+1;
@@ -348,11 +355,11 @@ function showShop2(tab){
     <button type="button" class="qarrow prev" id="qprev" ${shopPage?'':'disabled'}>‹</button><button type="button" class="qarrow next" id="qnext" ${shopPage<pages.length-1?'':'disabled'}>›</button>
     <div class="qfoot"><button class="btn ghost" data-go="hub">‹ Menu</button><span class="qpage">${SHOP_NAME[pg.tab]} · página ${shopPage+1} de ${pages.length}${locked.length?' · mais prateleiras abrem com as fases':''}</span>${coinsTag()}</div></div>`);
   paintCoins();quitandaArt();
-  $('menu').querySelectorAll('canvas[data-si]').forEach(c=>{const[t,...k]=c.dataset.si.split(':');const kk=k.join(':');if(t==='tool')toolIconTo(c,kk);else if(t==='bar')barrierIconTo(c,kk);else if(t==='card')treeIconTo(c,kk);else shopIconTo(c,kk)});
+  $('menu').querySelectorAll('canvas[data-si]').forEach(c=>{const[t,...k]=c.dataset.si.split(':');const kk=k.join(':');if(t==='tool')toolIconTo(c,kk);else if(t==='bar')barrierIconTo(c,kk);else if(t==='card')treeIconTo(c,kk);else if(t==='pack')packIconTo(c,kk);else shopIconTo(c,kk)});
   const bub=$('qbub'),all=pg.items;
   $('menu').querySelectorAll('[data-buy]').forEach(b=>{const it=all.find(i=>i.id===b.dataset.buy);
     b.onmouseenter=()=>{bub.innerHTML=`<b>${it.name}</b><br>${it.desc}`};b.onmouseleave=()=>{bub.textContent=pick(BOAZ)};
-    b.onclick=()=>{if(buyItem(it.id)){showShop2();$('qbub').innerHTML=pick(['Ótima escolha!','Que Deus abençoe a colheita!','Volte sempre!','Negócio fechado!'])}else{sfx('no');bub.innerHTML='Faltam moedas para '+it.name+'. Vença umas fases e volte!'}}});
+    b.onclick=()=>{if(buyItem(it.id)){showShop2();if(it.id.startsWith('p:')){openPack(it.id.slice(2),()=>showShop2());return}$('qbub').innerHTML=pick(['Ótima escolha!','Que Deus abençoe a colheita!','Volte sempre!','Negócio fechado!'])}else{sfx('no');bub.innerHTML='Faltam moedas para '+it.name+'. Vença umas fases e volte!'}}});
   $('qprev').onclick=()=>{shopPage--;sfx('card');showShop2()};$('qnext').onclick=()=>{shopPage++;sfx('card');showShop2()}}
 // painted backdrop: sky and fields, the stall with its striped awning, shelves, crates of fruit; and Boaz himself
 function quitandaArt(){let g=hdCtx($('qbg'),480,270,2);C=g;
@@ -399,8 +406,8 @@ function potAdvance(p){const P=GPLANTS[p.k],now=Date.now();while(p.watered&&p.st
 // ---------- settings
 function showConfig(){let armed=false;
   const render=()=>{menu(`<div class="mbox cabin"><div class="topbar"><button class="btn ghost" data-go="hub">‹ Menu</button><h2>Configurações</h2><span></span></div>
-    <div class="cfg"><label>Música <input type="range" id="cmus" min="0" max="1" step="0.05" value="${CFG.mus}"></label>
-    <label>Efeitos <input type="range" id="csfx" min="0" max="1" step="0.05" value="${CFG.sfx}"></label>
+    <div class="cfg"><label>Música <input type="range" id="cmus" min="0" max="1" step="0.05" value="${CFG.mus}" style="--v:${CFG.mus}"></label>
+    <label>Efeitos <input type="range" id="csfx" min="0" max="1" step="0.05" value="${CFG.sfx}" style="--v:${CFG.sfx}"></label>
     <label class="chk"><input type="checkbox" id="clite" ${CFG.lite?'checked':''}> Modo leve <small>sem brilho, neblina e distorção; para aparelhos mais fracos</small></label>
     <label class="chk"><input type="checkbox" id="cmute" ${muted?'checked':''}> Silenciar tudo (M)</label>
     <label class="chk"><input type="checkbox" id="cbig" ${CFG.big?'checked':''}> Texto maior <small>aumenta letras dos menus e do painel</small></label>
@@ -409,7 +416,7 @@ function showConfig(){let armed=false;
     <div class="row" style="justify-content:flex-start"><button class="btn ghost" id="cexp">Salvar arquivo</button><label class="btn ghost">Carregar arquivo<input type="file" id="cimp" accept="application/json,.json" hidden></label></div></div>
     <div class="sec"><h3>Progresso</h3><p class="help">Apaga fases, moedas, jardim, árvore, cartas e conquistas deste navegador.</p>
     <button class="btn ${armed?'act':'ghost'}" id="creset">${armed?'Tem certeza? Clique de novo para apagar tudo':'Reiniciar progresso'}</button></div></div>`);
-    $('cmus').oninput=e=>{CFG.mus=+e.target.value;saveCfg()};$('csfx').oninput=e=>{CFG.sfx=+e.target.value;saveCfg();sfx('coin')};
+    $('cmus').oninput=e=>{CFG.mus=+e.target.value;e.target.style.setProperty('--v',e.target.value);saveCfg()};$('csfx').oninput=e=>{CFG.sfx=+e.target.value;e.target.style.setProperty('--v',e.target.value);saveCfg();sfx('coin')};
     $('clite').onchange=e=>{CFG.lite=e.target.checked;saveCfg()};$('cshake').onchange=e=>{CFG.noShake=!e.target.checked;saveCfg()};$('cbig').onchange=e=>{CFG.big=e.target.checked;saveCfg()};$('cexp').onclick=exportSave;$('cimp').onchange=e=>{if(e.target.files[0])importSave(e.target.files[0])};$('cmute').onchange=e=>{initAudio();setMuted(e.target.checked)};
     $('creset').onclick=()=>{if(!armed){armed=true;return render()}['fds-meta','fds-run','jardim-do-fruto-celeiro'].forEach(k=>store.del(k));location.reload()}};render()}
 // ---------- show which works of the flesh come, on the seed screen

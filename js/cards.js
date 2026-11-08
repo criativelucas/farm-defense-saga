@@ -1,106 +1,143 @@
-// ---------- cards drawn as pixel art: each category has its own shape, frame and layout
-const CARD_W=120,CARD_H=168,MINI_W=72,MINI_H=100,CK=3;// cards are drawn at 3x so text and art stay sharp
-const CSTYLE={
-  semente:{shape:'chamfer',rim:['#16201e','#eef6f2','#a8c4ba','#5f7e74','#22302c'],bg:['#5a3a2e','#2c1a14'],gem:['#ffe08a','#f08a2a','#8a3a10'],plate:'ribbon'},
-  hibrida:{shape:'chamfer',rim:['#16201e','#e8fff0','#8ae0a8','#9a6ad8','#22302c'],bg:['#4a3450','#22142a'],gem:['#ffe08a','#f08a2a','#8a3a10'],plate:'ribbon'},
-  bencao:{shape:'shield',rim:['#2a1604','#fff4b0','#f0b838','#a86a10','#3a2006'],bg:['#40306a','#1c1234'],gem:['#fffbe0','#f7c948','#8a5a10'],plate:'gold'},
-  parabola:{shape:'torn',rim:['#6a5236','#ffffff','#f8f0dc','#e0d0b0','#8a7050'],bg:['#f0e2c0','#d4bc8c'],gem:['#d8f0ff','#4a9ad8','#1a4a8a'],plate:'dark',ink:'#3a2416'},
-  propria:{shape:'hex',rim:['#1e1030','#ffffff','#e0d0f8','#9a80c8','#2a1840'],bg:['#462a66','#22123a'],gem:['#f0d8ff','#a050e0','#4a1a7a'],plate:'gold',lattice:1},
-  joio:{shape:'octa',rim:['#121206','#a0a048','#6a6a2a','#3e3e18','#1a1a0a'],bg:['#30301a','#18180a'],gem:['#e8e8a0','#8a8a3a','#3a3a14'],plate:'dark'}
-};
-// left/right edge of the card shape on row y, shrunk by d pixels
-function cardSpan(shape,y,W,H,d){
-  const yy=y-d,h=H-2*d,w=W-2*d;if(yy<0||yy>=h)return null;let l=0,r=w;
-  const cut=(c,a)=>Math.max(0,c-a);
-  // small stepped pixel corners; each category differs only a little at the corners
-  const step=(n,a)=>a>=n?0:Math.ceil((n-a)/2)*2;
-  if(shape==='chamfer'){const c=step(4,Math.min(yy,h-1-yy));l=c;r=w-c}
-  if(shape==='octa'){const c=step(6,Math.min(yy,h-1-yy));l=c;r=w-c}
-  if(shape==='hex'){const c=yy<8?step(8,yy):step(4,h-1-yy);l=c;r=w-c}
-  if(shape==='shield'){const c=Math.max(step(4,yy),step(10,h-1-yy));l=c;r=w-c}
-  if(shape==='torn'){l=(hs(yy>>2,7)*3)|0;r=w-((hs(yy>>2,9)*3)|0)}
-  return[d+l,d+r];
-}
-function fillShape(g,shape,W,H,d,style){g.fillStyle=style;for(let y=0;y<H;y++){const s=cardSpan(shape,y,W,H,d);if(s)g.fillRect(s[0]|0,y,(s[1]-s[0])|0,1)}}
+// ---------- cards drawn as pixel art, after collectible card games: a pale rim and dark frame, the cost in a tab
+// and the name in a bar on top, a big painted window with the subject, a rarity seal and the collection number
+// on its edges, fruit marks under it, then stat bars for trees or a short rule for the rest
+const CARD_W=120,CARD_H=168,MINI_W=72,MINI_H=100,CK=3;// drawn at 3x so text and art stay sharp
+const RAR={comum:{name:'Comum',c:'#d4d8e0',d:'#5a6070'},rara:{name:'Rara',c:'#5ab8ff',d:'#14407a'},epica:{name:'Épica',c:'#c47aff',d:'#40146e'},lendaria:{name:'Lendária',c:'#ffd040',d:'#7a4a06'}};
+const RAR_ORDER=['comum','rara','epica','lendaria'];
+const RARITY={videira:'comum',roma:'comum',oliveira:'comum',lirio:'comum',mana:'comum',profecia:'comum',joio:'comum',
+  figueira:'rara',tamareira:'rara',mostarda:'rara',talentos:'rara',chuva:'rara',amendoeira:'epica',sarca:'epica',semeador:'epica',jerico:'lendaria'};
+const rarOf=c=>c.hyb?'epica':RARITY[c.k]||(CARDS[c.k]&&CARDS[c.k].own?'lendaria':'comum');
+// the window's palette, dark to light: trees by their fruit, the rest by category
+const THEME={Amor:['#3a0a1a','#7a1a2a','#c8402a','#f08a3a','#ffd08a'],Alegria:['#1a0a30','#3a1a6a','#6a3aa8','#b07ae0','#f0c8ff'],
+  Paz:['#0e2418','#1e4a2a','#3a7a3a','#8ab860','#e0f0b0'],Paciência:['#0a2014','#16402a','#2a6a3a','#5aa04a','#c0e890'],
+  Benignidade:['#2a1408','#6a3010','#b0601a','#f0a040','#ffe0a0'],Bondade:['#2a1028','#5a2050','#a04a80','#f08ab0','#ffe0f0'],
+  Fé:['#20180a','#4a3a10','#8a7a20','#d8c040','#fff6b0'],Mansidão:['#0a1a3a','#1a3a6a','#3a6aa8','#7ab0e0','#e0f4ff'],
+  Domínio:['#200808','#5a1408','#a8300a','#f0702a','#ffd060'],
+  bencao:['#1e1438','#4a2a6a','#a0602a','#f0b040','#fff0b0'],parabola:['#0e2a34','#1e5a5a','#3a8a7a','#8ac0a0','#e8f0c8'],
+  propria:['#2a1030','#5a2058','#a0407a','#e07a8a','#ffd0b0'],joio:['#14140a','#2a2a14','#4a4a22','#6a6a30','#9a9a50'],hibrida:['#1a2a40','#3a3a7a','#7a4aa0','#5ab08a','#d0f0b0']};
+// tree bars: damage, range, rhythm, 1 to 5
+const RATE={videira:[2,4,4],roma:[5,1,1],oliveira:[1,4,3],sarca:[3,2,5],figueira:[4,5,1],tamareira:[1,3,3],amendoeira:[2,3,4],lirio:[1,3,1],mostarda:[3,5,2]};
+const BARS=[['dmg','#f0b030'],['rng','#e85a50'],['cd','#3ab8b0']];
+const cardNo=k=>String(Object.keys(CARDS).indexOf(k)+1).padStart(3,'0');
+const themeOf=(c,I,cat)=>THEME[c.hyb?'hibrida':I.kinds?I.fruits[0]:cat]||THEME.parabola;
+const rateOf=c=>c.hyb?[0,1,2].map(i=>Math.max(1,Math.round((RATE[c.hyb[0]][i]+RATE[c.hyb[1]][i])/2))):RATE[c.k]||[1,1,1];
+const CINK='#140e0c',COUT='#1e1614';
+
 function wrapLines(g,text,maxW,maxLines){const words=text.split(' '),out=[];let line='';
   for(const w of words){const t=line?line+' '+w:w;if(g.measureText(t).width>maxW&&line){out.push(line);line=w;if(out.length===maxLines)break}else line=t}
   if(out.length<maxLines&&line)out.push(line);if(out.length===maxLines&&words.join(' ').length>out.join(' ').length)out[maxLines-1]=out[maxLines-1].replace(/.{2}$/,'…');return out}
 function pxText(g,t,x,y,font,col,shadow,align='center'){g.font=font;g.textAlign=align;g.textBaseline='alphabetic';if(shadow){g.fillStyle=shadow;g.fillText(t,x+1,y+1)}g.fillStyle=col;g.fillText(t,x,y)}
-function gemDraw(g,cx,cy,rad,cols,txt){C=g;disc(cx,cy,rad+1,'#120808');disc(cx,cy,rad,cols[2]);disc(cx,cy-1,rad-1,cols[1]);disc(cx-2,cy-3,(rad/3)|0,cols[0]);C=x;
-  pxText(g,txt,cx,cy+5,'700 14px "Pixelify Sans", monospace','#ffffff','#000000')}
+// the biggest font up to size that fits the width
+function fitFont(g,t,maxW,size){let s=size;for(;s>4;s-=.5){g.font=`700 ${s}px "Pixelify Sans", monospace`;if(g.measureText(t).width<=maxW)break}return g.font}
 const SMALL_ICON={dmg:[[0,6],[1,5],[2,4],[3,3],[4,2],[5,1],[6,0],[1,6],[0,5]],rng:[[1,0],[2,0],[3,0],[0,1],[4,1],[0,2],[2,2],[4,2],[0,3],[4,3],[1,4],[2,4],[3,4]],cd:[[1,0],[2,0],[3,0],[0,1],[4,1],[0,2],[2,2],[3,2],[4,2],[0,3],[4,3],[1,4],[2,4],[3,4],[2,1]]};
 function iconPx(g,k,x0,y0,c){g.fillStyle=c;SMALL_ICON[k].forEach(([a,b])=>g.fillRect(x0+a,y0+b,1,1))}
+// a rectangle with stepped pixel corners
+function rrect(x0,y0,w,h,rad,c){for(let i=0;i<rad;i++){const k=rad-i;r(x0+k,y0+i,w-2*k,1,c);r(x0+k,y0+h-1-i,w-2*k,1,c)}r(x0,y0+rad,w,h-2*rad,c)}
+// pale worn rim, dark outline, the card's panel inside
+function frameDraw(W,H,mini,gold,panel){const R=mini?[3,2,1]:[4,3,2],b=mini?3:4,L=gold?'#ffe08a':'#dccfb8',D=gold?'#c8902a':'#a8987e';
+  rrect(0,0,W,H,R[0],COUT);rrect(1,1,W-2,H-2,R[1],D);rrect(1,1,W-3,H-3,R[1],L);
+  for(let i=0;i<(mini?10:22);i++)r(2+hs(i,31)*(W-5),hs(i,37)<.5?1+hs(i,41)*2:H-3-hs(i,41)*1,1,1,gold?'#f0c050':'#c4b49a');
+  rrect(b,b,W-2*b,H-2*b,R[2],COUT);rrect(b+1,b+1,W-2*b-2,H-2*b-2,R[2],panel)}
+// the window: a dithered painting lit from behind the subject, big leafy shapes toward the edges, a floor at the bottom
+function paintWindow(cv,w,h,P,seed){const B=layerBuf(cv,'#000000',0,1,0),{d,k}=B,R=P.map(u32);
+  for(let Y=0;Y<B.h;Y++)for(let X=0;X<B.w;X++){const u=(X+.5)/k,v=(Y+.5)/k,nx=u/w-.5,ny=v/h-.45,
+      glow=Math.max(0,1-Math.hypot(nx*1.25,ny*1.6)*1.7),n=fbm(u*.08,v*.08,seed),m=fbm(u*.2+9,v*.2,seed+5);
+    let s=.2+glow*.6+(n-.5)*.3;
+    if(n+(1-glow)*.3>.74)s-=.3;else if(m>.7&&glow<.6)s+=.14;
+    const fl=h*.82+Math.sin(u*.21+seed)*1.4;
+    if(v>fl)s=v<fl+1.2?.66:.34-(v-fl)/h*1.4+(m-.5)*.16;
+    d[Y*B.w+X]=rp(R,s,X,Y,2.4)}
+  putBuf(B)}
+// the card's subject on a clear 48x48 buffer, standing at the bottom middle
+function subjectBuf(c,I,cat){const b=mkHD(48,48,2),keep=C;C=b.getContext('2d');
+  try{if(c.hyb){drawTower(c.hyb[0],16,46,1);drawTower(c.hyb[1],32,46,1)}
+    else if(I.kinds)drawTower(c.k,24,46,1);
+    else if(cat==='propria'){const kr=RUN;RUN={char:CARDS[c.k].own};try{drawGardener({face:-1,x:28,y:46,vx:0,vy:0,on:true,sq:1,anim:0,slam:false,stun:0,inv:0,faint:0,swing:0})}finally{RUN=kr}
+      C.save();C.translate(1,19);C.scale(.62,.62);ICONS[c.k]&&ICONS[c.k]();C.restore()}
+    else if(cat==='joio'){C.save();C.translate(24,46);C.scale(1.6,1.6);C.translate(-16,-30);drawJoio(16,30,0);C.restore()}
+    else{C.save();C.translate(8,12);ICONS[c.k]?ICONS[c.k]():0;C.restore()}}
+  finally{C=keep}return b}
+// draw a sprite with a dark outline o units wide
+function inked(g,src,x0,y0,w,h,ink,o){const s=mkCanvas(src.width,src.height),q=s.getContext('2d');q.drawImage(src,0,0);q.globalCompositeOperation='source-in';q.fillStyle=ink;q.fillRect(0,0,s.width,s.height);
+  g.imageSmoothingEnabled=false;for(const[a,b]of[[-o,0],[o,0],[0,-o],[0,o]])g.drawImage(s,x0+a,y0+b,w,h);g.drawImage(src,x0,y0,w,h)}
+// rarity seal: a dark ring around a colored gem with a glint; the legendary one wears a little crown
+function sealDraw(x0,y0,s,rk){const R=RAR[rk],u=s/8,cx=x0+4*u,cy=y0+4*u;
+  disc(cx,cy,4*u,CINK);disc(cx,cy,3.2*u,R.d);disc(cx,cy-.4*u,2.4*u,R.c);r(cx-1.4*u,cy-2*u,u,u,'#ffffff');
+  if(rk==='lendaria'){r(cx-2.5*u,y0-2*u,5*u,1.6*u,CINK);r(cx-2*u,y0-1.6*u,4*u,u,R.c);for(const dx of[-2,0,1.6])r(cx+dx*u,y0-3*u,.8*u,1.4*u,R.c)}
+  if(rk==='epica'||rk==='lendaria')r(cx+1.2*u,cy+.6*u,.8*u,.8*u,'#ffffffaa')}
+// the window with its painting, subject and seal, shared by both sizes
+function windowDraw(g,c,I,cat,P,ax,ay,aw,ah,sc){
+  const win=mkHD(aw,ah,CK);paintWindow(win,aw,ah,P,(c.k||'x').length*7+(c.hyb?3:0));
+  r(ax-1,ay-1,aw+2,ah+2,CINK);g.drawImage(win,ax,ay,aw,ah);
+  g.save();g.beginPath();g.rect(ax,ay,aw,ah);g.clip();
+  const fl=ay+ah*.82,cx=ax+aw/2;
+  g.globalAlpha=.45;for(let i=0;i<3;i++)r(cx-aw*(.24-i*.05),fl+i,aw*(.48-i*.1),1,P[0]);g.globalAlpha=1;
+  const sub=subjectBuf(c,I,cat),sw=48*sc;inked(g,sub,cx-sw/2,fl+2*sc-sw,sw,sw,COUT,Math.max(1,sc*.6));
+  if(c.rare){for(let i=0;i<12;i++){const sx=ax+hs(i,7)*aw,sy=ay+hs(i,8)*ah*.8;r(sx,sy,1,1,'#fff6c0');r(sx-1,sy,3,1,'#f7c94877');r(sx,sy-1,1,3,'#f7c94877')}}
+  g.restore();g.fillStyle='#ffffff1a';g.fillRect(ax,ay,aw,1)}
+function fruitsDraw(I,cx,cy,s){const g=C,n=I.fruits.length,gap=s+4;I.fruits.forEach((f,i)=>{const fx=cx-(n-1)*gap/2+i*gap;disc(fx,cy,s/2+2,CINK);disc(fx,cy,s/2+1,'#2c2420');
+  const e=mkHD(12,12,CK);embTo(e,f);C=g;g.drawImage(e,fx-s/2,cy-s/2,s,s)})}
+
+const CARD_CACHE=new Map();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>CARD_CACHE.clear());
 function cardCanvas(c,mini=false){
-  const W=mini?MINI_W:CARD_W,H=mini?MINI_H:CARD_H,cv2=mkHD(W,H,CK),g=cv2.getContext('2d');
-  const I=info(c),cat=catOf(c),st=CSTYLE[cat],rare=!!c.rare;
-  const rim=rare?['#2a1604','#fffbe0','#f7c948','#b07a1a','#3a2006']:st.rim;
-  // frame: dark outline, light bevel, mid, dark inner line, then the inner field
-  for(let k=0;k<4;k++)fillShape(g,st.shape,W,H,k*(mini?1:2),rim[k]);
-  fillShape(g,st.shape,W,H,mini?4:8,rim[4]);
-  const gr=g.createLinearGradient(0,0,0,H);gr.addColorStop(0,st.bg[0]);gr.addColorStop(1,st.bg[1]);fillShape(g,st.shape,W,H,mini?5:9,gr);
-  if(st.lattice){g.save();g.globalAlpha=.12;g.fillStyle='#ffffff';for(let y=0;y<H;y++)for(let xx=0;xx<W;xx++)if(((xx+y)%12===0||(xx-y+999)%12===0)){const s=cardSpan(st.shape,y,W,H,mini?5:9);if(s&&xx>s[0]&&xx<s[1])g.fillRect(xx,y,1,1)}g.restore()}
-  if(st.shape==='torn'){g.save();g.globalAlpha=.25;for(let i=0;i<60;i++){g.fillStyle=hs(i,c.uid|0)>.5?'#b89a68':'#fff6e0';g.fillRect(10+hs(i,3)*(W-20),10+hs(i,4)*(H-20),2,1)}g.restore()}
-  // corner rivets on the steel frame
-  if(st.shape==='chamfer'&&!mini){[[6,12],[W-8,12],[6,H-14],[W-8,H-14]].forEach(([a,b])=>{g.fillStyle='#22302c';g.fillRect(a,b,3,3);g.fillStyle='#eef6f2';g.fillRect(a,b,1,1)})}
-  // art window
-  const art=mkHD(64,44,CK);cardArtTo(art,c);
-  const ax=mini?4:12,aw=mini?64:96,ah=mini?44:66;
-  const ay=mini?(cat==='semente'||cat==='hibrida'?14:16):(cat==='semente'||cat==='hibrida'?20:30);
-  g.fillStyle='#0a0606';g.fillRect(ax-2,ay-2,aw+4,ah+4);g.fillStyle=st.shape==='torn'?'#8a7050':rim[2];g.fillRect(ax-1,ay-1,aw+2,ah+2);g.imageSmoothingEnabled=true;g.drawImage(art,ax,ay,aw,ah);g.imageSmoothingEnabled=false;
-  g.fillStyle='#ffffff22';g.fillRect(ax,ay,aw,1);
-  // name plate
-  const name=I.name.replace(' ★','');
-  if(st.plate==='ribbon'){const py=ay+ah+(mini?2:4),ph=mini?13:17;
-    g.fillStyle='#4a0c10';g.fillRect(2,py+3,8,ph-2);g.fillRect(W-10,py+3,8,ph-2);g.fillStyle='#801c24';g.fillRect(3,py+4,6,ph-4);g.fillRect(W-9,py+4,6,ph-4);
-    g.fillStyle='#2a0608';g.fillRect(6,py-1,W-12,ph+2);g.fillStyle='#c03a3a';g.fillRect(7,py,W-14,ph);g.fillStyle='#e86060';g.fillRect(7,py,W-14,1);g.fillStyle='#8a2028';g.fillRect(7,py+ph-2,W-14,2);
-    pxText(g,name,W/2,py+(mini?10:13),(mini?'700 8px':'700 11px')+' "Pixelify Sans", monospace','#ffffff','#3a0608')}
-  else{const py=mini?3:(st.shape==='hex'?9:st.shape==='octa'?8:9),ph=mini?11:16,px0=mini?16:28,pw=W-px0-(mini?4:10);
-    const plateCol=st.plate==='gold'?['#5a3a06','#f7c948','#c9921a']:['#120a08','#4a3a32','#2a1e18'];
-    g.fillStyle=plateCol[0];g.fillRect(px0-1,py-1,pw+2,ph+2);g.fillStyle=plateCol[2];g.fillRect(px0,py,pw,ph);g.fillStyle=plateCol[1];g.fillRect(px0,py,pw,1);
-    pxText(g,name,px0+pw/2,py+(mini?8:12),(mini?'700 7px':'700 10px')+' "Pixelify Sans", monospace',st.plate==='gold'?'#2a1408':'#fbe9d0',st.plate==='gold'?null:'#000')}
-  if(mini){
-    // the lower field shows big, readable marks instead of tiny rules: fruit emblems for seeds, the card's kind for the rest
-    const sy=(cat==='semente'||cat==='hibrida')?ay+ah+18:ay+ah+6;
-    if(I.fruits.length){I.fruits.forEach((f,k)=>{const e=mkHD(12,12,CK);embTo(e,f);g.drawImage(e,W/2-I.fruits.length*11+k*22+1,sy,20,20)})}
-    else pxText(g,(CAT_LABEL[cat]||'').toUpperCase(),W/2,sy+12,'700 9px "Pixelify Sans", monospace',st.ink||'#ffe9a0',st.ink?null:'#000');
-    gemDraw(g,cat==='semente'||cat==='hibrida'?W/2:9,cat==='semente'||cat==='hibrida'?8:9,6,st.gem,'');
-    pxText(g,String(I.cost),cat==='semente'||cat==='hibrida'?W/2:9,(cat==='semente'||cat==='hibrida'?8:9)+4,'700 10px "Pixelify Sans", monospace','#ffffff','#000');
-    if(rare){C=g;for(let i=0;i<5;i++)r(hs(i,7)*W,hs(i,8)*H,1,1,'#fff6c0');C=x}
-    if(c.plus){g.fillStyle='#1a4a8a';g.fillRect(W-12,4,9,9);pxText(g,'+',W-7.5,12,'700 10px "Pixelify Sans", monospace','#bfe8ff')}
-    return cv2}
-  if(CARDS[c.k]&&cardLv(c.k))pxText(g,'Nv '+(cardLv(c.k)+1),W-18,H-6,'700 9px "Pixelify Sans", monospace','#7fc8ff','#000');
-  // cost gem
-  if(cat==='semente'||cat==='hibrida')gemDraw(g,W/2,10,10,st.gem,String(I.cost));else gemDraw(g,15,16,10,st.gem,String(I.cost));
-  // fruit suits under the art
-  I.fruits.forEach((f,i)=>{const e=mkHD(12,12,CK);embTo(e,f);g.fillStyle='#000000aa';g.fillRect(ax+2+i*16,ay+ah-16,14,14);g.drawImage(e,ax+3+i*16,ay+ah-15,12,12)});
-  if(c.plus){g.fillStyle='#0a1a30';g.fillRect(ax+aw-16,ay+2,14,14);g.fillStyle='#4a9ad8';g.fillRect(ax+aw-15,ay+3,12,12);pxText(g,'+',ax+aw-9,ay+13,'700 12px "Pixelify Sans", monospace','#ffffff')}
-  // type line, rules text, stats, verse
-  const ink=st.ink||'#fbe9d0',dim=st.ink?'#6a4a30':'#c9a99a';
-  let ty=(cat==='semente'||cat==='hibrida')?ay+ah+31:ay+ah+12;
-  const own=CARDS[c.k]&&CARDS[c.k].own;
-  pxText(g,((own?'Carta de '+CHARS[own].name:CAT_LABEL[cat])+(I.fruit?' · '+I.fruit:'')).toUpperCase(),W/2,ty,'7px "Pixelify Sans", monospace',dim);
-  g.font='9px "Pixelify Sans", monospace';const lines=wrapLines(g,I.short,W-22,(cat==='semente'||cat==='hibrida')?2:3);
-  lines.forEach((ln,i)=>pxText(g,ln,W/2,ty+11+i*10,'9px "Pixelify Sans", monospace',ink,st.ink?null:'#00000088'));
-  const s2=I.kinds&&STATS[I.key];
-  const by=H-15;
-  if(s2&&cat!=='bencao'){const parts=[['dmg',s2.dmg],['rng',String(s2.rng)],['cd',s2.cd]];let xx=14;
-    parts.forEach(([k,v])=>{iconPx(g,k,xx,by-6,st.ink?'#8a3a10':'#ffd070');pxText(g,v,xx+8,by,'8px "Pixelify Sans", monospace',ink,null,'left');g.font='8px "Pixelify Sans", monospace';xx+=12+g.measureText(v).width})}
-  else if(I.ref)pxText(g,I.ref,W/2,by,'italic 7px "Pixelify Sans", monospace',st.ink?'#7a4a20':'#d8b070');
-  if(st.shape==='shield'){C=g;disc(W/2,H-4,3,'#3a2006');disc(W/2,H-4,2,'#e0284a');r(W/2-1,H-5,1,1,'#ffb0c8');C=x}
-  if(st.shape==='torn'){g.globalCompositeOperation='destination-out';for(let xx=0;xx<W;xx++){const tt=(hs(xx>>2,11)*4)|0,bb=(hs(xx>>2,13)*4)|0;g.fillRect(xx,0,1,tt);g.fillRect(xx,H-bb,1,bb)}g.globalCompositeOperation='source-over'}
-  if(rare){C=g;for(let i=0;i<10;i++){const sx=hs(i,c.uid|0)*W,sy=hs(i,5)*H;r(sx,sy,1,1,'#fff6c0');r(sx-1,sy,3,1,'#f7c94888');r(sx,sy-1,1,3,'#f7c94888')}C=x;pxText(g,'★',W-16,ty-1,'10px "Pixelify Sans", monospace','#f7c948','#000')}
-  return cv2;
-}
+  const I=info(c),cat=catOf(c),lv=I.kinds?cardLv(I.key):0,key=[c.k,c.hyb&&c.hyb.join('+'),c.rare?1:0,c.plus?1:0,mini?1:0,lv].join('|');
+  let src=CARD_CACHE.get(key);if(!src){const keep=C;try{src=mini?drawCardMini(c,I,cat):drawCardFull(c,I,cat,lv)}finally{C=keep}CARD_CACHE.set(key,src)}
+  const out=mkHD(mini?MINI_W:CARD_W,mini?MINI_H:CARD_H,CK),g=out.getContext('2d');g.save();g.setTransform(1,0,0,1,0,0);g.drawImage(src,0,0);g.restore();return out}
+function drawCardFull(c,I,cat,lv){
+  const W=CARD_W,H=CARD_H,cv=mkHD(W,H,CK),g=cv.getContext('2d'),P=themeOf(c,I,cat),rk=rarOf(c),panel=mixHex('#26201c',P[1],.32);C=g;
+  frameDraw(W,H,false,!!c.rare,panel);
+  // cost tab and name bar
+  rrect(6,6,17,15,2,CINK);pxText(g,String(I.cost),14.5,18,'700 13px "Pixelify Sans", monospace','#ffffff','#5a3a8a');
+  rrect(24,7,90,13,1,'#2c2420');r(25,7,88,1,'#4a3e36');const name=I.name.replace(' ★','').toUpperCase();
+  g.font=fitFont(g,name,84,9);pxText(g,name,69,17,g.font,c.rare?'#ffe08a':'#efe4d0','#000000');
+  const ax=10,ay=23,aw=100,ah=72;windowDraw(g,c,I,cat,P,ax,ay,aw,ah,2);C=g;
+  sealDraw(ax+aw-13,ay+3,10,rk);
+  // collection number on a tab over the right edge; level dots over the left edge for trees
+  if(!c.hyb&&CARDS[c.k]){rrect(107,ay+20,9,28,2,CINK);cardNo(c.k).split('').forEach((ch,i)=>pxText(g,ch,111.5,ay+28+i*8,'700 8px "Pixelify Sans", monospace','#c8bca8'))}
+  if(I.kinds){rrect(4,ay+20,9,30,2,CINK);for(let i=0;i<4;i++){disc(8.5,ay+25+i*7,2,i<=lv?'#5ae0d0':'#2a3a3a');if(i<=lv)r(7.5,ay+24+i*7,1,1,'#d0fff8')}}
+  if(c.plus){rrect(ax+2,ay+2,11,11,1,CINK);r(ax+3,ay+3,9,9,'#2a6ad8');pxText(g,'+',ax+7.5,ay+11.5,'700 11px "Pixelify Sans", monospace','#ffffff')}
+  fruitsDraw(I,W/2,ay+ah,12);C=g;
+  const ink='#efe4d0',dim='#b8a890';
+  if(I.kinds){const rt=rateOf(c);
+    BARS.forEach(([k,col],i)=>{const y=ay+ah+14+i*11;iconPx(g,k,9,y-5,col);pxText(g,String(rt[i]),22,y+2.5,'700 11px "Pixelify Sans", monospace',ink,'#000000');
+      rrect(28,y-5,83,9,1,CINK);for(let s=0;s<5;s++){const sx=29.5+s*16.2,on=s<rt[i];r(sx,y-3.5,14.6,6,on?col:'#2c2420');if(on){r(sx,y-3.5,14.6,1,shade(col,.4));r(sx,y+1.5,14.6,1,shade(col,-.35))}}});
+    g.font='8px "Pixelify Sans", monospace';wrapLines(g,I.short,W-22,2).forEach((ln,i)=>pxText(g,ln,W/2,ay+ah+51+i*9,'8px "Pixelify Sans", monospace',dim))}
+  else{const own=CARDS[c.k]&&CARDS[c.k].own,ty=ay+ah+14;
+    pxText(g,((own?'Carta de '+CHARS[own].name:CAT_LABEL[cat])).toUpperCase(),W/2,ty,'700 7px "Pixelify Sans", monospace',P[4],'#000000');
+    rrect(9,ty+4,W-18,H-ty-13,2,shade(panel,-.35));g.font='9px "Pixelify Sans", monospace';
+    wrapLines(g,I.short,W-26,4).forEach((ln,i)=>pxText(g,ln,W/2,ty+15+i*10,'9px "Pixelify Sans", monospace',ink,'#00000088'))}
+  if(c.rare)pxText(g,'★',W-10,18,'10px "Pixelify Sans", monospace','#ffe08a','#000000');
+  C=x;return cv}
+function drawCardMini(c,I,cat){
+  const W=MINI_W,H=MINI_H,cv=mkHD(W,H,CK),g=cv.getContext('2d'),P=themeOf(c,I,cat),rk=rarOf(c),panel=mixHex('#26201c',P[1],.32);C=g;
+  frameDraw(W,H,true,!!c.rare,panel);
+  rrect(4,4,13,12,2,CINK);pxText(g,String(I.cost),10.5,13.5,'700 10px "Pixelify Sans", monospace','#ffffff','#5a3a8a');
+  rrect(18,5,50,10,1,'#2c2420');const name=I.name.replace(' ★','').toUpperCase();g.font=fitFont(g,name,46,7);pxText(g,name,43,12.5,g.font,c.rare?'#ffe08a':'#efe4d0','#000000');
+  const ax=6,ay=18,aw=60,ah=46;windowDraw(g,c,I,cat,P,ax,ay,aw,ah,4/3);C=g;
+  sealDraw(ax+aw-9,ay+2,7,rk);
+  if(c.plus){r(ax+1,ay+1,8,8,CINK);r(ax+2,ay+2,6,6,'#2a6ad8');pxText(g,'+',ax+5,ay+8,'700 8px "Pixelify Sans", monospace','#ffffff')}
+  fruitsDraw(I,W/2,ay+ah,9);C=g;
+  if(I.kinds){const rt=rateOf(c);BARS.forEach(([k,col],i)=>{const y=ay+ah+10+i*7;rrect(8,y,56,6,1,CINK);for(let s=0;s<5;s++){const sx=9+s*10.8,on=s<rt[i];r(sx,y+1,9.8,4,on?col:'#2c2420');if(on)r(sx,y+1,9.8,1,shade(col,.4))}});
+    const lv=cardLv(I.key);if(lv)pxText(g,'Nv'+(lv+1),W-6,H-5,'700 6px "Pixelify Sans", monospace','#5ae0d0','#000000','right')}
+  else{const lab=(CAT_LABEL[cat]==='Carta de personagem'?'Personagem':CAT_LABEL[cat]||'').toUpperCase();rrect(8,ay+ah+11,56,13,2,shade(panel,-.4));
+    g.font=fitFont(g,lab,50,8);pxText(g,lab,W/2,ay+ah+20.5,g.font,P[4],'#000000')}
+  C=x;return cv}
 
 // ---------- card markup for menus and the hand
 function cardHTML(c,cls=''){const I=info(c),cat=catOf(c);
   return `<button type="button" class="card2 c-${cat}${c.rare?' rare':''}${c.plus?' plus':''} ${cls}" data-uid="${c.uid}" title="${c.locked?'Carta por descobrir':(I.name+': '+I.desc+(I.ref?' ('+I.ref+')':'')).replace(/"/g,'&quot;')}"><canvas width="${CARD_W*CK}" height="${CARD_H*CK}" data-card="${c.uid}"></canvas></button>`}
-function paintCards(root,cards){root.querySelectorAll('canvas[data-card]').forEach(cv2=>{const card=cards.find(k=>String(k.uid)===cv2.dataset.card);if(card){const g=cv2.getContext('2d');g.clearRect(0,0,cv2.width,cv2.height);g.drawImage(card.locked?cardBack():cardCanvas(card),0,0)}})}
-// the back of a card nobody has found yet
-function cardBack(mini){const W=mini?MINI_W:CARD_W,H=mini?MINI_H:CARD_H,c=mkHD(W,H,CK),g=c.getContext('2d');
-  fillShape(g,'chamfer',W,H,0,'#120a08');fillShape(g,'chamfer',W,H,2,'#8a5a30');fillShape(g,'chamfer',W,H,4,'#3a2216');fillShape(g,'chamfer',W,H,7,'#24140c');
-  g.fillStyle='#3a2418';for(let y=10;y<H-10;y+=6)for(let xx=10+(y/6%2)*3;xx<W-10;xx+=6)g.fillRect(xx,y,2,2);
-  pxText(g,'?',W/2,H/2+16,'700 46px "Pixelify Sans", monospace','#c9a24a','#000');pxText(g,'por descobrir',W/2,H-16,'9px "Pixelify Sans", monospace','#c9a99a');return c}
+function paintCards(root,cards){root.querySelectorAll('canvas[data-card]').forEach(cv2=>{const card=cards.find(k=>String(k.uid)===cv2.dataset.card);if(card){const g=cv2.getContext('2d');g.clearRect(0,0,cv2.width,cv2.height);g.drawImage(card.locked?cardBack(false,true):cardCanvas(card),0,0)}})}
+// the back: pale rim, a deep panel woven with small diamonds, the tree of life in a gold medallion; q swaps the tree for a question mark
+function cardBack(mini,q){const W=mini?MINI_W:CARD_W,H=mini?MINI_H:CARD_H,c=mkHD(W,H,CK),g=c.getContext('2d'),keep=C;C=g;
+  frameDraw(W,H,!!mini,false,'#2a1c3a');const b=mini?5:6,u=mini?.6:1,cx=W/2,cy=H/2;
+  for(let y=b;y<H-b-2;y+=6)for(let xx=b+((y/6|0)%2)*3;xx<W-b-2;xx+=6){r(xx+1,y,1,1,'#3e2c5a');r(xx,y+1,3,1,'#3e2c5a');r(xx+1,y+2,1,1,'#3e2c5a')}
+  for(let i=0;i<4;i++){const s=(mini?4:7)+i;r(b+1,b+1+i*2,s,1,'#c9a24a');r(W-b-1-s,b+1+i*2,s,1,'#c9a24a');r(b+1,H-b-2-i*2,s,1,'#c9a24a');r(W-b-1-s,H-b-2-i*2,s,1,'#c9a24a')}
+  disc(cx,cy,26*u,CINK);disc(cx,cy,25*u,'#c9a24a');disc(cx,cy,23*u,'#8a5a1a');disc(cx,cy,21*u,'#1e1430');
+  if(q){pxText(g,'?',cx,cy+12*u,`700 ${34*u}px "Pixelify Sans", monospace`,'#f7c948','#000000');if(!mini)pxText(g,'por descobrir',cx,H-12,'8px "Pixelify Sans", monospace','#c9a99a')}
+  else{r(cx-2*u,cy-2*u,4*u,15*u,'#7a4a2e');r(cx-6*u,cy+11*u,12*u,2*u,'#7a4a2e');blob(cx,cy-6*u,15*u,11*u,'#2a7a3a','#5fc060','#b0f090',7);
+    [[-8,-8],[6,-10],[-2,-14],[9,-3],[-10,-1],[2,-4]].forEach(([a,b2],i)=>r(cx+a*u,cy+b2*u,2*u,2*u,['#ff4f7b','#c58cff','#f7c948','#5af0ff','#ffa64a','#ff9ad0'][i]))}
+  C=keep;return c}
 function renderHand(){
   cardTip(null);
   const el=$('cards');el.innerHTML='';const n=S.hand.length,conf=S.babelOn>0;
@@ -122,3 +159,100 @@ function renderHand(){
 // hovering a card in hand shows it full size above the hand, where its rules are readable
 function cardTip(c,btn){const el=$('cardtip');if(!c){el.hidden=true;return}el.innerHTML='';const cv2=cardCanvas(c);el.append(cv2);
   const st=$('stage').getBoundingClientRect(),b=btn.getBoundingClientRect();el.style.left=(b.left+b.width/2-st.left)/st.width*100+'%';el.style.bottom=(st.bottom-b.top+8)/st.height*100+'%';el.hidden=false}
+
+// ---------- card packs from the market: buy one, tear it open, flip the cards one by one; rarer cards make a bigger show
+const PACKS={
+  semeador:{name:'Pacote do Semeador',short:'SEMEADOR',price:150,n:4,odds:[72,22,5,1],seeds:1,col:['#1e5a2a','#4faa4a','#b8f07a'],desc:'4 cartas, quase todas sementes.'},
+  bencao:{name:'Pacote da Bênção',short:'BÊNÇÃO',price:320,n:5,odds:[55,30,12,3],min:1,col:['#7a3a08','#e8a020','#fff0a0'],desc:'5 cartas. Uma rara ou melhor garantida.'},
+  arca:{name:'Pacote da Arca',short:'ARCA',price:750,n:5,odds:[30,38,24,8],min:2,col:['#2e1460','#8a4ad8','#e8c8ff'],desc:'5 cartas. Uma épica ou melhor garantida.'}};
+const PACK_POOL=Object.keys(RARITY).filter(k=>k!=='joio');
+const COPY_NEED=[2,3,4];// extra copies a tree card needs to reach level 2, 3 and 4
+const DUP_COINS={comum:10,rara:25,epica:60,lendaria:150};
+const anyOf=a=>a[Math.random()*a.length|0];
+function rollPack(id){const P=PACKS[id],out=[];
+  for(let i=0;i<P.n;i++){let ri=0,t=0;const roll=Math.random()*100;for(;ri<3;ri++){t+=P.odds[ri];if(roll<t)break}
+    if(i===P.n-1&&P.min)ri=Math.max(ri,P.min);
+    let pool=PACK_POOL.filter(k=>RARITY[k]===RAR_ORDER[ri]);
+    if(P.seeds&&Math.random()<.75){const s=pool.filter(k=>CARDS[k].type==='semente');if(s.length)pool=s}
+    out.push({k:anyOf(pool),rk:RAR_ORDER[ri],foil:Math.random()<(ri>=2?.15:.05)})}
+  return out.sort((a,b)=>RAR_ORDER.indexOf(a.rk)-RAR_ORDER.indexOf(b.rk))}// the best card comes last
+// a new card joins the collection; a copy of a tree counts toward its next level; other copies turn into coins; a foil copy consecrates the card
+function grantCard(o){const k=o.k,tree=CARDS[k].type==='semente'||!!CARDS[k].plant;META.copies=META.copies||{};META.foil=META.foil||{};META.cardLv=META.cardLv||{};
+  if(!META.unlocked.includes(k)){META.unlocked.push(k);META.seen.c[k]=1;o.st='nova'}
+  else if(tree&&cardLv(k)<3){const need=COPY_NEED[cardLv(k)];META.copies[k]=(META.copies[k]||0)+1;
+    if(META.copies[k]>=need){META.copies[k]-=need;META.cardLv[k]=cardLv(k)+1;o.st='nivel';o.lv=cardLv(k)}else{o.st='copia';o.have=META.copies[k];o.need=need}}
+  else{o.st='moedas';o.coins=DUP_COINS[o.rk];META.coins+=o.coins}
+  if(o.foil&&!META.foil[k])META.foil[k]=1;else o.foil=false;return o}
+// the pack itself, 48x64: a foil pouch with crimped ends, a tear line, a medallion and a ribbon with its name
+function packDraw(id,label){const P=PACKS[id],[c0,c1,c2]=P.col;
+  rrect(3,2,42,60,3,COUT);for(let y=3;y<61;y++){const t=(y-3)/58;r(4,y,40,1,t<.5?mixHex(c2,c1,t*2):mixHex(c1,c0,(t-.5)*2))}
+  for(let y=3;y<61;y++){const sx=4+((y*.55+6)%40);r(sx,y,3,1,'#ffffff30');r(sx+5,y,1,1,'#ffffff22')}
+  r(4,3,2,58,'#ffffff38');r(42,3,2,58,'#00000038');
+  for(const y0 of[3,55]){r(4,y0,40,6,shade(c0,-.15));for(let i=4;i<44;i+=2)r(i,y0,1,6,shade(c0,-.4));r(4,y0+(y0<9?5:0),40,1,shade(c1,.3))}
+  for(let i=4;i<44;i+=2)r(i,2,1,1,c0),r(i+1,61,1,1,c0);
+  for(let i=6;i<42;i+=3)r(i,10.5,2,.5,'#ffffffaa');
+  disc(24,30,13,COUT);disc(24,30,12,c0);disc(24,30,10.5,shade(c2,.2));disc(24,29,9,c2);
+  if(id==='semeador'){r(23,27,2,10,'#6a3a1a');blob(19,27,6,3,'#1e6a2a','#4faa4a','#a8f07a',3);blob(29,24,6,3,'#1e6a2a','#4faa4a','#a8f07a',5);for(let i=0;i<5;i++)r(16+i*4,37+(i%2),2,2,'#c88a3a')}
+  if(id==='bencao'){for(let i=0;i<8;i++){const a=i/8*Math.PI*2;r(24+Math.cos(a)*8-1,29+Math.sin(a)*8-1,2,2,'#fff6c0')}disc(24,29,5,'#ffd040');disc(23,28,3,'#fff6c0')}
+  if(id==='arca'){r(15,31,18,4,'#7a4a2a');r(16,35,16,2,'#5a3018');r(19,26,10,5,'#a06a3a');r(18,25,12,1,'#5a3018');r(22,28,2,2,'#2a1408');r(29,19,4,2,'#ffffff');r(31,18,2,1,'#ffffff');r(27,20,2,1,'#ffffff');for(let i=0;i<4;i++)r(14+i*6,38,4,1,'#5ab8ff')}
+  rrect(6,45,36,9,2,COUT);r(7,46,34,7,shade(c0,-.3));r(7,46,34,1,c1);
+  if(label)pxText(C,P.short,24,52,'700 6px "Pixelify Sans", monospace','#fff3c0','#000000');
+  [[8,14],[38,40],[12,42],[36,13]].forEach(([a,b])=>{r(a,b,1,1,'#ffffff');r(a-1,b,3,1,'#ffffff66');r(a,b-1,1,3,'#ffffff66')})}
+function packIconTo(cvs,id){itemIconTo(cvs,'pack:'+id,()=>{C.save();C.translate(3,0);C.scale(.375,.375);packDraw(id,false);C.restore()})}
+function packTag(o){const f=o.foil?'<b class="t-foil">★ Consagrada</b>':'';
+  if(o.st==='nova')return'<b class="t-new">NOVA!</b>'+f;
+  if(o.st==='nivel')return`<b class="t-lv">NÍVEL ${o.lv+1}!</b>`+f;
+  if(o.st==='copia')return`<span class="t-cp">+1 cópia</span><i class="cbar"><u style="width:${Math.round(o.have/o.need*100)}%"></u></i><small>${o.have}/${o.need} para o nível ${cardLv(o.k)+2}</small>`+f;
+  return`<span class="t-coin">+${o.coins} moedas</span>`+f}
+// the opening: the pack drops in and bobs; a tap shakes it and tears the top off; the cards deal out face down,
+// the rarer ones glowing; each tap flips one, with sparks, a flash and rays that grow with its rarity
+function openPack(id,onClose){
+  const P=PACKS[id],got=rollPack(id).map(grantCard);saveMeta();
+  const ov=document.createElement('div');ov.id='packov';ov.className='packov';
+  ov.innerHTML=`<div class="prays"></div><canvas class="pfx"></canvas><div class="ptitle">${P.name}</div>
+    <div class="ppack"><canvas class="pbody"></canvas><canvas class="ptop"></canvas></div><div class="prow"></div>
+    <div class="phint">Toque no pacote para abrir</div>
+    <div class="pbtns"><button type="button" class="btn ghost" id="pall" hidden>Virar todas</button><button type="button" class="btn" id="pagain" hidden></button><button type="button" class="btn ghost" id="pclose">Fechar</button></div>`;
+  $('stage').append(ov);
+  const src=mkHD(48,64,4),keep=C;C=src.getContext('2d');packDraw(id,true);C=keep;
+  const body=ov.querySelector('.pbody'),top=ov.querySelector('.ptop');
+  body.width=top.width=src.width;body.height=src.height;top.height=12*4;
+  body.getContext('2d').drawImage(src,0,0);body.getContext('2d').clearRect(0,0,src.width,12*4);top.getContext('2d').drawImage(src,0,0);
+  // chunky sparks on a canvas over everything
+  const fx=ov.querySelector('.pfx'),fg=fx.getContext('2d'),parts=[];let alive=true,last=performance.now();
+  const fit=()=>{fx.width=ov.clientWidth;fx.height=ov.clientHeight};fit();
+  const at=el=>{const a=el.getBoundingClientRect(),b=ov.getBoundingClientRect();return[a.left+a.width/2-b.left,a.top+a.height/2-b.top]};
+  const burst=(x0,y0,n,cols,sp)=>{const u=fx.width/400;for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,v=(60+Math.random()*220)*sp*u;
+    parts.push({x:x0,y:y0,vx:Math.cos(a)*v,vy:Math.sin(a)*v-90*sp*u,g:420*u,life:.6+Math.random()*.9,t:0,c:cols[i%cols.length],s:Math.max(2,(2+Math.random()*4)*u|0)})}};
+  const loop=now=>{if(!alive)return;const dt=Math.min(.05,(now-last)/1000);last=now;fg.clearRect(0,0,fx.width,fx.height);
+    for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.t+=dt;if(p.t>p.life){parts.splice(i,1);continue}p.vy+=p.g*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=.985;
+      fg.globalAlpha=Math.min(1,(p.life-p.t)*3);fg.fillStyle=p.c;fg.fillRect(p.x|0,p.y|0,p.s,p.s)}
+    fg.globalAlpha=1;requestAnimationFrame(loop)};requestAnimationFrame(loop);
+  const flash=cls=>{ov.classList.remove('flash','fl-epica','fl-lendaria');void ov.offsetWidth;ov.classList.add('flash');if(cls)ov.classList.add(cls)};
+  const row=ov.querySelector('.prow'),flipped=new Set();let opened=false;
+  got.forEach((o,i)=>{const el=document.createElement('div');el.className='pcard r-'+o.rk+(o.foil?' foil':'');el.style.setProperty('--i',i);
+    el.innerHTML=`<div class="pin"><div class="pf pback"></div><div class="pf pfront"></div></div><div class="prar">${RAR[o.rk].name}!</div><div class="ptag">${packTag(o)}</div>`;
+    el.querySelector('.pback').append(cardBack());el.querySelector('.pfront').append(cardCanvas(mk(o.k,o.foil?{rare:true}:{})));
+    el.onclick=()=>flip(i);row.append(el)});
+  const done=()=>{$('pall').hidden=true;ov.querySelector('.phint').textContent=got.some(o=>o.st==='nova')?'Cartas novas entram na sua coleção':'Cópias sobem o nível das árvores';
+    const again=$('pagain');again.hidden=META.coins<P.price;again.textContent='Abrir outro · '+P.price+' moedas';again.focus({preventScroll:true})};
+  const flip=i=>{if(!opened||flipped.has(i))return;flipped.add(i);const el=row.children[i],o=got[i],ri=RAR_ORDER.indexOf(o.rk);
+    const go=()=>{el.classList.remove('charge');el.classList.add('turned');
+      setTimeout(()=>{const[cx,cy]=at(el),col=RAR[o.rk].c;burst(cx,cy,[12,26,46,80][ri],[col,'#ffffff',shade(col,.45),shade(col,-.2)],[.6,.85,1.15,1.5][ri]);
+        if(ri>=2)flash('fl-'+o.rk);if(ri>=3){ov.classList.remove('quake');void ov.offsetWidth;ov.classList.add('quake');sfx('horn')}
+        sfx(['card','coin','super','ach'][ri]);if(o.foil)setTimeout(()=>sfx('beam'),150);
+        el.classList.add('shown');if(flipped.size===got.length)setTimeout(done,500)},260)};
+    if(ri>=1){el.classList.add('charge');sfx('hit');setTimeout(go,[0,380,650,950][ri])}else go()};
+  const pk=ov.querySelector('.ppack');
+  const open=()=>{if(opened||pk.classList.contains('shake'))return;pk.classList.add('shake');sfx('hit');
+    setTimeout(()=>{pk.classList.add('torn');sfx('pop');const[cx,cy]=at(pk);burst(cx,cy-pk.clientHeight*.38,46,[...P.col,'#ffffff','#fff3b0'],1.1);flash();
+      setTimeout(()=>{opened=true;ov.classList.add('opened');ov.querySelector('.phint').textContent='Toque nas cartas para virar';$('pall').hidden=false;sfx('card')},360)},650)};
+  pk.onclick=open;
+  $('pall').onclick=()=>{[...got.keys()].filter(i=>!flipped.has(i)).forEach((i,j)=>setTimeout(()=>flip(i),j*420))};
+  const close=()=>{if(!alive)return;alive=false;removeEventListener('keydown',key,true);ov.remove();onClose&&onClose()};
+  $('pclose').onclick=close;
+  $('pagain').onclick=()=>{if(META.coins<P.price)return;close();if(buyItem('p:'+id))openPack(id,onClose)};
+  const key=e=>{if(e.code==='Escape'){e.stopPropagation();close()}else if(e.code==='Space'||e.code==='Enter'){if(document.activeElement&&document.activeElement.closest&&document.activeElement.closest('.pbtns')&&opened)return;e.preventDefault();e.stopPropagation();
+    if(!opened)open();else{const n=[...got.keys()].find(i=>!flipped.has(i));if(n!=null)flip(n)}}};
+  addEventListener('keydown',key,true);
+  sfx('card');return got}

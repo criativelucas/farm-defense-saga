@@ -4,7 +4,7 @@ let S=null,RUN=null;
 const META_DEFAULTS={celeiro:store.get('jardim-do-fruto-celeiro',[]),chars:{lavrador:1},ascMax:0,stats:{kills:0,podas:0,runs:0,wins:0},ach:{},tut:0,daily:{},
   coins:0,char:'lavrador',weapon:'enxada',weapons:{enxada:1},items:{cerca:2,espantalho:1,lama:2},upg:{hearts:0,bag:0,mana:0,treeHearts:0},done:{},unlocked:['videira','mana'],seen:{c:{},e:{},r:{}},
   garden:{pots:[],potsN:8,seeds:{trigo:2,'t:videira':1},adubo:1,spray:3,mel:1,fertil:0,treeSeed:0,tree:{planted:false,lvl:0,xp:0,lastWater:0},lastVisit:0},
-  stars:{},talents:{},cardLv:{},sysSeen:{},dlg:{},endless:{},mg:{},missions:null,intro:0,v:2};
+  stars:{},talents:{},cardLv:{},copies:{},foil:{},sysSeen:{},dlg:{},endless:{},mg:{},missions:null,intro:0,v:2};
 function fillDefaults(t,d){for(const k in d){const dv=d[k];if(t[k]===undefined||t[k]===null&&dv!==null)t[k]=structuredClone(dv);
   else if(dv&&typeof dv==='object'&&!Array.isArray(dv)&&t[k]&&typeof t[k]==='object'&&!Array.isArray(t[k]))fillDefaults(t[k],dv)}return t}
 const META=fillDefaults(store.get('fds-meta',{}),META_DEFAULTS);META.celeiro=store.get('jardim-do-fruto-celeiro',META.celeiro||[]);

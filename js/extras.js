@@ -98,7 +98,7 @@ const cardLv=k=>(META.cardLv&&META.cardLv[k])||0;
 
 // ---------- the road: one place that says what each win opens (cards, bag space, pests, systems, shop shelves, modes)
 const SHOP_AT={ferramentas:0,cartas:2,barreiras:3,jardim:4,arvore:4,melhorias:5};
-const SHOP_NAME={ferramentas:'Ferramentas',cartas:'Cartas',barreiras:'Barreiras',jardim:'Jardim',arvore:'Árvore da Vida',melhorias:'Melhorias'};
+const SHOP_NAME={ferramentas:'Ferramentas',cartas:'Cartas e pacotes',barreiras:'Barreiras',jardim:'Jardim',arvore:'Árvore da Vida',melhorias:'Melhorias'};
 const winsN=()=>Object.keys(META.done).length;
 const shopOpen=k=>winsN()>=SHOP_AT[k];
 function unlocksAfter(n){const L=[],lv=LEVELS[n];if(!lv)return L;
