@@ -58,6 +58,12 @@ async function packs(label){
   const r=await js(`(()=>{let bad=0;for(let i=0;i<300;i++){const a=rollPack('arca'),b=rollPack('bencao'),s=rollPack('semeador');if(a.length!==5||RAR_ORDER.indexOf(a[4].rk)<2||RAR_ORDER.indexOf(b[4].rk)<1||s.length!==4)bad++}
     const st=[...Array(12)].map(()=>grantCard({k:'figueira',rk:'rara',foil:false}).st);return JSON.stringify({bad,st:[...new Set(st)],lv:cardLv('figueira')})})()`);
   const o=JSON.parse(r||'{}');check(label+': packs',o.bad===0&&o.st&&o.st.every(s=>['nova','copia','nivel','moedas'].includes(s))&&o.lv>=1,r)}
+// an Aseprite sheet (the bundled example) parses, keeps its tags and timing, and replaces the drawing until removed
+async function aseprite(label){
+  const r=await js(`(async()=>{const d='assets/sprites/exemplo/',s=await aseParse(await (await fetch(d+'odio.json')).json(),d),t=await aseParse(await (await fetch(d+'tree-videira.json')).json(),d);
+    ASE.odio=s;const c=mkHD(48,48,2);C=c.getContext('2d');enemyBody({k:'odio',x:24,y:40,t:.2,flash:0,frz:0});const px=[...c.getContext('2d').getImageData(0,0,96,96).data].some((v,i)=>i%4===3&&v>0);C=x;delete ASE.odio;
+    return JSON.stringify({n:s.frames.length,walk:(s.tags.walk||[]).length,f:[aseFrame(s,'walk',0),aseFrame(s,'walk',.15),aseFrame(s,'walk',.57)],ping:t.tags.idle.join(''),pivot:[t.px,t.py],px})})()`);
+  const o=JSON.parse(r||'{}');check(label+': aseprite sheets',o.n===5&&o.walk===4&&String(o.f)==='0,1,0'&&o.ping==='01'&&String(o.pivot)==='10,29'&&o.px,r)}
 // a short battle in every world: plant, call the wave, let it run, draw frames
 async function battles(label){
   for(let w=0;w<6;w++){const before=errors.length;
@@ -100,7 +106,7 @@ async function audio(label){const before=errors.length;
   check(label+': áudio '+r,errors.length===before&&r==='files,sfx,titulo,mundo,tambores',errors.slice(before).join(' | ').slice(0,200))}
 
 console.log('— new player');await load(true,false);await loopAndScene('new');
-console.log('— player with progress');await js(`Object.assign(META,{intro:1,tut:1,coins:5000});['1-1','1-2','1-3','1-4','2-1','2-4'].forEach(i=>META.done[i]=1);saveMeta();1`);await everyScreen('progress');await farmers('progress');await packs('progress');await battles('progress');await goals('progress');await minis('progress');await audio('progress');
+console.log('— player with progress');await js(`Object.assign(META,{intro:1,tut:1,coins:5000});['1-1','1-2','1-3','1-4','2-1','2-4'].forEach(i=>META.done[i]=1);saveMeta();1`);await everyScreen('progress');await farmers('progress');await packs('progress');await aseprite('progress');await battles('progress');await goals('progress');await minis('progress');await audio('progress');
 console.log('— embed with gamepad blocked');await load(false,true);await loopAndScene('blocked-pad');
 const fails=checks.filter(c=>!c[1]);console.log(`\n${checks.length-fails.length}/${checks.length} checks passed`+(errors.length?`; ${errors.length} error(s) logged:`:''));
 errors.forEach(e=>console.log('  · '+String(e).split('\n').slice(0,3).join(' / ')));

@@ -25,6 +25,7 @@ Abra `jardim-do-fruto.html` num navegador (ou sirva a pasta com `python3 -m http
 - `js/meta.js` — menu principal, aventura, loja
 - `js/garden.js` — jardim, Árvore da Vida, tutorial
 - `js/icons.js` — ícones dos itens (loja, equipamento, barra de itens) em pixel grosso com contorno
+- `js/aseprite.js` — lê folhas de sprites exportadas pelo Aseprite (`assets/sprites/`, ver o LEIA-ME de lá) e usa no lugar do desenho por código
 
 ## Teste antes de publicar
 

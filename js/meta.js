@@ -415,6 +415,7 @@ function showConfig(){let armed=false;
     <label class="chk"><input type="checkbox" id="cmute" ${muted?'checked':''}> Silenciar tudo (M)</label>
     <label class="chk"><input type="checkbox" id="cbig" ${CFG.big?'checked':''}> Texto maior <small>aumenta letras dos menus e do painel</small></label>
     <label class="chk"><input type="checkbox" id="cshake" ${CFG.noShake?'':'checked'}> Tremor de tela <small>desligue se a tela tremendo incomoda</small></label></div>
+    <div class="sec"><h3>Sprites do Aseprite</h3><p class="help">${Object.keys(ASE).length?"Carregados: "+Object.keys(ASE).join(", "):"Nenhum carregado. Exporte pelo Aseprite para assets/sprites/ (veja LEIA-ME.md na pasta)."}</p></div>
     <div class="sec"><h3>Guardar progresso</h3><p class="help">Salve um arquivo com seu progresso para levar a outro aparelho ou navegador.</p>
     <div class="row" style="justify-content:flex-start"><button class="btn ghost" id="cexp">Salvar arquivo</button><label class="btn ghost">Carregar arquivo<input type="file" id="cimp" accept="application/json,.json" hidden></label></div></div>
     <div class="sec"><h3>Progresso</h3><p class="help">Apaga fases, moedas, jardim, árvore, cartas e conquistas deste navegador.</p>
