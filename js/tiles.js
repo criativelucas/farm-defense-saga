@@ -43,7 +43,9 @@ function drawGround(){
     const prev=MAP.seg[si-1],next=MAP.seg[si+1],openL=prev&&prev[2]>y,openR=next&&next[2]>y;
     for(let j=y,row=0;j<H;j+=T,row++)for(let i=a;i<b;i+=T){const v=hs(i,j)*3|0;st(openL&&i===a?(row?TI.sideL:TI.capL):(row?TI.body:TI.cap)+(i===a&&openL?0:v),i,j,Math.min(T,b-i))}
     if(openR)for(let j=y,row=0;j<H;j+=T,row++)st(row?TI.sideR:TI.capR,b-T,j);
-    for(let row=2;y+row*T<H;row++){C.fillStyle=`rgba(10,2,12,${Math.min(.5,(row-1)*.11)})`;C.fillRect(a,y+row*T,b-a,T)}
+    // pebbles bedded in the earth, lit from the top left
+    for(let k=0;k<(b-a)/12;k++)pebble(a+5+hs(k,si+90)*(b-a-10),y+11+hs(k,si+91)*46,1.5+hs(k,si+92)*2.5,1+hs(k,si+93)*1.5,P);
+    for(let row=2;y+row*T<H;row++){C.fillStyle=`rgba(22,8,6,${Math.min(.5,(row-1)*.1)})`;C.fillRect(a,y+row*T,b-a,T)}
     // the top edge: grass blades, loose stones, a few hanging drips over the cliffs
     for(let i=a;i<b;i++){const n=hs(i,si+31);if(th==='grass'){if(n>.5)r(i,y-1,1,1,P.top1);if(n>.84)r(i,y-2,1,1,P.top1)}else if(n>.82)r(i,y-1,2,1,P.top2)}
     if(th==='grass'){if(openL)for(let j=0;j<3+(hs(a,3)*5|0);j++)r(a+1,y+3+j,1,1,P.top2);if(openR)for(let j=0;j<3+(hs(b,3)*5|0);j++)r(b-2,y+3+j,1,1,P.top2)}
@@ -54,12 +56,23 @@ function drawGround(){
       else if(th==='rock'){if(n>.9)blob(i,y-3,5,3,P.dark,P.fill,P.lite,i);else if(n>.8){for(let k=0;k<4;k++)r(i-2+k,y-2-k%2*2,1,2+k%2*2,'#8a6a3a')}}
       else{if(n>.9){r(i-2,y-6,5,6,'#b8683a');r(i-1,y-7,3,1,'#8a4a28');r(i-2,y-5,1,4,'#d88a50');r(i-1,y-3,3,1,'#8a4a28')}else if(n>.8){r(i-2,y-2,4,2,P.lite);r(i+2,y-1,3,1,P.fill)}}}
   });
+  // clumps of grass along every edge, the way the reference fringes its paths
+  if(th==='grass'){const tops=MAP.seg.map(([a,b,y])=>[a,b,y]).concat(MAP.plats.map(pl=>[pl.x+1,pl.x+pl.w-1,pl.y]));
+    tops.forEach(([a,b,y],k)=>{for(let i=a+1;i<b-3;i+=2+hs(i|0,k+95)*3){if(near(i)||inWater(i))continue;tuftClump(i,y,2+hs(i|0,k+96)*3,1.2+hs(i|0,k+97)*2,P,i|0)}})}
   if(MAP.water){const[a,b]=MAP.water,y=gy(a);for(let j=y;j<H;j++)r(a,j,b-a,1,j<y+20?'#0e1a30':'#081022');
     for(let j=y,row=0;j<H;j+=T,row++){st(row?TI.sideR:TI.capR,a-T,j);st(row?TI.sideL:TI.capL,b,j)}}
   MAP.plats.forEach(pl=>{for(let i=0;i<pl.w;i+=T){const last=i+T>=pl.w,px=last?pl.x+pl.w-T:pl.x+i,v=hs(i,pl.y)*3|0;
       st(i===0?TI.capL:last?TI.capR:TI.cap+v,px,pl.y);st(i===0?TI.underL:last?TI.underR:TI.under+(v&1),px,pl.y+T)}
     if(th==='grass')for(let i=1;i<pl.w-1;i++)if(hs(i,pl.y)>.55)r(pl.x+i,pl.y-1,1,1,P.top1)});
 }
+
+function pebble(cx,cy,w,h,P){const s=.5,o=shade(P.fill,-.42),m=shade(P.fill,.16),l=shade(P.fill,.4);
+  for(let j=0;j<h;j+=s){const t=j/h*2-1,hw=Math.round(w*Math.sqrt(Math.max(0,1-t*t))*2)/2;r(cx-hw,cy+j,hw*2,s,m);if(j<h*.5)r(cx-hw+s,cy+j,Math.max(s,hw*.8),s,l);r(cx+hw-s,cy+j,s,s,o)}
+  r(cx-w*.7,cy+h,w*1.4,s,o)}
+function tuftClump(x0,y,w,h,P,seed){const s=.5,drip=shade(P.top2,-.4);
+  for(let i=0;i<=w;i+=s){const t=i/w*2-1,top=Math.round((y-h*Math.sqrt(Math.max(0,1-t*t)))*2)/2;if(top>=y)continue;
+    r(x0+i,top,s,y-top,P.top2);if(t<.35)r(x0+i,top,s,s,P.top1);if(t<-.2&&y-top>1.2)r(x0+i,top+s,s,s,P.top1);if(t>.45)r(x0+i,top+(y-top)*.5,s,(y-top)*.5,drip)}
+  if(hs(seed,3)>.55)r(x0+w*.3,y-h-1,s,1,P.top1)}
 
 // ---------- living props: torches, lanterns, a rope bridge, banners, butterflies
 function buildProps(){
@@ -70,9 +83,6 @@ function buildProps(){
   if(MAPID==='jerico')MAP.plats.forEach((pl,k)=>{if(pl.wall&&pl.w<30)L.push({t:'banner',x:pl.x+pl.w-4,y:pl.y})});
   if(['eden','tumulo','jerico'].includes(MAPID))for(let k=0;k<5;k++)L.push({t:'fly',x:90+k*(MAP.ww-120)/5,y:gy(90+k*(MAP.ww-120)/5),s:k});
   MAP.props=L;
-  // drifting clouds in the colors of each sky
-  const cc=MAP.day?{[MAPID]:['#a8c4e0','#dceaf8','#ffffff']}[MAPID]:{eden:['#8a4a6a','#c87a8a','#f0b0a8'],mar:['#9a5a7a','#d8909a','#f8c8b0'],jerico:['#a8604a','#e0a070','#f8d8a0'],babel:['#5a3050','#8a4a6a','#b06a80'],tumulo:['#c890a0','#f0c0c0','#fff0e0']}[MAPID];
-  MAP.clouds=cc?[0,1,2].map(i=>{const c=mkHD(64,22),keep=C;C=c.getContext('2d');blob(32,14,24+i*3,6,cc[0],cc[1],cc[2],i*7+1);blob(20,10,12,6,cc[0],cc[1],cc[2],i*7+2);blob(42,9,13,6,cc[0],cc[1],cc[2],i*7+3);C=keep;return c}):null;
 }
 function flame(X,Y,k){const f=(S.t*12+k)|0,h=3+(f%3),sw=Math.round(Math.sin(S.t*9+k));
   r(X-1,Y-2,4,2,'#c0401a');r(X-1+sw*.5,Y-1-h,3,h,'#ff8a2a');r(X+sw,Y-h,2,h-1,'#ffd34a');r(X+sw,Y-h-1-(f%2),1,1,'#fff6c0')}
@@ -99,27 +109,24 @@ function propLights(L){for(const p of MAP.props){
   else if(p.t==='lantern')L.push({x:p.x+5,y:p.y-12,r:26+Math.sin(S.t*7+p.x)*2,c:'#ffc070',a:.5});
   else if(p.t==='bridge')for(let k=1;k<3;k++)L.push({x:p.a+(p.b-p.a)*k/3,y:p.y-5,r:18,c:'#ffb050',a:.45})}}
 
-// sky life: clouds drift, birds cross, the far sea sparkles, tent fires flicker on Sinai
+// sky life: painted clouds drift, birds cross, smoke rises from Sinai
 function drawSkyLife(){
-  if(MAP.clouds)for(let i=0;i<5;i++){const span=W+140,cx=((i*131-S.cam*.06+S.t*(1.5+i*.6))%span+span)%span-70,cy=10+i*11+hs(i,3)*12|0;x.globalAlpha=.85;dl(x,MAP.clouds[i%3],Math.round((cx+CAMF)*RS)/RS,cy);x.globalAlpha=1}
+  if(MAP.clouds)for(let i=0;i<4;i++){const span=W+220,cx=((i*157-S.cam*.06+S.t*(1.2+i*.5))%span+span)%span-110,cy=18+i*13+hs(i,3)*10|0;dl(x,MAP.clouds[i%3],Math.round((cx+CAMF)*RS)/RS,cy)}
+  for(const s of MAP.smokes||[])if(s.sky)smoke(s.x,s.y,1.4);
   if(!['getsemani','abismo','sinai'].includes(MAPID)){const per=26,ph=(S.t%per)/per;if(ph<.6){const k=ph/.6,bx=W+30-k*(W+90),by=34+Math.sin(S.t*.5)*6;
     for(let j=0;j<5;j++){const px=Math.round(bx+j*7),py=Math.round(by+Math.abs(j-2)*4+Math.sin(S.t*3+j)),w=(S.t*9+j|0)%2;r(px-2,py-w,2,1,'#2a1830');r(px,py,1,1,'#2a1830');r(px+1,py-w,2,1,'#2a1830')}}}
 }
+// a column of dithered smoke puffs that rise, drift right and thin out
+function smoke(sx,sy,sc){for(let i=0;i<7;i++){const ph=(S.t*.09+i/7)%1,px=sx+Math.sin(ph*5+i)*2*sc+ph*16*sc,py=sy-ph*44*sc;
+  ditherDisc(px,py,(1.5+ph*7)*sc,ph<.5?'#8a8494':'#a8a2b0',.9-ph*.8)}}
 function drawFarLife(){
   if(MAPID==='mar'||MAPID==='abismo')for(let i=0;i<16;i++){const sx=Math.round((hs(i,1)*W*1.4+S.t*(3+hs(i,2)*5))%(W+20))-10,sy=130+(hs(i,3)*24|0);if(Math.sin(S.t*2.5+i*1.7)>.35)r(sx,sy,2+(i%2),1,'#d8f0ff')}
 }
-function drawMidLife(){
-  if(!MAP.midFires)return;
-  for(const f of MAP.midFires){const sx=f.x+lay(PAR[1]);if(sx<-10||sx>W+10)continue;x.globalAlpha=.5+Math.sin(S.t*9+f.x)*.25+Math.random()*.15;r(sx-2,f.y,5,6,'#ffe0a0');x.globalAlpha=1}
+function drawMidLife(){const o=lay(PAR[1]);
+  for(const f of MAP.midFires||[]){const sx=f.x+o;if(sx>-10&&sx<W+10)flame(sx-1,f.y+6,f.x)}
+  // waterfalls: bright streaks slide down the painted water, foam flickers at the foot
+  for(const f of MAP.falls||[]){const sx=f.x+o,h=f.y1-f.y0;if(sx<-10||sx>W+10)continue;x.globalAlpha=.75;
+    for(let j=0;j<f.w;j+=.5)for(let n=0;n<2;n++){const yy=f.y0+((S.t*34+hs(j*2|0,n+1)*h+n*h/2)%h);r(sx+j,yy,.5,2+hs(j*2|0,n+5)*3,'#ffffff')}
+    x.globalAlpha=1;for(let n=0;n<3;n++)if(Math.sin(S.t*6+n*2+f.x)>0)r(sx+hs(n,f.x|0)*f.w,f.y1-2-hs(n+3,f.x|0)*3,1,.5,'#ffffff')}
+  for(const s of MAP.smokes||[])if(!s.sky){const sx=s.x+o;if(sx>-30&&sx<W+30)smoke(sx,s.y,.8)}
 }
-
-// ---------- day levels: a blue sky with a real sun, and the parallax silhouettes washed in daylight haze
-function daySky(){const desert=!MAP.pal.grass;
-  skyGrad(desert?[[0,'#3f86d4'],[.6,'#94cbee'],[1,'#f6dfb2']]:[[0,'#3a86de'],[.55,'#86c4f2'],[1,'#d6efff']]);
-  C.globalAlpha=.1;for(let rr=30;rr>10;rr-=5)disc(300,42,rr,'#fff8d0');C.globalAlpha=1;disc(300,42,9,'#fff2b8');disc(299,41,7,'#ffffff');
-  if(MAPID==='sinai'){for(let i=0;i<W;i+=.5){const d=Math.abs(i-290),h=Math.max(0,150-d*.95-hs(i*2|0,3)*4);if(h>0)r(i,H-h-30,.5,h+30,i<290?'#c0a088':'#a0806c')}
-    blob(290,64,16,5,'#d8e4f0','#eef4fa','#ffffff',61)}
-}
-function dayTint(){const desert=!MAP.pal.grass;
-  [[FAR,desert?'#e0d0b8':'#a4cbe8',.72],[MID,desert?'#c0a07c':'#7cae86',.74],[NEAR,desert?'#7a5c40':'#3e7048',.62]].forEach(([c,col,a])=>{
-    const g=c.getContext('2d');g.save();g.setTransform(1,0,0,1,0,0);g.globalCompositeOperation='source-atop';g.globalAlpha=a;g.fillStyle=col;g.fillRect(0,0,c.width,c.height);g.restore()})}

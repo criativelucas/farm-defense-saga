@@ -119,20 +119,22 @@ const LANDMARK={
   jardim(cx,cy){const lv=META.garden.tree.planted?META.garden.tree.lvl:0;if(lv>0){const s=6+lv*1.6;r(cx-1,cy-s*1.6,3,s*1.6,'#7a4a2e');blob(cx,cy-s*1.8,s|0,(s*.6)|0,'#2a7a3a','#5fc060','#b0f090',33)}else{r(cx-1,cy-8,2,8,'#8a5a2a');r(cx-5,cy-12,10,5,'#c9a060')}
     for(let i=0;i<5;i++){r(cx-24+i*10,cy-6,1,6,'#5fe08a');r(cx-25+i*10,cy-8,3,2,['#e0284a','#9b4be0','#f7c948','#ff8ac0','#ffffff'][i])}}
 };
-let wt=0;
+let wt=0,WMAP=null;
 function drawWorldMap(){
   const cvs=$('wmapc');if(!cvs){clearInterval(wmapTimer);wmapTimer=null;return}
   wt+=.05;const g=cvs.getContext('2d');C=g;
-  const gr=g.createLinearGradient(0,0,0,300);gr.addColorStop(0,'#5aa8d8');gr.addColorStop(.6,'#a8d8e8');gr.addColorStop(1,'#d8eef0');g.fillStyle=gr;g.fillRect(0,0,480,300);
-  disc(420,40,16,'#fff4c8');
-  for(let i=0;i<9;i++){const cx=((hs(i,1)*560+wt*(4+i))%600)-60,cy=20+hs(i,2)*120;blob(cx,cy,20+hs(i,3)*20|0,5+hs(i,4)*4|0,'#d8e8f0','#eef6fa','#ffffff',i+50)}
+  // the painted sky and clouds of the battles, made once
+  if(!WMAP){const bg=mkHD(480,300,1),B=layerBuf(bg,'#d8f0e8',0,1);pSky(B,{sky:SKIES.day,hor:330,sun:{...SUNS.day,x:420,y:40,r:14}});putBuf(B);
+    WMAP={bg,cl:[0,1,2].map(i=>{const c=mkHD(110,44,1),B2=layerBuf(c,'#fff',0,1);pCloud(B2,55,24,56+i*14,16+i*4,i*5+2,CLOUDS.day);putBuf(B2);return c})}}
+  g.drawImage(WMAP.bg,0,0);
+  for(let i=0;i<7;i++){const cx=((hs(i,1)*620+wt*(4+i))%660)-110,cy=hs(i,2)*120-6;g.drawImage(WMAP.cl[i%3],Math.round(cx),Math.round(cy))}
   // stone bridges between consecutive islands
   for(let i=0;i<WORLDS.length-1;i++){const a=WORLDS[i],b=WORLDS[i+1],open=levelOpen(i*4+4);const n=Math.hypot(b.x-a.x,b.y-a.y)/4|0;
     for(let k=0;k<=n;k++){const u=k/n,px=a.x+(b.x-a.x)*u,py=a.y+(b.y-a.y)*u+Math.sin(u*Math.PI)*10;if(k%2)r(px-1,py,3,2,open?'#c9a060':'#8a8a9a')}}
   WORLDS.forEach((w,i)=>islandAt(w,w.top,levelOpen(i*4),LANDMARK[w.id]));
   if(selWorld!=null){const w=WORLDS[selWorld];C.globalAlpha=.5+Math.sin(wt*4)*.3;ring(w.x,w.y-10,w.w/2+6,'#ffe36a');C.globalAlpha=1}
   drawWalker(g);C=g;
-  for(let i=0;i<7;i++){const cx=((hs(i,7)*560-wt*(6+i))%600+600)%600-60;blob(cx,294,40,12,'#c8d0e0','#dde4ee','#ffffff',i+80)}
+  for(let i=0;i<8;i++){const cx=((hs(i,7)*660-wt*(6+i))%660+660)%660-110;g.drawImage(WMAP.cl[i%3],Math.round(cx),262+Math.round(hs(i,8)*10))}
   C=x;
 }
 function showWorld(sel){

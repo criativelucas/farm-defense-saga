@@ -164,8 +164,8 @@ function drawRays(){
     x.fillStyle=`rgba(190,180,255,${a})`;x.beginPath();x.moveTo(284+i*2,42);x.lineTo(288+i*2,42);x.lineTo(bx+22,216);x.lineTo(bx,216);x.fill()}}
   x.restore();
 }
-function fog(y,a,spd){for(let k=0;k<3;k++){const span=W+260,bx=((k*200-S.cam*spd+S.t*5)%span+span)%span-130;
-  x.save();x.translate(bx,y);x.scale(1,.18);const g=x.createRadialGradient(0,0,0,0,0,130);g.addColorStop(0,`rgba(${MAP.fog},${a})`);g.addColorStop(1,`rgba(${MAP.fog},0)`);
+function fog(y,a,spd){const fc=MAP.mood==='day'?'214,236,246':MAP.fog;for(let k=0;k<3;k++){const span=W+260,bx=((k*200-S.cam*spd+S.t*5)%span+span)%span-130;
+  x.save();x.translate(bx,y);x.scale(1,.18);const g=x.createRadialGradient(0,0,0,0,0,130);g.addColorStop(0,`rgba(${fc},${a})`);g.addColorStop(1,`rgba(${fc},0)`);
   x.fillStyle=g;x.fillRect(-130,-130,260,260);x.restore()}}
 function drawWater(){
   if(!MAP.water)return;const[a,b]=MAP.water,y=gy(a),sx=Math.round(a-S.cam),w=b-a;if(sx>W||sx+w<0)return;
