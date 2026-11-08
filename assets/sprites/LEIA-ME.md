@@ -34,8 +34,3 @@ A duração de cada quadro e a direção da tag (forward, reverse, pingpong) vê
 - O contorno escuro é colocado pelo jogo. Não precisa desenhar.
 - **Pragas**: desenhe olhando para a **esquerda** (elas andam para a esquerda).
 - **Personagens**: desenhe olhando para a **direita**. O jogo espelha quando eles viram.
-
-## Exemplo
-
-A pasta `exemplo/` tem duas folhas prontas no formato do Aseprite: uma praga (`odio`) e uma árvore (`tree-videira`).
-Para testar, copie as duas para esta pasta e coloque `["odio", "tree-videira"]` em `sprites.json`.
