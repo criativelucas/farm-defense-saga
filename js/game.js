@@ -342,6 +342,11 @@ function blessing(k){
     for(const e of S.en)if(!EN[e.k].fly&&e.x>S.cam-10&&e.x<S.cam+W+10){damage(e,14);if(!EN[e.k].boss)e.x+=10}banner('As trombetas soaram','Muralha de Jericó')}
   if(k==='talentos'){S.talents+=6;pop(P.x,P.y-24,'investido: +6 na próxima onda','#f7c948')}
   if(k==='semeador'){for(let i=0;i<3;i++)S.proj.push({x:P.x,y:P.y-12,vx:rnd(-150,150),vy:rnd(-210,-130),g:300,kind:'sow',life:4})}
+  if(k==='vento'){sfx('wind');shake(6);for(let i=0;i<30;i++)S.parts.push({x:S.cam+rnd(0,W),y:rnd(40,170),vx:rnd(160,260),vy:rnd(-10,10),g:0,life:.7,max:.7,c:i%2?'#e8f4ff':'#b8d8a8',s:1});
+    for(const e of S.en)if(e.x>S.cam-10&&e.x<S.cam+W+10){e.x+=EN[e.k].boss?9:36;e.slow=Math.max(e.slow,1)}banner('Bênção','Vento do Senhor')}
+  if(k==='uncao'){RUN.hp=Math.min(RUN.maxhp,RUN.hp+4);P.hp=P.maxhp;sfx('heal');pop(30,120,'+4 Vida','#ffa64a',9);S.fx.push({k:'ring',x:P.x,y:P.y-8,r:2,max:40,t:0,c:'#f7c948'});banner('Bênção','O meu cálice transborda')}
+  if(k==='nuvem'){for(const e of S.en)e.slow=Math.max(e.slow,8);flash(.25,'230,240,255');banner('Bênção','Coluna de Nuvem')}
+  if(k==='estrela'){sfx('super');flash(.4,'255,240,180');S.mana=Math.min(MAXM,S.mana+3);S.tw.forEach((t,i)=>{if(!t)return;t.lvl=Math.min(3,(t.lvl||0)+1);t.cd={};t.dcd=0;const s=MAP.slots[i];S.fx.push({k:'ring',x:s.x,y:s.y-14,r:2,max:26,t:0,c:'#fff3b0'})});banner('Estrela da Manhã','Apocalipse 22:16')}
   if(k==='profecia'){S.reveal=true;S.mana+=2;pop(P.x,P.y-24,'a próxima onda foi revelada','#c58cff')}
   if(k==='regar'){const si=nearestTreeSlot();if(si<0){pop(P.x,P.y-24,'nenhuma árvore perto','#c9a99a');return false}const t=S.tw[si],s=MAP.slots[si];t.lvl=Math.min(3,(t.lvl||0)+1);water(t,s,1);t.dcd=0;
     S.fx.push({k:'ring',x:s.x,y:s.y-14,r:2,max:24,t:0,c:'#7fc8ff'});pop(s.x,s.y-44,'nível '+(t.lvl+1),'#7fc8ff',9);for(let i=0;i<12;i++)S.parts.push({x:s.x+rnd(-8,8),y:s.y-30,vx:0,vy:rnd(40,80),g:200,life:.5,max:.5,c:'#7fc8ff',s:1})}

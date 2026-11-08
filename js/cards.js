@@ -5,7 +5,14 @@ const CARD_W=120,CARD_H=168,MINI_W=72,MINI_H=100,CK=3;// drawn at 3x so text and
 const RAR={comum:{name:'Comum',c:'#d4d8e0',d:'#5a6070'},rara:{name:'Rara',c:'#5ab8ff',d:'#14407a'},epica:{name:'Épica',c:'#c47aff',d:'#40146e'},lendaria:{name:'Lendária',c:'#ffd040',d:'#7a4a06'}};
 const RAR_ORDER=['comum','rara','epica','lendaria'];
 const RARITY={videira:'comum',roma:'comum',oliveira:'comum',lirio:'comum',mana:'comum',profecia:'comum',joio:'comum',
-  figueira:'rara',tamareira:'rara',mostarda:'rara',talentos:'rara',chuva:'rara',amendoeira:'epica',sarca:'epica',semeador:'epica',jerico:'lendaria'};
+  figueira:'rara',tamareira:'rara',mostarda:'rara',talentos:'rara',chuva:'rara',amendoeira:'epica',sarca:'epica',semeador:'epica',jerico:'lendaria',
+  vento:'comum',uncao:'rara',nuvem:'epica',estrela:'lendaria'};
+// art for the cards found only in packs, on the 32x32 icon grid
+Object.assign(ICONS,{
+  vento(){for(let i=0;i<5;i++){const y0=6+i*5;for(let x0=2+i%2*3;x0<28;x0+=1)r(x0,y0+Math.sin(x0*.35+i)*1.5,1,1,i%2?'#e8f4ff':'#b8d8f0')}for(let i=0;i<4;i++)r(20+i*2,8+i*6,2,1,'#7ac050')},
+  uncao(){r(10,10,12,16,'#c8a040');r(10,10,12,2,'#f0d070');r(12,6,8,5,'#a07a28');r(14,3,4,4,'#7a4a2a');r(12,13,4,10,'#e8c860');for(let i=0;i<4;i++)r(23+i,22+i*2,2,2,'#ffe08a');disc(26,29,2,'#ffe08a')},
+  nuvem(){blob(16,9,12,6,'#c8d0e0','#e8eef8','#ffffff',4);for(let j=12;j<30;j++){const w2=10-(j-12)*.35;r(16-w2/2,j,w2,1,j%3?'#e8eef8':'#c8d0e0')}},
+  estrela(){const c='#ffe9a0';r(15,2,2,28,c);r(2,15,28,2,c);for(let i=0;i<9;i++){r(16-i,16-i,1,1,'#fff6c0');r(15+i,16-i,1,1,'#fff6c0');r(16-i,15+i,1,1,'#fff6c0');r(15+i,15+i,1,1,'#fff6c0')}disc(16,16,4,'#ffd040');disc(15,15,2,'#ffffff')}});
 const rarOf=c=>c.hyb?'epica':RARITY[c.k]||(CARDS[c.k]&&CARDS[c.k].own?'lendaria':'comum');
 // the window's palette, dark to light: trees by their fruit, the rest by category
 const THEME={Amor:['#3a0a1a','#7a1a2a','#c8402a','#f08a3a','#ffd08a'],Alegria:['#1a0a30','#3a1a6a','#6a3aa8','#b07ae0','#f0c8ff'],
@@ -166,6 +173,7 @@ const PACKS={
   bencao:{name:'Pacote da Bênção',short:'BÊNÇÃO',price:320,n:5,odds:[55,30,12,3],min:1,col:['#7a3a08','#e8a020','#fff0a0'],desc:'5 cartas. Uma rara ou melhor garantida.'},
   arca:{name:'Pacote da Arca',short:'ARCA',price:750,n:5,odds:[30,38,24,8],min:2,col:['#2e1460','#8a4ad8','#e8c8ff'],desc:'5 cartas. Uma épica ou melhor garantida.'}};
 const PACK_POOL=Object.keys(RARITY).filter(k=>k!=='joio');
+Object.assign(SND,{rip:[260,2400,.2,'sawtooth',.05],flip:[760,380,.11,'triangle',.05],shine:[900,2600,.35,'sine',.05],legend:[196,1568,.9,'square',.045]});
 const COPY_NEED=[2,3,4];// extra copies a tree card needs to reach level 2, 3 and 4
 const DUP_COINS={comum:10,rara:25,epica:60,lendaria:150};
 const anyOf=a=>a[Math.random()*a.length|0];
@@ -182,7 +190,11 @@ function grantCard(o){const k=o.k,tree=CARDS[k].type==='semente'||!!CARDS[k].pla
   else if(tree&&cardLv(k)<3){const need=COPY_NEED[cardLv(k)];META.copies[k]=(META.copies[k]||0)+1;
     if(META.copies[k]>=need){META.copies[k]-=need;META.cardLv[k]=cardLv(k)+1;o.st='nivel';o.lv=cardLv(k)}else{o.st='copia';o.have=META.copies[k];o.need=need}}
   else{o.st='moedas';o.coins=DUP_COINS[o.rk];META.coins+=o.coins}
-  if(o.foil&&!META.foil[k])META.foil[k]=1;else o.foil=false;return o}
+  if(o.foil&&!META.foil[k])META.foil[k]=1;else o.foil=false;
+  if(o.rk==='lendaria')unlockAch('perola');if(PACK_POOL.every(q=>META.unlocked.includes(q)))unlockAch('tesouros');return o}
+// free packs: one Semeador a day, and a Bênção pack for the first win over each boss
+const freePackToday=()=>META.freeDay!==todayKey();
+const packGifts=()=>(freePackToday()?1:0)+(META.gifts||0);
 // the pack itself, 48x64: a foil pouch with crimped ends, a tear line, a medallion and a ribbon with its name
 function packDraw(id,label,back){const P=PACKS[id],[c0,c1,c2]=P.col;
   rrect(3,2,42,60,3,COUT);for(let y=3;y<61;y++){const t=(y-3)/58;r(4,y,40,1,t<.5?mixHex(c2,c1,t*2):mixHex(c1,c0,(t-.5)*2))}
@@ -237,13 +249,13 @@ function openPack(id,onClose){
   const flip=i=>{if(!alive||!opened||flipped.has(i))return;flipped.add(i);const el=row.children[i],o=got[i],ri=RAR_ORDER.indexOf(o.rk);
     const go=()=>{if(!alive)return;el.classList.remove('charge');el.classList.add('turned');
       setTimeout(()=>{if(!alive)return;const[cx,cy]=at(el),col=RAR[o.rk].c;el.classList.add('lit');burst(cx,cy,[12,26,46,80][ri],[col,'#ffffff',shade(col,.45),shade(col,-.2)],[.6,.85,1.15,1.5][ri]);
-        if(ri>=2)flash('fl-'+o.rk);if(ri>=3){ov.classList.remove('quake');void ov.offsetWidth;ov.classList.add('quake');sfx('horn')}
-        sfx(['card','coin','super','ach'][ri]);if(o.foil)setTimeout(()=>sfx('beam'),150);
+        if(ri>=2)flash('fl-'+o.rk);if(ri>=3){ov.classList.remove('quake');void ov.offsetWidth;ov.classList.add('quake');sfx('legend')}
+        sfx('flip');sfx(['card','coin','shine','ach'][ri]);if(ri>=2)setTimeout(()=>sfx('shine'),120);if(o.foil)setTimeout(()=>sfx('beam'),150);
         el.classList.add('shown');if(flipped.size===got.length)setTimeout(done,700)},480)};
     if(ri>=1){el.classList.add('charge');sfx('hit');setTimeout(go,[0,450,800,1150][ri])}else go()};
   const pk=ov.querySelector('.ppack');
   const open=()=>{if(opened||pk.classList.contains('shake'))return;pk.classList.add('shake');sfx('hit');
-    setTimeout(()=>{if(!alive)return;pk.classList.add('torn');sfx('pop');const[cx,cy]=at(pk);burst(cx,cy-pk.clientHeight*.38,46,[...P.col,'#ffffff','#fff3b0'],1.1);flash();
+    setTimeout(()=>{if(!alive)return;pk.classList.add('torn');sfx('rip');const[cx,cy]=at(pk);burst(cx,cy-pk.clientHeight*.38,46,[...P.col,'#ffffff','#fff3b0'],1.1);flash();
       setTimeout(()=>{if(!alive)return;opened=true;ov.classList.add('opened');ov.querySelector('.phint').textContent='Toque nas cartas para virar';$('pall').hidden=false;sfx('card')},360)},650)};
   pk.onclick=open;
   $('pall').onclick=()=>{$('pall').hidden=true;[...got.keys()].filter(i=>!flipped.has(i)).forEach((i,j)=>setTimeout(()=>flip(i),j*650))};
@@ -269,6 +281,7 @@ function showPacks(){
   menu(`<div class="tenda"><canvas id="tbg" width="960" height="540"></canvas><i class="tlamp" style="--x:31%;--d:0s"></i><i class="tlamp" style="--x:63%;--d:-1.3s"></i><i class="tlamp" style="--x:93%;--d:-.6s"></i>
     <div class="qsign">Tenda das Cartas</div>
     <div class="qboaz"><canvas id="qboazc" width="256" height="384"></canvas><div class="qbubble" id="qbub">${pick(TENDA)}</div></div>
+    ${packGifts()?`<div class="tgifts">${freePackToday()?'<button type="button" class="btn tgift" data-free="semeador">🎁 Pacote grátis do dia</button>':''}${META.gifts?`<button type="button" class="btn tgift" data-free="bencao">🎁 Presente dos chefes · ${META.gifts}</button>`:''}</div>`:''}
     <div class="tpacks">${Object.entries(PACKS).map(([k,p],i)=>`<div class="tpk" data-pk="${k}" style="--pc:${p.col[1]};--n:${i}">
       <div class="tstage">${pack3dHTML(k)}</div><b>${p.name}</b><small>${p.desc}</small>
       <div class="todds">${p.odds.map((o,j)=>`<span style="--rc:${RAR[RAR_ORDER[j]].c};flex:${Math.max(o,5)}" title="${RAR[RAR_ORDER[j]].name}: ${o}%"></span>`).join('')}</div>
@@ -280,6 +293,7 @@ function showPacks(){
   $('menu').querySelectorAll('.tpk').forEach(el=>{const p=PACKS[el.dataset.pk];
     el.onmouseenter=()=>{bub.innerHTML=`<b>${p.name}</b><br>${p.desc} Chances: ${p.odds.map((o,j)=>RAR[RAR_ORDER[j]].name.toLowerCase()+' '+o+'%').join(', ')}.`;sfx('hit')};
     el.onmouseleave=()=>{bub.textContent=pick(TENDA)}});
+  $('menu').querySelectorAll('[data-free]').forEach(b=>b.onclick=()=>{const k=b.dataset.free;if(k==='semeador'){if(!freePackToday())return;META.freeDay=todayKey()}else{if(!META.gifts)return;META.gifts--}saveMeta();openPack(k,()=>showPacks())});
   $('menu').querySelectorAll('[data-buypk]').forEach(b=>b.onclick=e=>{e.stopPropagation();const k=b.dataset.buypk;
     if(buyItem('p:'+k))openPack(k,()=>showPacks());else{sfx('no');bub.innerHTML='Faltam moedas para o '+PACKS[k].name+'. Vença umas fases e volte!'}})}
 // the tent inside: striped canvas walls, a scalloped valance, shelves with card stacks, a velvet table, plank floor

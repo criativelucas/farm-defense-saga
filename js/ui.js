@@ -187,15 +187,22 @@ function showChoose(){
   S.en.sort((a,b)=>a.y-b.y);
   const sel=RUN.deck.slice(0,max),locked=UNLOCK_ORDER.filter(k=>k&&!META.unlocked.includes(k)).length;
   const goal=LEVELS[n].goal;
+  const TORD={semente:0,hibrida:0,parabola:1,bencao:2,propria:3,joio:4},rv=c=>RAR_ORDER.indexOf(rarOf(c));
+  const view=[...RUN.coll].sort((a,b)=>TORD[catOf(a)]-TORD[catOf(b)]||rv(b)-rv(a)||info(a).cost-info(b).cost);let filt='all';
+  // fill for me: about 60% trees (best ones first, then their copies), then the best other cards, then anything left
+  const auto=()=>{sel.length=0;const tree=c=>!!info(c).kinds,key=c=>c.k+(c.hyb||''),add=(ok,lim)=>{for(const c of view){if(sel.length>=lim)return;if(!sel.includes(c)&&catOf(c)!=='joio'&&ok(c))sel.push(c)}};
+    const nT=Math.ceil(max*.6),has=c=>sel.some(o=>key(o)===key(c));
+    add(c=>tree(c)&&!has(c),nT);add(tree,nT);add(c=>!tree(c)&&!has(c),max);add(()=>true,max)};
   const render=()=>{const ok=goal==='esteira'||sel.length>=Math.min(mn,RUN.coll.length);
     menu(`<div class="choose"><div class="bank"><div class="bmana"><canvas width="32" height="32" id="bmana"></canvas><b>${6+2*((META.upg&&META.upg.mana)||0)+tl('mana')}</b></div>
       ${Array.from({length:max},(_,i)=>sel[i]?`<button type="button" class="bslot full" data-out="${i}" title="Tirar ${info(sel[i]).name}"><canvas width="${MINI_W*CK}" height="${MINI_H*CK}" data-mini="${sel[i].uid}"></canvas></button>`:`<span class="bslot"></span>`).join('')}</div>
       <div class="cpanel"><h2>Escolha suas sementes</h2>
-        <div class="cgrid">${RUN.coll.map(c=>{const on=sel.includes(c);return`<button type="button" class="cpick ${on?'used':''}" data-in="${c.uid}" title="${info(c).name}: ${info(c).desc}"><canvas width="${MINI_W*CK}" height="${MINI_H*CK}" data-mini="${c.uid}"></canvas></button>`}).join('')}
+        <div class="cfilt">${[['all','Todas'],['semente','Sementes'],['bencao','Bênçãos'],['parabola','Parábolas']].map(([k,t])=>`<button type="button" class="${filt===k?'on':''}" data-filt="${k}">${t}</button>`).join('')}<span></span><button type="button" id="cauto">Montar sozinho</button><button type="button" id="cclear">Limpar</button></div>
+        <div class="cgrid">${view.filter(c=>filt==='all'||catOf(c)===filt||(filt==='bencao'&&catOf(c)==='propria')||(filt==='semente'&&catOf(c)==='hibrida')).map(c=>{const on=sel.includes(c);return`<button type="button" class="cpick r-${rarOf(c)} ${on?'used':''}" data-in="${c.uid}" title="${info(c).name}: ${info(c).desc}"><canvas width="${MINI_W*CK}" height="${MINI_H*CK}" data-mini="${c.uid}"></canvas></button>`}).join('')}
           ${Array.from({length:Math.max(0,Math.min(locked,24-RUN.coll.length))},()=>'<span class="cpick lock"></span>').join('')}</div>
         <p class="cinfo" id="cinfo">${goal?`<b class="goalt">${GOALS[goal].name}:</b> ${GOALS[goal].desc} `:''}${LEVELS[n].id} · ${LEVELS[n].night?'Noite':'Dia'} · escolha de ${Math.min(mn,RUN.coll.length)} a ${max} cartas. A bolsa cresce conforme você avança.</p>
         <button class="btn plantar" id="go" ${ok?'':'disabled'}>Plantar!</button></div>
-      <div class="cside"><button class="btn ghost" id="backmap">‹ Mapa</button><button class="btn ghost" id="cshop">Quitanda</button><button class="btn ghost" id="ccodex">Códex</button></div></div>`);
+      <div class="cside"><button class="btn ghost" id="backmap">‹ Mapa</button><button class="btn ghost" id="cpacks">Tenda</button><button class="btn ghost" id="cshop">Quitanda</button><button class="btn ghost" id="ccodex">Códex</button></div></div>`);
     S.state='choose';
     const all=[...RUN.coll];$('menu').querySelectorAll('canvas[data-mini]').forEach(cv2=>{const c=all.find(k=>String(k.uid)===cv2.dataset.mini);if(c)cv2.getContext('2d').drawImage(cardCanvas(c,true),0,0)});
     {const g=hdCtx($('bmana'),32,32);C=g;disc(16,16,11,'#6a24a8');disc(16,16,9,'#9b4be0');disc(13,12,3,'#e2b0ff');C=x}
@@ -203,7 +210,9 @@ function showChoose(){
       b.onclick=()=>{const c=all.find(k=>String(k.uid)===b.dataset.in),i=sel.indexOf(c);if(i>=0)sel.splice(i,1);else if(sel.length<max)sel.push(c);else{sfx('no');return}sfx('card');render()}});
     $('menu').querySelectorAll('[data-out]').forEach(b=>b.onclick=()=>{sel.splice(+b.dataset.out,1);sfx('card');render()});
     $('go').onclick=()=>{RUN.deck=[...sel];RUN.needDeck=false;startLevelBattle()};
-    $('backmap').onclick=()=>showWorld();$('cshop').onclick=()=>showShop2('ferramentas');$('ccodex').onclick=()=>showCodex('cartas')};
+    $('backmap').onclick=()=>showWorld();$('cshop').onclick=()=>showShop2('ferramentas');$('ccodex').onclick=()=>showCodex('cartas');$('cpacks').onclick=()=>showPacks();
+    $('menu').querySelectorAll('[data-filt]').forEach(b=>b.onclick=()=>{filt=b.dataset.filt;sfx('card');render()});
+    $('cauto').onclick=()=>{auto();sfx('card');render()};$('cclear').onclick=()=>{sel.length=0;sfx('card');render()}};
   render()}
 function showDeck(){
   if(RUN.mode==='level')return showChoose();
@@ -399,7 +408,8 @@ const ccard=o=>`<div class="ccard ${o.cls||''}" style="--cc:${o.col}"><div class
 const lvlOf=(v,cuts)=>1+cuts.filter(c=>v>=c).length;
 function showCodex(tab){
   const tabs={cartas:'Frutos e cartas',vizinhas:'Vizinhanças',inimigos:'Obras da carne',reliquias:'Relíquias',personagens:'Personagens'};let body='',cards=[];
-  if(tab==='cartas'){cards=Object.keys(CARDS).map(k=>mk(k,cardKnown(k)?{}:{locked:true}));body=`<p class="help">${cards.filter(c=>!c.locked).length} de ${cards.length} cartas descobertas. Vença fases para encontrar as outras.</p><div class="grid">${cards.map(c=>{const I=info(c);return`<div class="cx">${cardHTML(c)}<i>${c.locked?'???':I.ref}</i></div>`}).join('')}</div>`}
+  if(tab==='cartas'){cards=Object.keys(CARDS).map(k=>mk(k,cardKnown(k)?{}:{locked:true}));body=`<p class="help">${cards.filter(c=>!c.locked).length} de ${cards.length} cartas descobertas. Vença fases e abra pacotes na Tenda para encontrar as outras.</p><div class="grid">${cards.map(c=>{const I=info(c),rk=RAR[rarOf(c)],lv=cardLv(c.k),tree=!!I.kinds;
+    return`<div class="cx">${cardHTML(c)}<small class="cxr" style="color:${rk.c}">◆ ${rk.name}${tree&&!c.locked?` · nível ${lv+1}${lv<3?` · cópias ${(META.copies||{})[c.k]||0}/${COPY_NEED[lv]}`:''}`:''}${(META.foil||{})[c.k]&&!c.locked?' · ★':''}</small><i>${c.locked?'???':I.ref}</i></div>`}).join('')}</div>`}
   if(tab==='vizinhas')body=`<div class="ccrules"><span style="--c:#4faa4a">Árvores a até 72 passos se ligam por ramos</span><span style="--c:#e8a020">Frutos diferentes juntos: +10% de dano</span><span style="--c:#9b5ae0">Perto de uma Videira: +25% (João 15:5)</span><span style="--c:#c8403a">A Discórdia corta ramos ao passar por baixo</span></div>
     <div class="grid ccg pairs">${PAIRS.map((p,i)=>ccard({col:FRUIT_COL[FRUIT[p.a]],name:p.name,art:`<canvas width="288" height="144" data-pair="${i}"></canvas>`,body:`<b class="ccsub">${CARDS[p.a].name} + ${CARDS[p.b].name}</b><p>Juntas, ${p.desc}.</p>`,ref:p.ref})).join('')}</div>`;
   if(tab==='inimigos')body=`<p class="help">Passe o mouse numa carta para ver a praga se mexer.</p><div class="grid ccg">${Object.entries(EN).filter(([,d])=>!d.hide).map(([k,d])=>{const seen=META.seen.e[k];

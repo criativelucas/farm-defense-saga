@@ -50,7 +50,7 @@ function showHub(){
       ${plank('jardim','Estufa',gardenOpen()?'plante e colha':'vença Éden 1-4',!gardenOpen())}
       ${plank('minijogos','Minijogos',miniOpen('raposas')?trophies()+'/6 troféus':'vença 2 fases',!miniOpen('raposas'))}
       ${treeOwned()?plank('arvore','Árvore da Vida','nível '+META.garden.tree.lvl+'/10'):''}</div></div>
-    <div class="props">${prop('codex','Códex','#c8403a')}${prop('loja','Quitanda','#e8902a')}${shopOpen('cartas')?prop('pacotes','Pacotes','#9b5ae0','✦'):''}${prop('personagem','Lavrador','#e8b830')}${prop('missoes','Missões','#4faa4a',mr||'')}${prop('conquistas','Conquistas','#2aa8a0')}${prop('intro','Ajuda','#3a7ad8')}${prop('config','Ajustes','#7a8094')}</div>
+    <div class="props">${prop('codex','Códex','#c8403a')}${prop('loja','Quitanda','#e8902a')}${shopOpen('cartas')?prop('pacotes','Pacotes','#9b5ae0',packGifts()||''):''}${prop('personagem','Lavrador','#e8b830')}${prop('missoes','Missões','#4faa4a',mr||'')}${prop('conquistas','Conquistas','#2aa8a0')}${prop('intro','Ajuda','#3a7ad8')}${prop('config','Ajustes','#7a8094')}</div>
   </div>`);
   $('menu').classList.add('scene');paintCoins();barnArt();
   $('menu').querySelectorAll('canvas[data-prop]').forEach(c=>propIconTo(c,c.dataset.prop));
@@ -216,11 +216,11 @@ function levelWon(){
   const L=LEVELS[RUN.level],first=!META.done[L.id],treeBonus=1+(META.garden.tree.lvl||0)*.05;
   const reward=Math.round((first?60+L.n*20:30+L.n*5)*treeBonus),picked=Math.round(S.coins*treeBonus);
   META.coins+=reward+picked;META.done[L.id]=1;const stars=RUN.hp>=18?3:RUN.hp>=10?2:1;META.stars=META.stars||{};const newBest=stars>(META.stars[L.id]||0);META.stars[L.id]=Math.max(stars,META.stars[L.id]||0);
-  let card=null;const unl=UNLOCK_ORDER[L.n];if(first&&unl&&!META.unlocked.includes(unl)){META.unlocked.push(unl);card=mk(unl)}
+  let card=null;const unl=UNLOCK_ORDER[L.n];if(first&&unl&&!META.unlocked.includes(unl)){META.unlocked.push(unl);card=mk(unl)}if(first&&L.boss)META.gifts=(META.gifts||0)+1;
   saveMeta();MUS.mode='calm';mission('win',1);if(stars===3)mission('star3',1);
   // every win leaves a seedling of a tree you know in the greenhouse
   const known=META.unlocked.filter(k=>CARDS[k].type==='semente'),sprout=known.length?known[(Math.random()*known.length)|0]:null;if(sprout){const sk='t:'+sprout;META.garden.seeds[sk]=(META.garden.seeds[sk]||0)+1;saveMeta()}
-  const news=unlocksAfter(L.n).filter(([k])=>first&&(k==='bag'||k==='pest'||k==='sys'||k==='shop'||(k==='mode'&&L.l===3))).map(([,t])=>'Liberado · '+t);if(sprout&&gardenOpen())news.push('Uma muda de '+CARDS[sprout].name+' foi para a estufa do jardim.');if(L.id==='1-4')news.push('O Jardim foi liberado! Plante, regue e venda. Junte moedas para a semente da Árvore da Vida.');
+  const news=unlocksAfter(L.n).filter(([k])=>first&&(k==='bag'||k==='pest'||k==='sys'||k==='shop'||(k==='mode'&&L.l===3))).map(([,t])=>'Liberado · '+t);if(sprout&&gardenOpen())news.push('Uma muda de '+CARDS[sprout].name+' foi para a estufa do jardim.');if(first&&L.boss)news.push('Presente: um Pacote da Bênção na Tenda das Cartas');if(L.id==='1-4')news.push('O Jardim foi liberado! Plante, regue e venda. Junte moedas para a semente da Árvore da Vida.');
   if(L.id==='2-4')news.push('O modo Jornada foi liberado no menu.');
   const last=RUN.level===LEVELS.length-1,total=reward+picked;
   endScreen({win:true,eyebrow:`${WORLDS[L.wi].name} · ${L.id} · ${L.night?'Noite':'Dia'}`,title:'Vitória!',stars,

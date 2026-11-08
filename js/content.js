@@ -125,7 +125,9 @@ const ACH={
   mostarda:{name:'Fé como um grão',ref:'Mateus 17:20',desc:'Faça um grão de mostarda virar árvore.'},
   combo:{name:'Mil ao teu lado',ref:'Salmos 91:7',desc:'Faça um combo de 25.'},
   tribos:{name:'As 12 tribos',ref:'Gênesis 49:28',desc:'Guarde 12 cartas no celeiro.'},
-  jornada:{name:'Combati o bom combate',ref:'2 Timóteo 4:7',desc:'Vença a jornada inteira.'}
+  jornada:{name:'Combati o bom combate',ref:'2 Timóteo 4:7',desc:'Vença a jornada inteira.'},
+  perola:{name:'Pérola de grande valor',ref:'Mateus 13:46',desc:'Encontre uma carta lendária num pacote.'},
+  tesouros:{name:'Ajuntai tesouros no céu',ref:'Mateus 6:20',desc:'Complete a coleção das cartas de pacote.'}
 };
 
 // ---------- events: a story and a choice. Each option returns the result text.
@@ -170,8 +172,14 @@ Object.assign(CARDS,{
   fogoceu:{type:'bencao',name:'Fogo do Céu',cost:5,own:'elias',ref:'1 Reis 18:38',desc:'Consome a árvore onde você está e queima todo inimigo na tela com 25 de dano.'},
   celeiro:{type:'bencao',name:'Celeiros do Egito',cost:0,own:'jose',ref:'Gênesis 41:35',desc:'Guarda todo o seu maná. Ele volta 50% maior no começo da próxima onda.'},
   palmeira:{type:'bencao',name:'Sob a Palmeira',cost:3,own:'debora',ref:'Juízes 4:5',desc:'Todas as árvores atiram na hora e 50% mais rápido por 6s.'},
-  maraberto:{type:'bencao',name:'Estende a Mão',cost:3,own:'moises',ref:'Êxodo 14:21',desc:'No mar, abre as águas por 12s. Fora dele, congela todos os inimigos por 3s.'}
+  maraberto:{type:'bencao',name:'Estende a Mão',cost:3,own:'moises',ref:'Êxodo 14:21',desc:'No mar, abre as águas por 12s. Fora dele, congela todos os inimigos por 3s.'},
+  // found only in card packs
+  vento:{type:'bencao',name:'Vento do Senhor',cost:2,ref:'Números 11:31',desc:'Um vento forte empurra para trás todos os inimigos na tela.'},
+  uncao:{type:'bencao',name:'Óleo da Unção',cost:3,ref:'Salmos 23:5',desc:'O jardim recupera 4 de Vida e você recupera todos os corações.'},
+  nuvem:{type:'bencao',name:'Coluna de Nuvem',cost:4,ref:'Êxodo 13:21',desc:'Uma nuvem desce: todos os inimigos andam na metade da velocidade por 8s.'},
+  estrela:{type:'bencao',name:'Estrela da Manhã',cost:5,ref:'Apocalipse 22:16',desc:'Toda árvore sobe 1 nível e atira na hora. Você ganha 3 de maná.'}
 });
+Object.assign(SHORT,{vento:'Empurra todos os inimigos para trás.',uncao:'+4 de Vida e corações cheios.',nuvem:'Inimigos lentos por 8s.',estrela:'Toda árvore sobe 1 nível e atira.'});
 
 // ---------- neighbours: trees close to each other strengthen each other
 const PAIRS=[
