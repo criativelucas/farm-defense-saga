@@ -180,7 +180,7 @@ function saveRun(){if(RUN&&RUN.mode==='level')return;store.set('fds-run',{RUN,UI
 // ---------- choosing seeds before a level, like Plants vs. Zombies: the bank on top, your cards below, the level waiting on the right
 function showChoose(){
   const n=RUN.level,[mn,max]=levelBag(n),node=levelNode();
-  blankBattle(node.map,node.night===false);S.cam=MAP.ww-W;
+  blankBattle(node.map,node.night===false,lvVariant(node));S.cam=MAP.ww-W;
   const cnt={};node.waves.forEach(w=>w.list.forEach(([k])=>{if(!EN[k].hide)cnt[k]=(cnt[k]||0)+1}));
   Object.entries(cnt).forEach(([k,c])=>{for(let j=0;j<Math.min(c,3);j++){const d=EN[k],x0=MAP.ww-rnd(20,150),e={k,born:-9,x:x0,y:gy(x0),hp:1,max:1,t:rnd(0,9),flash:0,slow:0,frz:0,base:rnd(80,110),st:9};
     if(d.fly===1)e.y=gy(x0)-20;if(d.fly===2)e.y=e.base;S.en.push(e)}});

@@ -22,8 +22,11 @@ function gPlant(k,stage,t){// drawn at the pot's soil line, local pixels
   if(k==='oliva'){const h=[0,7,12,17][stage];r(-1,-h,2,h,'#7d6a5a');r(-3,-h+3,2,2,'#7d6a5a');blob(0,-h-3,4+stage*2,2+stage*2,'#4f6b48','#7f9a6e','#b8cf9a',23);
     if(stage===3)[[-5,-h-2],[4,-h-4],[0,-h],[-2,-h-7],[6,-h]].forEach(([a,b])=>{r(a,b,2,2,'#2a2a3a');r(a,b,1,1,'#6a6a8a')})}
 }
-function gPot(){r(-14,4,28,4,'#e8c870');r(-15,5,30,2,'#c8a050');for(let i=-13;i<14;i+=3)r(i,4,1,4,'#d8b060');// straw mat
-  r(-9,-1,18,2,'#4a2a1a');r(-10,-3,20,4,'#d07a4a');r(-10,-3,20,1,'#f09a6a');r(-8,1,16,8,'#b0603a');r(-8,1,2,8,'#d07a4a');r(-8,8,16,1,'#7a3a20')}
+function gPot(){// a terracotta pot on a little saucer, outlined like the sprites
+  r(-13,6,26,4,'#2a1408');r(-12,7,24,2,'#a0502a');r(-12,7,24,1,'#c87048');
+  r(-12,-5,24,5,'#2a1408');for(let y=0;y<9;y++){const q=y*.25|0;r(-10+q-1,y,20-2*q+2,1,'#2a1408')}
+  for(let y=0;y<8;y++){const q=y*.25|0;r(-10+q,y,20-2*q,1,'#c0603a');r(-10+q,y,2,1,'#e08050');r(8-q,y,2,1,'#8a3a20')}r(-8,4,16,1,'#8a3a20');
+  r(-11,-4,22,4,'#d87a4a');r(-11,-4,22,1,'#f8a070');r(-11,-1,22,1,'#a04a28');r(-9,-3,18,1,'#4a2a1a')}
 function gBubble(kind){r(-6,-12,13,11,'#ffffff');r(-7,-11,15,9,'#ffffff');r(-1,-1,3,2,'#ffffff');r(-7,-12,15,1,'#00000022');
   if(kind==='water'){r(-1,-10,2,2,'#4a9ad8');r(-2,-8,4,3,'#4a9ad8');r(-1,-8,1,1,'#bfe8ff')}
   else if(kind==='spray'){r(-3,-9,4,7,'#5aa84a');r(-2,-11,2,2,'#3a6a3a');r(1,-10,3,1,'#9a9aa8');r(4,-11,1,1,'#bfe8ff');r(4,-9,1,1,'#bfe8ff')}
@@ -38,19 +41,22 @@ function dropCoins(now){const G=META.garden;G.pots.forEach((p,i)=>{if(!p||!isTre
   if(gDrops.filter(d=>d.i===i).length>=4)return;p.coinAt=now+(mel?1800:25000);const gold=Math.random()<(mel?.25:.12),sp=GSPOTS[i];
   gDrops.push({i,x:sp.x+rnd(-14,14)*sp.s,y:sp.y+4*sp.s,vy:-2.5,yy:0,gold,t:0});sfx('coin')})}
 function gPick(d){META.coins+=d.gold?25:5;d.dead=1;saveMeta();sfx('coin');gParts.push({x:d.x,y:d.y-6,vx:0,vy:-1.2,g:0,t:.8,c:d.gold?'#ffe36a':'#e8e8f0',s:2,txt:'+'+(d.gold?25:5)});$('gcoins')&&($('gcoins').textContent=META.coins)}
-function drawGreenhouse(g){
-  // glass wall with white frames, sunlight, a garden outside
-  let gr=g.createLinearGradient(0,0,0,110);gr.addColorStop(0,'#c8ecf4');gr.addColorStop(1,'#eef8f0');g.fillStyle=gr;g.fillRect(0,0,GW,110);
-  for(let i=0;i<GW;i+=26)blob(i+10,88+hs(i,3)*8,16,12,'#8ac08a','#a8d8a0','#c8ecc0',i);for(let i=0;i<GW;i+=40)blob(i+20,70,14,18,'#7ab07a','#98c890','#b8e0b0',i+5);
-  g.globalAlpha=.35;for(let i=0;i<5;i++){g.fillStyle='#ffffff';g.beginPath();g.moveTo(40+i*100,0);g.lineTo(70+i*100,0);g.lineTo(130+i*100,110);g.lineTo(100+i*100,110);g.fill()}g.globalAlpha=1;
+// the greenhouse behind the pots: painted once (sky and trees through the glass, white frames, a stone floor, wooden shelves)
+let GH_BG=null;
+function greenhouseBG(){if(GH_BG)return GH_BG;const c=mkHD(GW,GH,2),B=layerBuf(c,'#e8f4ec',40,220,.5),{d,w,h,k}=B;
+  pSky(B,{sky:['#5ab0dc','#7ac4e4','#a0d8ea','#c8ecf2','#e8f6f0'],hor:140});pForest(B,-10,GW+10,108,11,3,'leaf',2);
+  const T=['#4a3424','#6a4a32','#8a6444','#a88058','#c49c70'].map(u32);
+  for(let Y=Math.floor(113*k);Y<h;Y++)for(let X=0;X<w;X++){const u=(X+.5)/k,v=(Y+.5)/k,row=Math.floor((v-113)/12),tx=(u+(row%2)*14)%28,ty=(v-113)%12;
+    let s=.62-(v-113)/(GH-113)*.3+(hs(Math.floor((u+(row%2)*14)/28),row)-.5)*.16+(fbm(u*.2,v*.2,3)-.5)*.14;if(tx<1||ty<1)s=.08;else if(tx<2||ty<2)s+=.12;d[Y*w+X]=rp(T,s,X,Y,2)}
+  putBuf(B);const keep=C;C=c.getContext('2d');
   for(let i=0;i<=GW;i+=60){r(i-2,0,4,110,'#f8faf8');r(i+1,0,1,110,'#c8d0c8')}for(const yy of[0,36,72]){r(0,yy,GW,4,'#f8faf8');r(0,yy+3,GW,1,'#c8d0c8')}
-  r(0,104,GW,8,'#e8ece8');r(0,111,GW,2,'#a8b0a8');
-  // floor: packed earth with gravel, darker toward the front
-  gr=g.createLinearGradient(0,113,0,GH);gr.addColorStop(0,'#a07a58');gr.addColorStop(1,'#6a4a32');g.fillStyle=gr;g.fillRect(0,113,GW,GH-113);
-  for(let i=0;i<420;i++){const px=hs(i,61)*GW,py=114+hs(i,62)*(GH-114);r(px,py,1+(i%3===0),1,i%2?'#c09a78':'#5a3c28')}
-  // white tables under each row
-  GROWS.forEach(rw=>{const y=rw.y+11*rw.s,h=7*rw.s;r(16,y-2,GW-32,h+2,'#f4f2ec');r(16,y-2,GW-32,1,'#ffffff');r(16,y+h,GW-32,2,'#b8b4a8');
-    for(const lx of[26,GW/2-4,GW-34]){r(lx,y+h+2,5,18*rw.s,'#e0ddd4');r(lx+4,y+h+2,1,18*rw.s,'#b8b4a8')}})}
+  r(0,104,GW,8,'#e8ece8');r(0,104,GW,1,'#ffffff');r(0,111,GW,2,'#a8b0a8');
+  GROWS.forEach(rw=>{const y=rw.y+11*rw.s,hh=7*rw.s;r(15,y-3,GW-30,hh+4,'#2a1408');r(16,y-2,GW-32,hh+2,'#a8703e');r(16,y-2,GW-32,1,'#d8a064');r(16,y+hh-1,GW-32,1,'#7a4a26');
+    for(let i=20;i<GW-24;i+=17)r(i,y+(i%3),6,.5,'#8a5a32');
+    for(const lx of[26,GW/2-4,GW-34]){r(lx-1,y+hh+1,7,18*rw.s+1,'#2a1408');r(lx,y+hh+1,5,18*rw.s,'#8a5a32');r(lx,y+hh+1,1,18*rw.s,'#b07a48')}});
+  C=keep;return GH_BG=c}
+function drawGreenhouse(g){g.drawImage(greenhouseBG(),0,0,GW,GH);
+  g.globalAlpha=.25;for(let i=0;i<5;i++){g.fillStyle='#ffffff';g.beginPath();g.moveTo(40+i*100,0);g.lineTo(70+i*100,0);g.lineTo(130+i*100,110);g.lineTo(100+i*100,110);g.fill()}g.globalAlpha=1}
 function drawGarden(){
   const cvs=$('gardc');if(!cvs){clearInterval(gLoop);gLoop=null;return}
   gT+=.05;const g=hdCtx(cvs,GW,GH,2);C=g;const G=META.garden,now=Date.now();G.pots.forEach(p=>{if(p){potAdvance(p);treeTick(p,now)}});dropCoins(now);
@@ -107,16 +113,8 @@ function gAct(i,ev){const G=META.garden,now=Date.now();
   if(gTool==='regar'||!gTool){if(p.stage<3&&!p.watered){p.watered=true;p.t0=now;saveMeta();sfx('heal');gBurst(i,14,['#7fc8ff','#bfe8ff'],0);mission('water',1);gardenBar();return}
     if(p.need==='water'){satisfy(p,i,'water');sfx('heal');gBurst(i,14,['#7fc8ff','#bfe8ff'],0);return}}
 }
-function gIcon(cvs,k){const g=hdCtx(cvs,32,32);C=g;
-  if(k==='regar'){r(6,14,16,11,'#7a8a9a');r(6,14,16,2,'#a0b0c0');r(22,16,6,2,'#7a8a9a');r(27,13,3,3,'#7a8a9a');r(10,9,8,2,'#5a6a7a');r(9,9,1,6,'#5a6a7a');r(18,9,1,6,'#5a6a7a');for(let i=0;i<3;i++)r(29+(i%2),18+i*3,1,2,'#7fc8ff')}
-  if(k==='adubo'){r(8,9,16,19,'#c8a870');r(8,9,16,3,'#e8d0a0');r(10,4,12,5,'#a88050');r(11,16,10,7,'#6a4a2a');r(14,14,4,2,'#5fae4a')}
-  if(k==='spray'){r(10,10,10,17,'#5aa84a');r(10,10,10,2,'#8ad070');r(12,6,6,4,'#3a6a3a');r(18,6,6,2,'#9a9aa8');for(let i=0;i<4;i++)r(25+i,4+i*2,1,1,'#bfe8ff')}
-  if(k==='harpa'){r(8,6,2,22,'#c9921a');r(8,6,16,2,'#c9921a');r(22,6,2,14,'#c9921a');r(8,26,10,2,'#c9921a');for(let i=11;i<22;i+=3)r(i,8,1,17-(i-11)*.6,'#fff6c0')}
-  if(k==='mel'){r(9,10,14,16,'#e8a020');r(9,10,14,2,'#ffd060');r(11,6,10,4,'#c8a870');r(12,14,8,6,'#ffd060');r(13,15,2,2,'#fff6c0')}
-  if(k==='luva'){r(10,12,12,14,'#e05a4a');r(8,14,3,6,'#e05a4a');for(let i=0;i<4;i++)r(11+i*3,6,2,7,'#e05a4a');r(10,24,12,3,'#f0c040')}
-  if(k==='vender'){disc(16,16,11,'#3a8a3a');disc(16,16,9,'#5fae4a');r(15,8,2,16,'#fff6c0');r(12,11,8,2,'#fff6c0');r(12,15,8,2,'#fff6c0');r(12,19,8,2,'#fff6c0')}
-  if(k.startsWith('seed:')){const sk=k.slice(5);r(9,27,14,2,'#00000030');g.save();g.translate(16,28);gPlant(sk,3,1);g.restore()}
-  C=x}
+function gIcon(cvs,k){if(k.startsWith('seed:')){const sk=k.slice(5);itemIconTo(cvs,'',()=>{C.save();C.translate(12,23);gPlant(sk,3,1);C.restore()});return}
+  itemIconTo(cvs,'g:'+k)}
 function gardenBar(){const G=META.garden,el=$('gbar');if(!el)return;const cnt={adubo:G.adubo,spray:G.spray||0,mel:G.mel||0};
   el.innerHTML=GTOOLS.map(([k,n,d])=>`<button type="button" class="gtool ${gTool===k?'on':''}" data-gt="${k}" title="${n}: ${d}"><canvas width="32" height="32" data-gi="${k}"></canvas><b>${n}</b>${k in cnt?`<i>${cnt[k]}</i>`:''}</button>`).join('')+
     `<button type="button" class="gtool shopb" id="gshop" title="Comprar sementes, mudas, adubo, spray e mel"><b>Loja ›</b></button>`;

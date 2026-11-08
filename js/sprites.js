@@ -7,44 +7,42 @@ function ball(P,cx,cy,rx,ry,dark,mid,lite){
   const row=(y0,ry2,rx2,c,ox=0)=>{for(let dy=-ry2;dy<=ry2;dy++){const w=Math.round(rx2*Math.sqrt(Math.max(0,1-dy*dy/(ry2*ry2+.01))));if(w>0)P(cx+ox-w,y0+dy,w*2,1,c)}};
   row(cy,ry,rx,dark);row(cy-1,ry-1,rx-1,mid,-1);row(cy-Math.round(ry*.45),Math.max(1,Math.round(ry*.3)),Math.max(1,Math.round(rx*.35)),lite,-Math.round(rx*.35))}
 
-// ---------- the gardener
+// ---------- the gardener: chunky pixels on the world grid like the monsters, facing p.face, shaded from the top left
 function gardenerBody(p){
-  const f=p.face,X=p.x,Y=p.y,moving=Math.abs(p.vx)>8&&p.on,fr=moving?(p.anim|0)%4:0,air=!p.on;
-  const pal=CHARS[RUN?RUN.char:'lavrador'].pal,tun=pal.tunic,tD=shade(tun,-.28),tL=shade(tun,.22);
-  const G=(dx,dy,w,h,c)=>{dx/=2;dy/=2;w/=2;h/=2;r(f>0?X+dx:X-dx-w,Y+dy,w,h,c)};
+  const f=p.face,X=Math.round(p.x),Y=Math.round(p.y),moving=Math.abs(p.vx)>8&&p.on,fr=moving?(p.anim|0)%4:0,air=!p.on;
+  const pal=CHARS[RUN?RUN.char:'lavrador'].pal,tun=pal.tunic,tD=shade(tun,-.3),tL=shade(tun,.25),hair=pal.hair||'#5a3a2a',boot='#3a2418',pant='#5a4030';
   const R=(dx,dy,w,h,c)=>r(f>0?X+dx:X-dx-w,Y+dy,w,h,c);
-  const idle=!moving&&!air&&Math.sin(S.t*2.6)>.5?1:0,B=((fr===1||fr===3)?-1:0)+(air?-2:0)+idle;
+  const idle=!moving&&!air&&Math.sin(S.t*2.6)>.5?1:0,B=((fr===1||fr===3)?-1:0)+(air?-1:0)+idle;
   // legs and boots
-  if(air){G(-4,-9,3,5,'#4a3428');G(1,-8,3,5,'#4a3428');G(-5,-5,4,2,'#2a1810');G(1,-4,4,2,'#2a1810')}
-  else{const L=[[-4,0],[-6,1],[-4,0],[-2,0]][fr],F=[[1,0],[3,0],[1,0],[-1,1]][fr];
-    for(const[lx,lift]of[L,F]){G(lx,-9,3,8-lift,'#4a3428');G(lx,-9,1,8-lift,'#3a2820');G(lx-1,-2-lift,5,2,'#2a1810');G(lx+2,-2-lift,2,1,'#4a2e1e')}}
-  // back arm, tunic, belt
-  G(-8,-22+B,3,9,tD);G(-8,-14+B,3,2,SKD);
-  G(-6,-23+B,12,14,tun);G(-6,-23+B,2,14,tD);G(4,-22+B,1,11,tL);G(-7,-11+B,14,2,tD);
-  if(pal.coat){['#f7c948','#2a5bd7','#5fe08a','#e0284a'].forEach((c,i)=>G(-6,-21+B+i*3,12,1,c))}
-  G(-6,-15+B,12,2,'#5a3420');G(1,-15+B,2,2,'#e0b050');
-  // head
-  G(-4,-33+B,9,10,SK);G(-4,-24+B,9,1,SKD);G(-4,-33+B,1,9,SKD);G(-2,-29+B,2,3,SKD);
-  G(3,-29+B,1,2,'#1a0e0a');G(2,-31+B,3,1,shade(pal.hair||'#5a3a2a',-.2));G(5,-28+B,1,2,SKD);G(2,-27+B,1,1,'#f09a80');
-  if(pal.beard){G(-1,-27+B,7,4,pal.beard);G(0,-23+B,5,1,pal.beard);G(2,-26+B,2,1,'#8a4a3a')}else G(2,-25+B,2,1,'#8a4a3a');
-  const hy=B+(p.vy<-60?-3:p.vy<0?-1:0)+(moving&&fr===2?-1:0);
-  if(pal.hat){G(-5,-32+B,2,5,pal.hair||'#5a3a2a');G(-9,-34+hy,18,2,'#d9b45a');G(-9,-34+hy,18,1,'#f0d488');G(-4,-38+hy,9,4,pal.hat);G(-4,-35+hy,9,1,pal.band);G(-3,-38+hy,3,1,shade(pal.hat,.25));
-    if(moving||air)G(-10,-33+hy+(fr%2),1,2,'#d9b45a')}
-  else{G(-5,-35+hy,10,3,pal.hair);G(-5,-33+hy,3,7,pal.hair);G(3,-33+hy,3,1,pal.hair);G(-3,-35+hy,3,1,shade(pal.hair,.25));
-    if(pal.scarf){G(-5,-36+hy,11,4,pal.scarf);G(-7,-33+hy,3,9+(moving?fr%2:0),pal.scarf);G(-4,-36+hy,3,1,shade(pal.scarf,.3))}}
-  // front arm and tool (tools are drawn on the world grid, which reads well at this size)
-  if(p.slam){R(0,-26+B/2,1,12,'#8a5236');R(-1,-27+B/2,3,1,'#9aa0b0');R(-1,-26+B/2,1,2,'#9aa0b0');G(-4,-31+B,3,5,SK);G(2,-31+B,3,5,SK)}
+  if(air){R(-3,-5,2,3,pant);R(1,-4,2,3,pant);R(-3,-3,3,1,boot);R(1,-2,3,1,boot)}
+  else{const L=[[-3,0],[-4,1],[-3,0],[-2,0]][fr],F=[[1,0],[2,0],[1,0],[0,1]][fr];
+    for(const[lx,lift]of[L,F]){R(lx,-4,2,3-lift,pant);R(lx,-1-lift,3,1,boot)}}
+  // back arm, tunic with a lit front edge and a shaded back, belt with a buckle
+  R(-4,-10+B,1,4,tD);R(-4,-6+B,1,1,SKD);
+  R(-3,-11+B,6,7,tun);R(-3,-11+B,1,7,tD);R(2,-10+B,1,5,tL);R(-3,-5+B,6,1,tD);
+  if(pal.coat)['#f7c948','#2a5bd7','#5fe08a'].forEach((c,i)=>R(-3,-10+B+i*2,6,1,c));
+  R(-3,-7+B,6,1,'#5a3420');R(0,-7+B,1,1,'#e0b050');
+  // head: skin, an eye toward the front, a blush, hair at the back
+  R(-2,-17+B,5,6,SK);R(-2,-12+B,5,1,SKD);R(-2,-17+B,1,5,SKD);R(1,-15+B,1,1,INK);R(2,-13+B,1,1,'#f09a80');R(-1,-14+B,1,1,SKD);
+  if(pal.beard){R(0,-13+B,3,2,pal.beard);R(1,-11+B,1,1,pal.beard)}
+  const hy=B+(p.vy<-60?-1:0);
+  if(pal.hat){R(-3,-16+B,1,3,hair);R(-4,-18+hy,9,1,'#d9b45a');R(-4,-18+hy,9,1,'#e8c870');R(-2,-21+hy,6,3,pal.hat);R(-2,-19+hy,6,1,pal.band);R(-2,-21+hy,2,1,shade(pal.hat,.3));
+    if(moving||air)R(-5,-17+hy+(fr%2),1,1,'#d9b45a')}
+  else if(pal.scarf){R(-3,-18+hy,6,2,pal.scarf);R(-3,-16+hy,1,4,pal.scarf);R(-4,-14+hy,1,4+(moving?fr%2:0),pal.scarf);R(-2,-18+hy,2,1,shade(pal.scarf,.3))}
+  else{R(-3,-18+hy,6,2,hair);R(-3,-16+hy,2,4,hair);R(-1,-18+hy,2,1,shade(hair,.3))}
+  // front arm and tool (tools keep their world-grid drawings)
+  if(p.slam){R(0,-13+B,1,6,'#8a5236');R(-1,-14+B,3,1,'#9aa0b0');R(-2,-15+B,1,3,SK);R(2,-15+B,1,3,SK)}
   else{const sw=moving?[0,1,0,-1][fr]:0,sv=p.swing>0?1-p.swing/.22:-1,wk=(typeof META!=='undefined'&&META.weapon)||'enxada',by=B/2;
     if(sv>=0&&wk!=='arado'){const a=-1.7+sv*2.8;for(let j=0;j<12;j++)R(2+Math.cos(a)*j,-10+by+Math.sin(a)*j,1,1,'#8a5236');R(1+Math.cos(a)*12,-11+by+Math.sin(a)*12,3,3,'#d0d0d8')}
     else TOOLS[wk](R,sw,by);
-    G(1,-21+B,3,6,tun);G(1,-21+B,3,1,tL);G(2,-16+B,3,3,SK);G(2,-14+B,3,1,SKD)}
+    R(1,-10+B,2,3,tun);R(1,-10+B,2,1,tL);R(1,-7+B,2,2,SK)}
 }
 function drawGardener(p){
   const X=p.x,Y=p.y;
   if(p.faint>0){r(X-7,Y-1,14,1,'#0004');r(X-6,Y-4,10,4,CHARS[RUN?RUN.char:'lavrador'].pal.tunic);r(X+4,Y-5,4,4,SK);r(X-8,Y-3,3,2,'#4a3428');for(let i=0;i<3;i++){const a=S.t*5+i*2.1;r(X+6+Math.cos(a)*5,Y-9+Math.sin(a)*2,1,1,'#ffe36a')}return}
   if(p.inv>0&&(S.t*20|0)%2)return;
   C.save();C.translate(X,Y);C.scale(1/p.sq**.5,p.sq);C.translate(-X,-Y);
-  OV=INK;for(const[ox,oy]of[[-.5,0],[.5,0],[0,-.5],[0,.5]]){C.translate(ox,oy);gardenerBody(p);C.translate(-ox,-oy)}OV=null;
+  OV=INK;for(const[ox,oy]of[[-1,0],[1,0],[0,-1],[0,1]]){C.translate(ox,oy);gardenerBody(p);C.translate(-ox,-oy)}OV=null;
   gardenerBody(p);C.restore();
   if(p.stun>0)for(let i=0;i<3;i++){const a=S.t*6+i*2.1;r(X+Math.cos(a)*6,Y-22+Math.sin(a)*2,1,1,'#ffe36a')}
 }
@@ -117,7 +115,7 @@ const SPR={
     P(-4,-6,9,1,'#c9a24a');feet(P,t,-3,1,R[0],6)}
 };
 // ---------- the golden calf and the three bosses
-const H2=e=>(dx,dy,w,h,c)=>r(e.x+dx/2,e.y+dy/2,w/2,h/2,c);
+const H2=e=>{const X=Math.round(e.x),Y=Math.round(e.y);return(dx,dy,w,h,c)=>r(X+Math.round(dx/2),Y+Math.round(dy/2),Math.max(1,Math.round(w/2)),Math.max(1,Math.round(h/2)),c)};
 function frogH(P,cx,t,c1,c2){const hop=Math.round(Math.max(0,Math.sin(t*5))*8),y=-hop;
   P(cx+3,y-4,7,4,c2);P(cx-9,y-3,5,3,c2);ball(P,cx,y-9,9,6,c2,c1,shade(c1,.35));
   for(const ex of[-8,-1]){P(cx+ex,y-18,6,5,c1);P(cx+ex+1,y-17,4,3,'#ffffff');P(cx+ex+1,y-16,2,2,'#111')}

@@ -28,8 +28,9 @@ function newRelic(){const free=Object.keys(RELICS).filter(k=>!RUN.relics.include
 function unlockAch(id){if(META.ach[id])return;META.ach[id]=1;saveMeta();toast('Conquista: '+ACH[id].name,ACH[id].ref);sfx('ach')}
 
 // ---------- battle setup
-function blankBattle(mapId,day=false){
-  MAPS[mapId]._fallen=false;buildMap(mapId,day);
+const lvVariant=n=>{const m=/^\d+-(\d)/.exec(n&&n.level||'');return m?+m[1]-1:0};
+function blankBattle(mapId,day=false,variant=0){
+  MAPS[mapId]._fallen=false;buildMap(mapId,day,variant);
   S={t:0,state:'title',node:null,wi:0,waves:[],q:[],qt:0,total:1,done:0,between:12,cam:0,mana:6,
      en:[],tw:MAP.slots.map(()=>null),proj:[],eproj:[],parts:[],pops:[],drops:[],fx:[],shake:0,stop:0,combo:0,comboT:0,comboShow:0,comboN:0,lifeHit:0,
      rain:0,talents:0,talentsDue:0,fullT:0,setMult:1,setTier:0,fruits:new Set(),bolt:0,night:0,wet:0,sand:0,sandT:20,sandOn:0,
@@ -40,7 +41,7 @@ function blankBattle(mapId,day=false){
   S.p.y=gy(60);
 }
 function startBattle(node){
-  MUS.scene=null;blankBattle(node.map,node.night===false);
+  MUS.scene=null;blankBattle(node.map,node.night===false,lvVariant(node));S.wx=(WEATHER[node.map]||[])[lvVariant(node)]||null;
   S.node=node;S.waves=node.waves;S.state='prep';S.between=12;
   S.mana=6+(relic('arca')?4:0)+2*((META.upg&&META.upg.mana)||0);S.p.maxhp=S.p.hp=3+((META.upg&&META.upg.hearts)||0)+((META.upg&&META.upg.treeHearts)||0)+tl('hearts');S.mana+=tl('mana');S.levelNight=node.night??null;
   S.draw=rshuffle(RUN.deck);S.hand=S.draw.splice(0,RUN.handSize);
@@ -106,6 +107,7 @@ function damage(e,d,src){
   d*=1+Math.min(S.combo,25)*.02;
   e.hp-=d;e.flash=.07;sfx('hit');if(!EN[e.k].boss&&!EN[e.k].elite)e.x+=Math.min(3,d*.25);vfx('spark',e.x,ecy(e),{n:2});
   if(d>=8)S.stop=Math.max(S.stop,.035);
+  if(EN[e.k].boss||EN[e.k].elite){if(d>=3){S.stop=Math.max(S.stop,.045);shake(Math.min(5,1.5+d*.15))}vfx('spark',e.x+rnd(-6,6),ecy(e)+rnd(-8,8),{n:4})}
   pop(e.x+rnd(-3,3),ecy(e)-6,(d<1?d.toFixed(1):Math.round(d))+(strong?'!':''),strong?'#ffe14a':e.shield?'#9ab0ff':'#fff4dc',strong?11:d>=6?9:7);
   const D=EN[e.k];
   if(D.boss&&!e.ph2&&e.hp>0&&e.hp<e.max/2){e.ph2=1;shake(8);flash(.35,'255,80,80');banner(D.name,{golias:'Golias se enfurece',farao:'O Faraó endurece o coração',leviata:'O Leviatã se agita'}[e.k])}
@@ -125,8 +127,16 @@ function kill(e){
   if(d.boss&&RUN){RUN.stats.bosses++;unlockAch(e.k);if(e.k==='golias'&&!META.chars.davi){META.chars.davi=1;saveMeta();toast('Personagem liberado: Davi','1 Samuel 17:40')}if(e.k==='farao'&&!META.chars.moises){META.chars.moises=1;saveMeta();toast('Personagem liberado: Moisés','Êxodo 14:21')}}
   if(META.stats.kills>=490)unlockAch('setenta');
 }
+// the colors each monster breaks into: body, shadow, light
+const CHUNKC={odio:['#e8303f','#9a1428','#ff8a7a'],inveja:['#68cc34','#2a6a18','#b8f07a'],discordia:['#ff8a2c','#a8420e','#ffd080'],contendinha:['#d0662a','#7a3010','#f0a060'],
+  contenda:['#e08a34','#8a4410','#ffc070'],gula:['#9040d0','#4a1a7a','#c890ff'],feitico:['#2a8ac8','#1a4a7a','#7ad0ff'],ambicao:['#d8404a','#8a1a3a','#f7c948'],
+  embriaguez:['#f0609a','#9a2a5a','#ffb0d0'],impureza:['#b0b030','#5a5a10','#e8e870'],faccoes:['#3a6ae0','#1a3a8a','#90b8ff'],ira:['#ff7a28','#a8380e','#ffd34a'],
+  ciume:['#3ad0a8','#1a6a5a','#a0f8e0'],heresia:['#7a4ad0','#3a1a6a','#f7c948'],bezerro:['#f0b838','#a06a10','#fff4b0'],golias:['#c9a24a','#6a5030','#d9a07a'],
+  farao:['#d9a521','#2a5bd7','#c78b5a'],leviata:['#2a6a7a','#1a4250','#5af0c0']};
 function deathFx(e){
-  S.fx.push({k:'corpse',e:{...e},t:0,max:.3});onoma(e.x,ecy(e)-4,EN[e.k].boss||EN[e.k].elite?'big':'kill',EN[e.k].boss||EN[e.k].elite?1:.18);vfx('puff',e.x,ecy(e),{n:5});vfx('spark',e.x,ecy(e),{n:6});
+  S.fx.push({k:'corpse',e:{...e},t:0,max:.3});
+  {const D=EN[e.k],big=D.boss||D.elite,cc=CHUNKC[e.k]||[D.glow,'#2a1a1a','#ffffff'],n=big?46:Math.min(18,6+D.w);for(let i=0;i<n;i++){const a=rnd(-Math.PI,0),v=rnd(40,big?200:120);
+    S.parts.push({x:e.x+rnd(-D.w/2,D.w/2),y:ecy(e)+rnd(-D.h/3,D.h/3),vx:Math.cos(a)*v,vy:Math.sin(a)*v-40,g:380,life:rnd(.5,big?1.4:.9),max:big?1.4:.9,c:cc[i%3],s:big&&i%3===0?3:2})}}onoma(e.x,ecy(e)-4,EN[e.k].boss||EN[e.k].elite?'big':'kill',EN[e.k].boss||EN[e.k].elite?1:.18);vfx('puff',e.x,ecy(e),{n:5});vfx('spark',e.x,ecy(e),{n:6});
   const X=e.x,Y=ecy(e),P=(n,c,o)=>{for(let i=0;i<n;i++){const a=rnd(0,Math.PI*2),v=rnd(o.sp*.3,o.sp);
     S.parts.push({x:X+rnd(-3,3),y:Y+rnd(-3,3),vx:Math.cos(a)*v,vy:Math.sin(a)*v+(o.up||0),g:o.g,life:rnd(o.l*.5,o.l),max:o.l,c:pick(c),s:o.s||1,sway:o.sway,a:o.a})}};
   switch(e.k){
@@ -196,7 +206,8 @@ const slotAt=()=>MAP.slots.findIndex(s=>Math.abs(s.x-S.p.x)<12&&Math.abs(s.y-S.p
 function tmult(t){let m=(t.plus?1.3:1)*(t.mods?t.mods.dmg:1)*S.setMult*(t.soil==='boa'?1.3:t.soil==='espinho'?.6:1)*(t.rare?1.5:1)*(t.kinds.length>1?.8:1)*(1+.2*(t.lvl||0))*(t.branch==='a'?1.7:1)*(1+.15*cardLv(t.kinds[0]))*(1+.08*tl('dmg'));
   if(relic('lampada')&&S.night>.3)m*=1.1;return m}
 function nearest(sx,sy,range){let best=null,bd=range;for(const e of S.en){if(e.dive>0)continue;const d=Math.hypot(e.x-sx,ecy(e)-sy);if(d<bd&&e.hp>0){bd=d;best=e}}return best}
-function lob(sx,sy,e,kind,dmg,src,T=.55){const g=300,tx=e.x-EN[e.k].spd*1.2*T*(e.frz>0?0:e.slow>0?.5:1),ty=ecy(e);
+const SHOTC={seed:['#e8e070','#ffffff'],date:['#d9802a','#ffc080'],almond:['#e8d0b0','#ffd0e8'],fig:['#a04a8a','#7ac050'],oil:['#d9c24a','#fff3a0'],grape:['#9b4be0','#d8a8ff'],mustard:['#e8e070','#fff']};
+function lob(sx,sy,e,kind,dmg,src,T=.55){const g=300,tx=e.x-EN[e.k].spd*1.2*T*(e.frz>0?0:e.slow>0?.5:1),ty=ecy(e);burst(sx,sy,4,SHOTC[kind]||['#fff6c0'],50,0,.22);
   S.proj.push({x:sx,y:sy,vx:(tx-sx)/T,vy:(ty-sy)/T-.5*g*T,g,kind,dmg,src,life:2})}
 function beam(xx,w,d){S.fx.push({k:'beam',x:xx,w,t:0,max:.4});shake(4);sfx('beam');flash(.22,'255,80,140');
   for(const e of S.en)if(Math.abs(e.x-xx)<w){burst(e.x,ecy(e),7,['#e0284a','#ff9aa8','#ffffff'],80,320,.5);damage(e,d,'roma')}}
@@ -393,7 +404,7 @@ function updStory(dt){
   if(S.floodIn>0){S.floodIn-=dt;if(S.floodIn<=0){S.flood=6;banner('O dilúvio','Só a Arca protege');sfx('wind');MAP.slots.forEach((s,i)=>{const t=S.tw[i];if(t&&!(t.ark>0))t.stun=6})}}
   S.flood=Math.max(0,S.flood-dt);
 }
-function fallWalls(){S.fallen=true;MAP._fallen=true;C=GROUND.getContext('2d');C.clearRect(0,0,MAP.ww,H);drawGround();MAP.homeDraw();C=x;
+function fallWalls(){S.fallen=true;MAP._fallen=true;C=GROUND.getContext('2d');C.clearRect(0,0,MAP.ww,H);drawGround();outlinedGround(()=>MAP.homeDraw());C=x;
   shake(14);flash(.5,'255,220,150');sfx('horn');banner('As muralhas caíram','Josué 6:20');
   MAP.plats.forEach(pl=>{if(pl.wall)burst(pl.x+pl.w/2,pl.y+20,20,['#8a5c3a','#b88a5a','#ecd090'],120,300,.9,2)});
   for(const e of S.en){damage(e,20);e.frz=3}}

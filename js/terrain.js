@@ -13,7 +13,7 @@ function growProf(M){const seg=M.seg,onPlat=s=>M.plats.some(p=>Math.abs(s.y-p.y)
 function buildProfile(){const M=MAP,P=M.prof||(M.prof=growProf(M)),n=Math.ceil(M.ww*2)+2,T=new Float32Array(n);let i=1;
   for(let j=0;j<n;j++){const u=j/2;while(i<P.length-1&&u>=P[i][0])i++;const[a,ya]=P[i-1],[b,yb]=P[i];T[j]=u<=a?ya:u>=b?yb:ya+(yb-ya)*sstep((u-a)/(b-a))}
   M.gyT=T;M.flats=[];for(let k=1;k<P.length;k++)if(P[k][1]===P[k-1][1]&&P[k][0]-P[k-1][0]>=16)M.flats.push([P[k-1][0],P[k][0],P[k][1]]);
-  M.slots.forEach(s=>{if(!M.plats.some(p=>Math.abs(s.y-p.y)<1&&s.x>=p.x-2&&s.x<=p.x+p.w+2))s.y=gy(s.x)})}
+  M.slots.forEach(s=>{if(s.pl==null)s.y=gy(s.x)})}
 // how far an island's earth hangs below its top at x: a rounded wedge with a few stalactite rocks
 function islandDepth(pl,u){if(pl.wall)return 4;const cx=pl.x+pl.w/2,hw=pl.w/2+2,q=(u-cx)/hw;if(Math.abs(q)>=1)return 0;
   const k=Math.floor(u/1.5);return(8+pl.w*.3)*Math.pow(1-q*q,.65)*(.78+.3*vn(u*.28,pl.x|0))+(hs(k,pl.x|0)>.8&&Math.abs(q)<.6?2+hs(k,pl.y|0)*5:0)}
@@ -47,7 +47,7 @@ function drawGround(){
     for(let t=0;t<L;t+=.5){const px=rx+Math.sin(t*.35+i)*1.6;dot(B,px,y0+t,rc);if(t<L*.6&&hs(i,(t*2)|0)>.86)for(let b=1;b<4;b++)dot(B,px+b*.5*(i%2?1:-1),y0+t+b*.5,rl)}}}
   // floating islands: grass or sand on top, a tapering wedge of earth, a dark rim underneath, roots hanging
   M.plats.forEach((pl,pi)=>{if(pl.wall)return;const cx=pl.x+pl.w/2,hw=pl.w/2+2;
-    for(let X=Math.floor((pl.x-2)*k);X<Math.ceil((pl.x+pl.w+2)*k);X++){if(X<0||X>=w)continue;const u=(X+.5)/k,dep=islandDepth(pl,u);if(dep<=0)continue;const q=(u-cx)/hw,
+    for(let X=Math.floor((pl.x-2)*k);X<Math.ceil((pl.x+pl.w+2)*k);X++){if(X<0||X>=w)continue;const u=(X+.5)/k,dep=Math.min(islandDepth(pl,u),G(u)-pl.y-5);if(dep<=0)continue;const q=(u-cx)/hw,
       capH=grassy?2.4+vn(u*.4,pi+3)*1.6:1.6,drip=grassy&&hs(X>>1,pi+41)>.78?1+hs(X>>1,pi+42)*3:0,bump=grassy?vn(u*.8,pi+5)*1.5:0;
       for(let Y=Math.floor((pl.y-bump)*k);Y<Math.ceil((pl.y+dep)*k);Y++){if(Y<0||Y>=h)continue;const v=(Y+.5)/k,dd=v-pl.y;let c;
         if(dd<capH)c=rp(lip,(dd<0?.9:.86-dd/capH*.42)-q*.12,X,Y,2.2);else if(dd<capH+drip+.6)c=rp(lip,.04,X,Y);
@@ -70,7 +70,7 @@ function drawGround(){
     r(pl.x+2,pl.y,pl.w-4,g2-pl.y,'#8a5c3a');for(let j=pl.y+4;j<g2;j+=5){r(pl.x+2,j,pl.w-4,1,'#6a4228');for(let i=pl.x+2+((j/5|0)%2)*5;i<pl.x+pl.w-2;i+=10)r(i,j-4,1,4,'#6a4228')}
     r(pl.x+2,pl.y,1,g2-pl.y,'#b88a5a');r(pl.x+pl.w-3,pl.y,1,g2-pl.y,'#5a3420');
     for(let i=0;i<pl.w;i+=T0){const last=i+T0>=pl.w,px=last?pl.x+pl.w-T0:pl.x+i,v=hs(i,pl.y)*3|0;st(i===0?TI.capL:last?TI.capR:TI.cap+v,px,pl.y);st(i===0?TI.underL:last?TI.underR:TI.under+(v&1),px,pl.y+T0)}});
-  decorate(near);
+  outlinedGround(()=>decorate(near));
 }
 
 // ---------- decoration baked into the ground: what grows and lies around differs from world to world
@@ -81,7 +81,7 @@ const DECOR={
 function decorate(near){const M=MAP,P=M.pal,kinds=DECOR[MAPID]||DECOR.eden,G=gy,leaf=[shade(P.top2,-.45),P.top2,P.top1];
   const bad=x0=>x0<46||x0>M.ww-6||near(x0)||inWater(x0)||(M.sea&&x0>M.sea[0]-6&&x0<M.sea[1]+6)||Math.abs(G(x0+3)-G(x0-3))>3||
     M.plats.some(pl=>pl.wall&&x0>pl.x-4&&x0<pl.x+pl.w+4)||(MAPID==='eden'&&Math.abs(x0-530)<16)||(MAPID==='sinai'&&Math.abs(x0-470)<16);
-  for(let x0=50,i=0;x0<M.ww-8;x0+=7+hs(i,301)*13,i++){if(bad(x0)||hs(i,302)<.25)continue;decor(kinds[(hs(i,303)*kinds.length)|0],x0,G(x0),i,leaf)}
+  const V=(M.variant||0)*977;for(let x0=50,i=0;x0<M.ww-8;x0+=7+hs(i+V,301)*13,i++){if(bad(x0)||hs(i+V,302)<.25)continue;decor(kinds[(hs(i+V,303)*kinds.length)|0],x0,G(x0),i+V,leaf)}
   M.plats.forEach((pl,pi)=>{if(pl.wall)return;for(const ex of[pl.x+3,pl.x+pl.w-4]){if(M.slots.some(s=>Math.abs(s.x-ex)<10&&Math.abs(s.y-pl.y)<1))continue;decor(kinds[(hs(pi,ex|0)*kinds.length)|0],ex,pl.y,pi+50,leaf)}})}
 function decor(t,X,Y,s,leaf){const R=(dx,dy,w,h,c)=>r(X+dx,Y+dy,w,h,c);
   if(t==='bush'){const z=3+hs(s,1)*3;blob(X,Y-z*.7,z+1|0,z*.8|0,leaf[0],leaf[1],leaf[2],s);if(hs(s,2)>.5)for(let i=0;i<3;i++)R(-z+hs(s,i+3)*z*2,-z*1.1+hs(s,i+6)*z,1,1,['#ff4f7b','#ffe36a','#c58cff'][(s+i)%3])}
@@ -104,3 +104,35 @@ function drawGFalls(){for(const f of MAP.gfalls||[]){if(f.x<S.cam-10||f.x>S.cam+
   for(let j=0;j<f.w;j+=.5)for(let n=0;n<2;n++){const yy=f.y0+((S.t*40+hs(j*2|0,n+1)*h+n*h/2)%h);r(f.x+j,yy,.5,Math.min(3,f.y1-yy),'#ffffff')}
   x.globalAlpha=1;for(let n=0;n<4;n++)if(Math.sin(S.t*7+n*1.7+f.x)>0)r(f.x-1+hs(n,f.x|0)*(f.w+2),f.y1-1-hs(n+3,f.x|0)*2.5,1,.5,'#ffffff');
   if(Math.random()<.05)S.parts.push({x:f.x+rnd(0,f.w),y:f.y1-1,vx:rnd(-12,12),vy:rnd(-30,-12),g:120,life:.5,max:.5,c:'#bfe8ff',s:1})}}
+// draw something onto the ground canvas with a dark outline around it, like the sprites
+function outlinedGround(fn){const keep=C,off=mkHD(MAP.ww,H),g=off.getContext('2d');C=g;try{fn()}finally{C=keep}
+  const sil=mkHD(MAP.ww,H),s=sil.getContext('2d');s.setTransform(1,0,0,1,0,0);s.drawImage(off,0,0);s.globalCompositeOperation='source-in';s.fillStyle='#1a0c10';s.fillRect(0,0,sil.width,sil.height);
+  for(const[a,b]of[[-1,0],[1,0],[0,-1],[0,1]])C.drawImage(sil,a,b,MAP.ww,H);C.drawImage(off,0,0,MAP.ww,H)}
+
+// ---------- each of a world's four levels has its own lay of the land. The first keeps the hand-made layout; the
+// others raise a mound or two on long flats (never under a tree slot) and shift the islands, always within jump reach.
+function varyTerrain(v){const M=MAP;
+  if(!M.base){if(!M.prof)M.prof=growProf(M);
+    M.slots.forEach(s=>{const i=M.plats.findIndex(p=>Math.abs(s.y-p.y)<1&&s.x>=p.x-2&&s.x<=p.x+p.w+2);if(i>=0){s.pl=i;s.dx=s.x-M.plats[i].x}});
+    M.base={plats:M.plats.map(p=>({...p})),prof:M.prof.map(n=>[...n]),slots:M.slots.map(s=>({x:s.x,y:s.y}))}}
+  M.plats=M.base.plats.map(p=>({...p}));M.prof=M.base.prof.map(n=>[...n]);M.slots.forEach((s,i)=>{s.x=M.base.slots[i].x;s.y=M.base.slots[i].y});
+  if(!v)return;const P=M.prof,free=m=>m>70&&!M.slots.some(s=>s.pl==null&&Math.abs(s.x-m)<26)&&!inWater(m)&&!(M.sea&&m>M.sea[0]-30&&m<M.sea[1]+30)&&
+    !(MAPID==='eden'&&Math.abs(m-530)<30)&&!(MAPID==='sinai'&&Math.abs(m-470)<30)&&!M.plats.some(p=>p.wall&&m>p.x-24&&m<p.x+p.w+24);
+  let made=0;for(let i=0;i<P.length-1&&made<2;i++){const[a,y]=P[i],[b,y2]=P[i+1];if(y!==y2||b-a<64)continue;
+    for(let tries=0;tries<6;tries++){const m=a+22+hs(v*13+i,tries)*(b-a-44);if(!free(m))continue;const hh=5+hs(v*7+i,3)*5;P.splice(i+1,0,[m-18,y],[m,y-hh],[m+18,y]);made++;i+=3;break}}}
+function varyIslands(v){const M=MAP;
+  if(v){const P=M.plats;P.forEach((pl,i)=>{if(pl.wall)return;const h1=hs(v*31+i,7),h2=hs(v*17+i,9);let nx=clamp(pl.x+Math.round((h1-.5)*22),24,M.ww-pl.w-8);
+      for(const q of P)if(q!==pl&&nx<q.x+q.w+12&&nx+pl.w>q.x-12)nx=pl.x;pl.x=nx;
+      let low=1e9;for(let x0=pl.x;x0<=pl.x+pl.w;x0+=2)low=Math.min(low,gy(x0));pl.y=Math.round(clamp(pl.y+[0,-6,6,-4,4][(h2*5)|0],low-46,low-28))});
+    if(M.pal.grass){let n=0;P.forEach((pl,i)=>{delete pl.fall;const h=hs(v*5+i,11);if(!pl.wall&&h>.62&&n<2){pl.fall=h>.81?'L':'R';n++}})}}
+  M.slots.forEach(s=>{if(s.pl!=null){const pl=M.plats[s.pl];s.x=pl.x+s.dx;s.y=pl.y}})}
+// ---------- weather by level: [first, second, third, fourth]
+const WEATHER={eden:[null,null,'petals','rain'],jerico:['wind',null,'sand',null],mar:['wind','mist','mist',null],sinai:[null,'rain','sand','rain'],
+  babel:['sand',null,'wind','sand'],getsemani:['mist','rain','mist','mist'],tumulo:['petals']};
+function drawWeather(){const w=S.wx;if(!w||CFG.lite&&w!=='rain')return;const t=S.t,loop=(v,m)=>((v%m)+m)%m;
+  if(w==='rain'){x.globalAlpha=.55;for(let i=0;i<70;i++){const sx=loop(hs(i,1)*W*1.3-t*90-i*7,W+40)-20,sy=loop(hs(i,2)*H+t*260,H+20)-10;r(sx,sy,.5,4,'#bfe0ff');r(sx-.5,sy+4,.5,2,'#bfe0ff')}
+    x.globalAlpha=1;x.fillStyle='rgba(40,60,100,.12)';x.fillRect(0,0,W+1,H);if(Math.random()<.4){const sx=S.cam+rnd(0,W);if(!inWater(sx))vfx('splash',sx,gy(sx))}}
+  else if(w==='wind'){for(let i=0;i<22;i++){const sp=50+hs(i,3)*60,sx=loop(hs(i,1)*(W+60)-t*sp,W+60)-30,sy=30+hs(i,2)*150+Math.sin(t*2+i)*8,f=(t*8+i|0)%2;r(sx,sy,f?2:1,f?1:2,['#7ac050','#c8d050','#e8a040','#5fae4a'][i%4])}}
+  else if(w==='sand'){x.globalAlpha=.6;for(let i=0;i<60;i++){const sp=80+hs(i,3)*90,sx=loop(hs(i,1)*(W+60)-t*sp,W+60)-30,sy=60+hs(i,2)*140+Math.sin(t*3+i)*4;r(sx,sy,1+(i%3===0),.5,'#e8c890')}
+    x.globalAlpha=1;x.fillStyle='rgba(220,170,100,.08)';x.fillRect(0,0,W+1,H)}
+  else if(w==='petals'){for(let i=0;i<26;i++){const sx=loop(hs(i,1)*(W+40)-t*(14+hs(i,4)*12),W+40)-20+Math.sin(t*1.5+i)*6,sy=loop(hs(i,2)*H+t*(18+hs(i,5)*14),H+10)-5,f=(t*4+i|0)%2;r(sx,sy,f?1.5:1,1,i%3?'#ffc8dc':'#ffffff')}}}

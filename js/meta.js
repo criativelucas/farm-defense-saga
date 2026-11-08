@@ -113,11 +113,20 @@ function showJornada(){
 
 // ---------- world map: floating islands
 let wmapTimer=null,selWorld=null;
+// a floating island for the map, painted like the ones in the battles: grass on top, a wedge of earth with stones
+const WISLE={};
+function paintIsle(w,top,seed){const W2=Math.ceil(w)+6,dep=w*.42,cap=w/7|0,c=mkHD(W2,cap+dep+6,1),B=layerBuf(c,'#000000',0,1,0),{d,k}=B,cx=W2/2,ty=cap+2;
+  const G=[top[0],top[1],top[2],shade(top[2],.3)].map(u32),E=['#2a1c22','#4a3030','#6a4636','#8a5e44','#a8805c'].map(u32),S2=['#3a3a44','#6a6a78','#9a9aa8'].map(u32);
+  for(let X=0;X<B.w;X++){const u=X+.5,q=(u-cx)/(w/2);if(Math.abs(q)>=1)continue;const t=ty-cap*Math.sqrt(1-q*q)*.9-vn(u*.4,seed)*1.5,dp=dep*Math.pow(1-q*q,.65)*(.8+.3*vn(u*.2,seed+1));
+    for(let Y=Math.max(0,Math.floor(t));Y<Math.min(B.h,ty+dp);Y++){const v=Y+.5,dd=v-ty;let col;
+      if(dd<2)col=rp(G,.95-(v-t)/(ty+2-t)*.6-q*.12,X,Y,2.2);else{let sh=.62-q*.3-(dd/dp)*.4+(fbm(u*.25,v*.25,seed)-.5)*.3;if(((dd+vn(u*.1,seed)*4)%7)<1)sh-=.2;if(ty+dp-v<1)sh=0;col=rp(E,sh,X,Y,2.2)}
+      d[Y*B.w+X]=col}}
+  for(let i=0;i<5;i++){const sx=cx-w*.3+hs(i,seed)*w*.6,sy=ty+4+hs(i,seed+3)*dep*.4,rr=1.5+hs(i,seed+5)*1.5;disk(B,sx,sy,rr,(X,Y,nx,ny)=>rp(S2,light(nx,ny),X,Y))}
+  putBuf(B);return c}
 function islandAt(I,top,open,landmark){
-  const{x:cx,y:cy,w}=I,dep=w*.42;
-  for(let j=0;j<dep;j++){const hw=w/2*Math.pow(1-j/dep,.7);const c=hs(j,cx)>.5?'#5a4a5a':'#6a5a6a';r(cx-hw,cy+j,hw*2,1,j%7===0?'#4a3a4a':c)}
-  for(let i=0;i<6;i++){const rx=cx-w/3+hs(i,cx)*w*.66;for(let j=0;j<6+hs(i,3)*10;j++)r(rx+Math.sin(j*.5)*1,cy+dep*.3+j,1,1,'#3a5a3a')}
-  blob(cx,cy,w/2,w/7|0,top[0],top[1],top[2],cx);r(cx-w/2+4,cy+2,w-8,2,top[0]);
+  const{x:cx,y:cy,w}=I,key=I.id||cx;WISLE[key]=WISLE[key]||paintIsle(w,top,cx);const c=WISLE[key];
+  C.drawImage(c,Math.round(cx-c.width/2),Math.round(cy-w/7-2));
+  for(let i=0;i<5;i++){const rx=cx-w/3+hs(i,cx)*w*.66,L=5+hs(i,3)*9,base=cy+w*.4*Math.pow(1-Math.abs(rx-cx)/(w/2),.7)-2;for(let j=0;j<L;j++)r(rx+Math.sin(j*.5+wt*1.5+i)*1,base+j,1,1,j%3?'#2f7a3a':'#5fae4a')}
   landmark&&landmark(cx,cy-4);
   if(!open){C.globalAlpha=.55;blob(cx,cy-6,w/2+2,w/5|0,'#8a8a9a','#a0a0b0','#c0c0d0',cx+1);C.globalAlpha=1;r(cx-4,cy-16,8,7,'#c9a24a');r(cx-3,cy-20,6,4,'#c9a24a');r(cx-2,cy-19,4,3,'#2a1e3a');r(cx-1,cy-13,2,3,'#2a1e3a')}
 }
@@ -126,8 +135,8 @@ const LANDMARK={
   jerico(cx,cy){r(cx-34,cy-14,68,14,'#b88a5a');for(let i=0;i<68;i+=6)r(cx-34+i,cy-17,3,3,'#b88a5a');r(cx-8,cy-28,16,28,'#a07848');for(let i=0;i<16;i+=5)r(cx-8+i,cy-31,3,3,'#a07848');r(cx-3,cy-10,6,10,'#3a2010');r(cx+20,cy-12,2,4,'#e0284a')},
   mar(cx,cy){r(cx-34,cy-4,68,6,'#2a6aa8');const o=Math.sin(wt*2)*2;r(cx-34,cy-16+o,12,14,'#4a9ad8');r(cx+22,cy-16-o,12,14,'#4a9ad8');r(cx-22,cy-2,44,3,'#e8c890');for(let i=0;i<5;i++)r(cx-30+i*14+((wt*8)%6),cy-4,3,1,'#d8f0ff');
     for(let j=0;j<40;j++)r(cx+40+Math.sin(j*.3+wt*6)*1,cy+j,2,1,j%3?'#7ac0f0':'#d8f0ff')},
-  sinai(cx,cy){for(let j=0;j<44;j++){const hw=j*1.1;r(cx-hw,cy-44+j,hw*2,1,j<10?'#4a3a5a':'#6a4a5a')}blob(cx,cy-46,18,5,'#3a3260','#4a4278','#5a5288',4);if((wt*1.3%3)<.15){r(cx+4,cy-42,1,8,'#fffbe0');r(cx+5,cy-34,1,6,'#fffbe0')}},
-  babel(cx,cy){for(let k=0;k<6;k++)r(cx-30+k*5,cy-6-k*8,60-k*10,8,k%2?'#9a6248':'#7a4a3a');r(cx-2,cy-56,4,8,'#c98a5a')},
+  sinai(cx,cy){for(let j=0;j<44;j++){const hw=j*1.1,sp=Math.sin(j*.7)*2;r(cx-hw,cy-44+j,hw+sp,1,'#c0703e');r(cx+sp,cy-44+j,hw-sp,1,'#8a3e2a');if(j%9===4)r(cx-hw*.6,cy-44+j,hw*.4,1,'#e0904e')}blob(cx,cy-46,18,5,'#3a3260','#4a4278','#5a5288',4);if((wt*1.3%3)<.15){r(cx+4,cy-42,1,8,'#fffbe0');r(cx+5,cy-34,1,6,'#fffbe0')}},
+  babel(cx,cy){for(let k=0;k<6;k++){const x0=cx-30+k*5,w2=60-k*10,y0=cy-6-k*8;r(x0,y0,w2,8,'#a8704a');r(x0,y0,w2,1,'#d8a070');r(x0+w2-4,y0+1,4,7,'#7a4a32');for(let i=x0+3;i<x0+w2-5;i+=6)r(i,y0+3,2,3,'#5a3424')}r(cx-3,cy-54,6,48,'#c98a5a');r(cx-3,cy-54,2,48,'#e0a878');r(cx-2,cy-60,1,6,'#6a4a2a');r(cx+2,cy-60,1,6,'#6a4a2a');r(cx-3,cy-58,6,1,'#6a4a2a')},
   getsemani(cx,cy){oliveTree(cx-20,cy-22,'#0e2a24');oliveTree(cx+18,cy-18,'#123a30');blob(cx+30,cy-46,8,8,'#f8f0d8','#f8f0d8','#ffffff',3);blob(cx-2,cy-2,6,3,'#5a5a70','#7a7a90','#9a9ab0',5)},
   jardim(cx,cy){const lv=META.garden.tree.planted?META.garden.tree.lvl:0;if(lv>0){const s=6+lv*1.6;r(cx-1,cy-s*1.6,3,s*1.6,'#7a4a2e');blob(cx,cy-s*1.8,s|0,(s*.6)|0,'#2a7a3a','#5fc060','#b0f090',33)}else{r(cx-1,cy-8,2,8,'#8a5a2a');r(cx-5,cy-12,10,5,'#c9a060')}
     for(let i=0;i<5;i++){r(cx-24+i*10,cy-6,1,6,'#5fe08a');r(cx-25+i*10,cy-8,3,2,['#e0284a','#9b4be0','#f7c948','#ff8ac0','#ffffff'][i])}}

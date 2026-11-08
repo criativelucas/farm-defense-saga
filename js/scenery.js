@@ -184,6 +184,16 @@ const SCENES={
 };
 SCENES.abismo=SCENES.mar;
 
+// foreground plants close to the camera: painted like the rest but kept in shadow, in the light of the hour
+function paintFG(desert){const mk=(w,h,fn)=>{const c=mkHD(w,h),B=layerBuf(c,'#000000',0,1,0);fn(B);putBuf(B);return c},L=desert?'palm':'leaf';
+  const leafy=(B,u,v,rr,seed)=>disk(B,u,v,rr,(X,Y,nx,ny,f,uu,vv)=>f<.1&&bay(X,Y)>.5?-1:ink(B,L,light(nx,ny)*.62+(vn(uu,vv,seed)-.5)*.2,X,Y,vv,2.4));
+  return{vine:mk(26,72,B=>{for(let i=0;i<4;i++){const vx=5+i*5,len=30+hs(i,5)*36;for(let t=6;t<len;t+=.5){const px=vx+Math.sin(t*.15+i)*2;dot(B,px,t,ink(B,L,.15,px*2|0,t*2|0,t));if(((t*2)|0)%9===0)leafy(B,px+(i%2?1.6:-1.6),t,1.8,i)}}
+      for(let j=0;j<5;j++)leafy(B,4+j*4.5,4+hs(j,3)*4,5+hs(j,4)*2,j+20)}),
+    fern:mk(44,32,B=>{for(let b=0;b<9;b++){const a=Math.PI*(.12+b*.095),len=16+hs(b,6)*8;for(let t=0;t<len;t+=.5){const px=22+Math.cos(a)*t,py=31-Math.sin(a)*t+t*t*.018;
+        dot(B,px,py,ink(B,L,.35-t/len*.15,px*2|0,py*2|0,py));if(t>2&&((t*2)|0)%3===0){dot(B,px+.5,py+.8,ink(B,L,.55,0,0,py));dot(B,px-.5,py+.8,ink(B,L,.45,1,1,py))}}}}),
+    rock:mk(40,24,B=>{disk(B,20,22,17,(X,Y,nx,ny,f,u,v)=>v>23.5?-1:ink(B,desert?'redrock':'stone',light(nx,ny)*.6+(fbm(u*.3,v*.3,4)-.5)*.25,X,Y,v,2.4));if(!desert)for(let j=0;j<4;j++)leafy(B,8+j*7,8+hs(j,9)*3,3,j+40)}),
+    frond:mk(54,44,B=>{for(let f=0;f<7;f++){const a=Math.PI*(-.05-f*.13),len=20+hs(f,8)*10;for(let t=0;t<len;t+=.5){const px=27+Math.cos(a)*t*(f%2?1:-1),py=2-Math.sin(a)*t*.6+t*t*.03;
+        dot(B,px,py,ink(B,'palm',.4-t/len*.2,px*2|0,py*2|0,py));for(let q=.5;q<(1-t/len)*4+1;q+=.5)dot(B,px+(f%2?.3:-.3)*q,py+q,ink(B,'palm',.25,0,0,py))}}})}}
 const SCN_CACHE=new Map();
 function paintScene(lw,day){const key=MAPID+(day?':d':':n'),hit=SCN_CACHE.get(key);
   if(hit){[SKY,FAR,MID,NEAR]=hit.c;Object.assign(MAP,hit.meta);return}
@@ -200,7 +210,8 @@ function paintScene(lw,day){const key=MAPID+(day?':d':':n'),hit=SCN_CACHE.get(ke
   [L.sky,L.far,L.mid,L.near].forEach(putBuf);
   // drifting clouds over the sky, in the same light
   MAP.clouds=[0,1,2].map(i=>{const c=mkHD(100,40),B=layerBuf(c,haze,0,1);pCloud(B,50,22,56+i*12,17+i*4,i*7+1,CLOUDS[mood]);putBuf(B);return c});
+  MAP.fgSpr=paintFG(desert);
   GRADE=null;
   if(SCN_CACHE.size>=3)SCN_CACHE.delete(SCN_CACHE.keys().next().value);
-  SCN_CACHE.set(key,{c:[SKY,FAR,MID,NEAR],meta:{midFires:MAP.midFires,falls:MAP.falls,smokes:MAP.smokes,clouds:MAP.clouds,mood}});
+  SCN_CACHE.set(key,{c:[SKY,FAR,MID,NEAR],meta:{midFires:MAP.midFires,falls:MAP.falls,smokes:MAP.smokes,clouds:MAP.clouds,fgSpr:MAP.fgSpr,mood}});
 }
