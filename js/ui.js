@@ -406,11 +406,22 @@ function showCodex(tab){
   $('menu').querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>showCodex(b.dataset.tab));
   $('menu').querySelectorAll('canvas[data-char]').forEach(c=>charIconTo(c,c.dataset.char));
 }
-function showAchs(){
-  menu(`<div class="mbox wide cabin"><h2>Conquistas</h2><p class="help">Obras da carne derrotadas: ${META.stats.kills} · Jornadas vencidas: ${META.stats.wins}</p>
-    <div class="grid">${Object.entries(ACH).map(([k,a])=>`<div class="entry ${META.ach[k]?'got':'locked'}"><b>${META.ach[k]?'✓ ':''}${a.name}</b><small>${a.desc}</small><i>${a.ref}</i></div>`).join('')}</div>
+function showAchs(){const keys=Object.keys(ACH),got=keys.filter(k=>META.ach[k]).length;
+  menu(`<div class="mbox wide cabin achs"><h2>Conquistas</h2>
+    <div class="achtop"><b>${got} de ${keys.length} conquistadas</b><div class="xp"><i style="width:${got/keys.length*100}%"></i></div><small>Obras da carne derrotadas: ${META.stats.kills} · Jornadas vencidas: ${META.stats.wins}</small></div>
+    <div class="achgrid">${keys.map((k,i)=>{const a=ACH[k],on=!!META.ach[k];return`<div class="ach ${on?'got':'locked'}"><canvas width="64" height="80" data-medal="${i}" data-on="${on?1:0}"></canvas>
+      <div><b>${a.name}</b><small>${a.desc}</small><i>${a.ref}</i></div>${on?'<span class="tag">conquistada</span>':''}</div>`}).join('')}</div>
     <button class="btn" data-go="title">Voltar</button></div>`);
-}
+  $('menu').querySelectorAll('canvas[data-medal]').forEach(c=>medalTo(c,+c.dataset.medal,c.dataset.on==='1'))}
+// a medal on a two-color ribbon; gray with a padlock while it is still locked
+function medalTo(cvs,i,on){const g=hdCtx(cvs,16,20,4);C=g;const RB=[['#c0283f','#f7c948'],['#2a5bd7','#ffffff'],['#2f8a3a','#f7c948'],['#7b2fbf','#ffd0f0'],['#e0782a','#fff0c0'],['#1a8a9a','#f7c948']][i%6];
+  const A=on?RB[0]:'#5a5866',B=on?RB[1]:'#7a7888',ol='#2a1408';
+  r(3,0,10,9,ol);r(4,0,4,8,A);r(8,0,4,8,B);r(5,0,1,7,on?'#ffffff55':'#8a8898');r(10,0,1,7,on?'#0003':'#5a5866');
+  disc(8,13,6.5,ol);disc(8,13,5.5,on?'#c98a1a':'#6a6458');disc(8,13,4.5,on?'#f7c948':'#8a8478');disc(7.5,12.5,3,on?'#ffe27a':'#9a9488');
+  r(5,10,1.5,1.5,on?'#fff8d0':'#b0aaa0');
+  if(on){const st=[[8,10],[7,11],[8,11],[9,11],[5.5,12],[6.5,12],[7,12],[8,12],[9,12],[10,12],[6.5,13],[7,13],[8,13],[9,13],[7,14],[9,14],[6.5,15],[9.5,15]];st.forEach(([a,b])=>r(a,b,1,1,'#b8781a'))}
+  else{r(6.5,12,3,3,'#3a3630');r(7,10.5,2,2,'#3a3630');r(7.5,11,1,1,'#8a8478');r(7.5,13,1,1.2,'#8a8478')}
+  C=x}
 
 // ---------- loop and boot
 let last=performance.now();

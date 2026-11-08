@@ -23,6 +23,7 @@ Abra `jardim-do-fruto.html` num navegador (ou sirva a pasta com `python3 -m http
 - `js/cards.js` — cartas desenhadas por categoria
 - `js/meta.js` — menu principal, aventura, loja
 - `js/garden.js` — jardim, Árvore da Vida, tutorial
+- `js/icons.js` — ícones dos itens (loja, equipamento, barra de itens) em pixel grosso com contorno
 
 ## Teste antes de publicar
 

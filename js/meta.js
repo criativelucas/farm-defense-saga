@@ -56,29 +56,42 @@ function showHub(){
   $('menu').querySelectorAll('canvas[data-prop]').forEach(c=>propIconTo(c,c.dataset.prop));
   $('menu').querySelectorAll('[data-hub]').forEach(b=>{b.onmouseenter=()=>sfx('hit');b.onclick=()=>{initAudio();sfx('card');({aventura:showWorld,jardim:showGarden,arvore:showTree,intro:()=>showIntro(0),config:showConfig,loja:()=>showShop2('ferramentas'),personagem:showLavrador,jornada:showJornada,minijogos:showMinis,missoes:showMissions,codex:()=>showCodex('caminho'),conquistas:showAchs})[b.dataset.hub]()}});
 }
-// a two-storey red barn: gambrel roof in slate, white trim, hayloft door and windows upstairs, big braced doors below
+// a two-storey red barn seen from the front: the red wall rises into the gambrel gable, a band of slate shingles
+// caps it with a white fascia, hayloft door and pulley up top, braced doors below; dark outline all around
 function barnArt(){const g=hdCtx($('barnc'),200,260,3);C=g;
-  const red='#b8322a',dk='#8a2420',lt='#cc4436',wh='#f4ecdc',wd='#c8bca8',sl='#4a4a62',sl2='#5c5c78';
-  r(16,58,168,202,red);for(let x0=20;x0<182;x0+=6){r(x0,58,1,202,dk);r(x0+1,58,1,202,lt)}
-  // gambrel roof: steep lower slopes, shallow upper slopes, shingles, white fascia
-  const roofY=x0=>{const d=Math.abs(x0-100);return d<70?12+d*.42:12+70*.42+(d-70)*2.6};
-  for(let x0=2;x0<198;x0+=.5){const y0=roofY(x0);r(x0,y0,.5,Math.max(0,62-y0+(Math.abs(x0-100)>88?10:0)),sl)}
-  for(let row=0;row<14;row++)for(let x0=4+(row%2)*5;x0<196;x0+=10){const y0=roofY(x0)+3+row*4;if(y0<64+(Math.abs(x0-100)>88?8:0))r(x0,y0,8,1,sl2)}
-  for(let x0=2;x0<198;x0+=.5)r(x0,roofY(x0)-1.5,.5,2,wh);
-  r(14,58,172,4,wh);r(14,58,4,202,wh);r(182,58,4,202,wh);r(14,146,172,4,wh);
-  // upstairs: hayloft door with an X, two four-pane windows
-  r(80,70,40,62,'#5a1a14');r(80,70,40,3,wh);r(80,129,40,3,wh);r(80,70,3,62,wh);r(117,70,3,62,wh);
-  for(let k=0;k<56;k++){r(83+k*.6,73+k,2,2,wh);r(115-k*.6,73+k,2,2,wh)}for(let i=0;i<8;i++)r(86+i*4,124-((i*5)%5),3,6,'#e8c050');
-  for(const wx of[30,146]){r(wx,84,24,28,wh);r(wx+3,87,18,22,'#2a3a5a');r(wx+11,87,2,22,wh);r(wx+3,97,18,2,wh);r(wx+4,88,6,3,'#7a9ac8')}
-  // downstairs: big double doors with diagonal braces, small side doors
-  r(54,166,92,94,dk);r(54,166,92,4,wh);r(54,166,4,94,wh);r(142,166,4,94,wh);r(98,166,4,94,wh);
-  for(let k=0;k<88;k++){r(58+k*.45,170+k,3,2,wh);r(102+k*.45,170+k,3,2,wh)}
-  for(const sx of[22,152]){r(sx,190,26,70,dk);r(sx,190,26,3,wh);r(sx,190,3,70,wh);r(sx+23,190,3,70,wh);r(sx+10,214,6,6,'#2a3a5a')}
-  // weathervane and a rooster on the ridge
-  r(99,0,2,13,'#2a2a2a');r(93,5,14,1,'#2a2a2a');r(95,0,8,4,'#1a1a1a');r(103,-1,3,3,'#c8302a');
-  // ivy and flowers at the base, two hay bales by the door
+  const red='#c0362c',dk='#8e2622',lt='#d84a3a',wh='#f6eedc',wd='#cfc2aa',ol='#2a1216',sl='#46465e',sl2='#5a5a78',sl3='#74749a';
+  // the gable edge: ridge at the middle, a break, steep lower slopes down to the eaves
+  const gable=x0=>{const d=Math.abs(x0-100);return d<56?16+d*.39:16+56*.39+(d-56)*1.18};
+  const top=x0=>gable(x0)+9;   // the red wall starts under the roof band
+  const W0=18,W1=182;
+  // outline first, one unit wider than everything
+  for(let x0=4;x0<196;x0+=.5){const y0=gable(x0)-2.5;if(y0<80)r(x0,y0,.5,(Math.abs(x0-100)<82?260:Math.min(260,gable(x0)+12))-y0,ol)}
+  r(W0-1.5,60,W1-W0+3,200,ol);
+  // red wall with vertical boards, lit from the left
+  for(let x0=W0;x0<W1;x0+=.5){const y0=Math.max(top(x0),0),k=(x0-W0)%6;r(x0,y0,.5,260-y0,k<.5?dk:k<1?lt:red)}
+  for(let x0=W0;x0<W0+10;x0+=.5){const t=top(x0);r(x0,t,.5,260-t,lt)}
+  // the roof band: shingle rows that follow the slope, lighter on the left, a highlight along the outer edge
+  for(let x0=5;x0<195;x0+=.5){const y0=gable(x0),h=Math.min(9,Math.abs(x0-100)>82?14:9);
+    for(let j=0;j<h;j+=.5){const row=Math.floor(j/3),edge=(x0+row*3)%7<.6||j%3<.5;r(x0,y0+j,.5,.5,edge?sl:x0<100?sl3:sl2)}
+    r(x0,y0,.5,.5,'#9a9ac0')}
+  // white fascia under the shingles, ending at the eaves; a shadow line on the wall below it
+  for(let x0=W0-4;x0<W1+4;x0+=.5){const y0=top(x0)-1.5;r(x0,y0,.5,2,wh);if(x0>W0&&x0<W1)r(x0,y0+2,.5,1.5,dk)}
+  // ridge cap and weathervane with a rooster
+  r(94,12,12,4,sl);r(94,12,12,1,'#9a9ac0');r(99,0,2,13,ol);r(93,4,14,1,ol);r(95,0,7,3,ol);r(102,-1,3,3,'#e0402a');r(95,6,2,1,'#f7c948');
+  // corner trims and the floor line
+  r(W0,top(W0),4,260,wh);r(W1-4,top(W1-4),4,260,wh);r(W0,150,W1-W0,3,wh);
+  // hayloft: door with an X brace, hay spilling out, a pulley beam with rope and hook
+  r(82,34,36,34,ol);r(84,36,32,30,'#5a1a14');r(84,36,32,2,wh);r(84,64,32,2,wh);r(84,36,2,30,wh);r(114,36,2,30,wh);
+  for(let k=0;k<26;k++){r(86+k*1.1,38+k,1.5,1.5,wh);r(112-k*1.1,38+k,1.5,1.5,wh)}
+  for(let i=0;i<10;i++){const hx=86+i*3,hh=4+hs(i,7)*4;r(hx,66-hh,2,hh,'#f0c850');r(hx,66-hh,1,1,'#fff0a0')}r(84,62,32,3,'#e8b840');
+  r(96,22,8,5,ol);r(97,23,8,3,'#7a4a2a');r(97,23,8,1,'#a06a3a');r(103,26,1,9,'#c8b088');r(102,34,3,2,'#5a5a60');
+  // downstairs: big double doors with braces, small side doors with windows
+  r(54,168,92,92,ol);r(56,170,88,90,dk);r(56,170,88,3,wh);r(56,170,3,90,wh);r(141,170,3,90,wh);r(98,170,4,90,wh);
+  for(let k=0;k<84;k++){r(59+k*.46,173+k,3,2,wh);r(102+k*.46,173+k,3,2,wh)}
+  for(const sx of[24,150]){r(sx-1,191,28,69,ol);r(sx,192,26,68,dk);r(sx,192,26,3,wh);r(sx,192,3,68,wh);r(sx+23,192,3,68,wh);r(sx+9,206,8,8,'#2a3a5a');r(sx+10,207,3,2,'#7a9ac8')}
+  // ivy up the left corner, flowers, hay bales by the door
   for(let j=0;j<90;j++)if(hs(j,4)>.35)r(17+Math.sin(j*.3)*3+hs(j,5)*6,258-j*1.5,3,2,j%3?'#3a8a3a':'#5fae4a');
-  for(const hx of[36,150]){r(hx,246,18,14,'#e8c050');r(hx,246,18,2,'#fff0a0');for(let i=hx+2;i<hx+18;i+=4)r(i,248,1,12,'#c8a030')}
+  for(const hx of[36,150]){r(hx-1,245,20,15,ol);r(hx,246,18,14,'#e8c050');r(hx,246,18,2,'#fff0a0');for(let i=hx+2;i<hx+18;i+=4)r(i,248,1,12,'#c8a030')}
   C=x}
 function propIconTo(cvs,k){const g=hdCtx(cvs,48,48,3);C=g;
   if(k==='codex'){r(8,14,32,26,'#6a2a1a');r(10,12,30,26,'#9a3a24');r(10,12,30,2,'#c05a3a');r(36,14,4,24,'#e8d8b0');r(14,18,18,3,'#f7c948');r(14,24,14,2,'#e8c890');r(14,28,16,2,'#e8c890');r(8,38,32,3,'#4a1a10')}
@@ -281,18 +294,6 @@ const GPLANTS={trigo:{name:'Trigo',price:20,stage:40,sell:50,col:'#e8c86a'},uva:
 // the nine fruit trees as greenhouse plants: they grow, then ask for care and drop coins while happy
 [...SEED_KEYS,'mostarda'].forEach((k,i)=>GPLANTS['t:'+k]={name:CARDS[k].name,price:90+i*25,stage:120+i*20,sell:160,col:FRUIT_COL[FRUIT[k]],tree:k});
 const TREE_SEED_PRICE=2000;
-function shopIconTo(cvs,k){const g=cvs.getContext('2d');g.clearRect(0,0,32,32);C=g;
-  if(k==='hearts'){[[9,8,6],[17,8,6],[7,10,18],[7,12,18],[9,14,14],[11,16,10],[13,18,6],[15,20,2]].forEach(([a,b,w])=>r(a,b,w,2,'#ff4f7b'));r(10,10,3,2,'#ffb0c8')}
-  if(k==='bag'){r(8,10,16,18,'#c9a99a');r(8,10,16,3,'#e8dcc0');r(11,6,10,4,'#a88a7a');r(14,16,4,6,'#5fe08a')}
-  if(k==='mana'){disc(16,16,9,'#6a24a8');disc(16,16,7,'#9b4be0');r(12,11,4,3,'#e2b0ff')}
-  if(k.startsWith('seed:')){const p=GPLANTS[k.slice(5)];r(9,8,14,20,'#c9a060');r(9,8,14,3,'#e8c890');r(12,4,8,4,'#a8784a');if(p.tree){g.save();g.translate(16,25);g.scale(.6,.6);drawTower(p.tree,0,0,1,null,1);g.restore()}else disc(16,18,4,p.col)}
-  if(k==='spray'){r(10,10,10,17,'#5aa84a');r(12,6,6,4,'#3a6a3a');r(18,6,6,2,'#9a9aa8')}
-  if(k==='mel'){r(9,10,14,16,'#e8a020');r(11,6,10,4,'#c8a870');r(12,14,8,6,'#ffd060')}
-  if(k==='vaso'){r(8,14,16,14,'#b0603a');r(6,12,20,4,'#d07a4a');r(10,16,2,10,'#d07a4a')}
-  if(k==='adubo'){r(7,8,18,20,'#6a4a2a');r(7,8,18,3,'#8a6a3a');r(10,16,12,6,'#3a2414');r(13,4,6,4,'#5a3a20')}
-  if(k==='fertil'){r(11,6,10,4,'#5fe08a');r(9,10,14,18,'#2a8a5a');r(11,14,10,8,'#9ff7b8');r(14,16,4,4,'#ffffff')}
-  if(k==='arvore'){disc(16,18,8,'#c9921a');disc(16,18,6,'#f7c948');r(15,6,2,8,'#5fe08a');r(12,6,3,2,'#5fe08a');r(17,5,3,2,'#5fe08a');for(let i=0;i<6;i++){const a=i/6*Math.PI*2+wt;r(16+Math.cos(a)*12,18+Math.sin(a)*12,1,1,'#fff6c0')}}
-  C=x}
 // ---------- the shop is Boaz's market stall: shelves of goods, price tags, pages like a catalogue
 function shopItems(tab){let items=[];
   if(tab==='cartas')items=META.unlocked.filter(k=>CARDS[k].type==='semente').map(k=>{const lv=cardLv(k);return{id:'c:'+k,icon:['card',k],name:CARDS[k].name+' nv '+(lv+1)+'/4',desc:'Cada nível dá +15% de dano a esta árvore.',price:CARD_LV_PRICE[lv],owned:lv>=3}});
@@ -329,7 +330,7 @@ function showShop2(tab){
     <button type="button" class="qarrow prev" id="qprev" ${shopPage?'':'disabled'}>‹</button><button type="button" class="qarrow next" id="qnext" ${shopPage<pages.length-1?'':'disabled'}>›</button>
     <div class="qfoot"><button class="btn ghost" data-go="hub">‹ Menu</button><span class="qpage">${SHOP_NAME[pg.tab]} · página ${shopPage+1} de ${pages.length}${locked.length?' · mais prateleiras abrem com as fases':''}</span>${coinsTag()}</div></div>`);
   paintCoins();quitandaArt();
-  $('menu').querySelectorAll('canvas[data-si]').forEach(c=>{const[t,...k]=c.dataset.si.split(':');const kk=k.join(':');if(t==='tool')toolIconTo(c,kk,2.3);else if(t==='bar')barrierIconTo(c,kk);else if(t==='card'){const g=hdCtx(c,32,32);C=g;drawTower(kk,16,30,1,null,1);C=x}else shopIconTo(c,kk)});
+  $('menu').querySelectorAll('canvas[data-si]').forEach(c=>{const[t,...k]=c.dataset.si.split(':');const kk=k.join(':');if(t==='tool')toolIconTo(c,kk);else if(t==='bar')barrierIconTo(c,kk);else if(t==='card')treeIconTo(c,kk);else shopIconTo(c,kk)});
   const bub=$('qbub'),all=pg.items;
   $('menu').querySelectorAll('[data-buy]').forEach(b=>{const it=all.find(i=>i.id===b.dataset.buy);
     b.onmouseenter=()=>{bub.innerHTML=`<b>${it.name}</b><br>${it.desc}`};b.onmouseleave=()=>{bub.textContent=pick(BOAZ)};

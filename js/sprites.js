@@ -50,65 +50,71 @@ function drawGardener(p){
 }
 
 // ---------- works of the flesh (all face left, toward the garden's home tree)
+// ---------- the works of the flesh: chunky blocks on the world grid (bigger pixels than the characters), a lit top,
+// a shaded base and right side, big eyes. MP paints in whole units from the feet (or the center, for flyers).
+const MP=(e,bob=0)=>{const X=Math.round(e.x),Y=Math.round(e.y-bob);return(dx,dy,w,h,c)=>r(X+dx,Y+dy,w,h,c)};
+function box(P,x0,y0,w,h,[d,m,l]){P(x0+1,y0,w-2,h,m);P(x0,y0+1,w,h-2,m);P(x0+1,y0+h-2,w-2,2,d);P(x0+w-1,y0+1,1,h-2,d);P(x0+1,y0+1,w-3,1,l);P(x0+1,y0+1,1,Math.max(1,h-4),l)}
+// two eyes: white, pupil toward the front (left), an angry brow slanting to the middle when asked
+function eyes(P,x0,y0,gap,o={}){const h=o.h||2;for(const[i,ex]of[[0,x0],[1,x0+gap]]){P(ex,y0,2,h,'#ffffff');P(ex,y0+h-1,1,1,INK);
+  if(o.brow){P(ex,y0-(i?1:2),1,1,INK);P(ex+1,y0-(i?2:1),1,1,INK)}if(o.lid)P(ex,y0,2,1,o.lid)}}
+function feet(P,t,a,b,c,spd=10){const f=(t*spd|0)%2;P(a-f,-1,2,1,c);P(b+f,-1,2,1,c)}
+function chunkSpark(e,R,small){const t=e.t,f=(t*14|0)%2,P=MP(e,(t*12|0)%2),w=small?4:5,h=small?4:5,x0=-Math.ceil(w/2),y0=-h-1;
+  for(let i=0;i<w;i+=2)P(x0+i+f,y0-1,1,1,R[2]);box(P,x0,y0,w,h,R);
+  P(x0,y0+1,1,1,INK);P(x0+2,y0+1,1,1,INK);P(x0+1,y0+h-2,2,1,INK);feet(P,t,x0,x0+w-2,R[0],16)}
 const SPR={
-  odio(e){const t=e.t,hop=Math.abs(Math.sin(t*5)),P=(dx,dy,w,h,c)=>r(e.x+dx/2,e.y+dy/2-hop*3,w/2,h/2,c);
-    ball(P,0,-8,8,8,'#7a1020','#c0283f','#ff7a7a');
-    P(-6,-17,2,3,'#2a0008');P(-7,-19,1,2,'#2a0008');P(4,-17,2,3,'#2a0008');P(5,-19,1,2,'#2a0008');
-    P(-6,-12,4,1,'#2a0008');P(-5,-13,2,1,'#2a0008');P(0,-12,4,1,'#2a0008');
-    P(-6,-11,3,2,'#ffd34a');P(-6,-11,1,2,'#2a0008');P(0,-11,3,2,'#ffd34a');P(0,-11,1,2,'#2a0008');
-    P(-5,-6,7,2,'#2a0008');P(-4,-6,1,1,'#ffffff');P(0,-6,1,1,'#ffffff');
-    r(e.x-3,e.y-.5,2,.5,'#5a0818');r(e.x+1,e.y-.5,2,.5,'#5a0818')},
-  inveja(e){const t=e.t,f=(t*20|0)%2,P=(dx,dy,w,h,c)=>r(e.x+dx/2,e.y+dy/2,w/2,h/2,c),look=Math.round(Math.sin(t*2));
-    // bat wings: three scalloped ribs that flap together
-    for(const s of[-1,1]){const wy=f?-5:1,W2=(dx,dy,w,h,c)=>P(s<0?-dx-w:dx,dy,w,h,c);
-      W2(6,-3+wy*.4,5,3,'#2f5a22');W2(10,-5+wy*.7,5,3,'#2f5a22');W2(14,-7+wy,4,3,'#2f5a22');W2(6,-3+wy*.4,9,1,'#5a9a3a');
-      W2(10,-2+wy*.7,1,2,'#1f4018');W2(14,-4+wy,1,2,'#1f4018');W2(17,-4+wy,1,2,'#1f4018')}
-    ball(P,0,0,7,6,'#3a7a1a','#7fd04a','#c8f890');
-    P(-5,-3,9,6,'#e8ffe0');P(-4,-4,7,1,'#e8ffe0');P(-4,3,7,1,'#c8e0c0');
-    P(-3+look,-2,4,4,'#3a8a1a');P(-2+look,-1,2,2,'#0a1a08');P(-3+look,-2,1,1,'#ffffff');
-    P(-6,-5,11,1,'#3a7a1a');P(-6,-4,3,1,'#3a7a1a');P(5,1,3,1,'#3a7a1a');P(7,2,2,1,'#2f5a22')},
-  discordia(e){spark(e,'#a04a10','#ff8a3c','#ffc080',1)},
-  contendinha(e){spark(e,'#7a3008','#d06a2a','#f09a5a',.8)},
-  contenda(e){const t=e.t,f=(t*10|0)%2,P=(dx,dy,w,h,c)=>r(e.x+dx/2,e.y+dy/2,w/2,h/2,c),push=Math.round(Math.sin(t*6));
-    ball(P,-5-push,-9,7,8,'#7a3008','#d06a2a','#ffb070');ball(P,6+push,-9,6,8,'#6a2808','#b05a20','#e09050');
-    for(let j=-16;j<-2;j+=2)P(0+(j%4?1:0),j,1,2,'#3a1404');
-    P(-9-push,-12,2,2,'#111');P(-6-push,-12,2,2,'#111');P(-10-push,-14,4,1,'#3a1404');P(-8-push,-7,4,1,'#2a0a00');
-    P(4+push,-12,2,2,'#111');P(8+push,-12,2,2,'#111');P(4+push,-14,5,1,'#3a1404');P(5+push,-7,4,1,'#2a0a00');
-    for(const[lx,o]of[[-9,f],[-4,1-f],[3,f],[8,1-f]])P(lx,-2,2,2+o,'#5a2408')},
-  gula(e){const t=e.t,m=(Math.sin(t*6)+1)*1.5|0,w=(t*5|0)%2,P=(dx,dy,w2,h,c)=>r(e.x+dx/2,e.y+dy/2,w2/2,h/2,c);
-    P(-12,-3,7,3+w,'#3a1a5a');P(5,-3,7,3+(1-w),'#3a1a5a');
-    ball(P,0,-14,19,13,'#4a2a6a','#6a3f96','#a07ad8');P(-6,-8,16,6,'#8e5bc0');P(-4,-7,10,3,'#a888d8');
-    P(-19,-17,15,5+m*2,'#1a0618');for(let i=0;i<5;i++){P(-18+i*3,-17,2,2,'#ffffff');P(-18+i*3,-14+m*2,2,2,'#ffffff')}P(-22,-14+m*2,5,3,'#e0284a');P(-23,-12+m*2,2,2,'#ff6a8a');
-    P(-12,-25,4,4,'#ffd34a');P(-12,-25,2,4,'#2a0a2a');P(-5,-25,4,4,'#ffd34a');P(-5,-25,2,4,'#2a0a2a');P(-13,-27,6,1,'#2a0a2a');P(-6,-27,5,1,'#2a0a2a');
-    if((t*2|0)%3===0)P(-20,-6+((t*20)%8),2,2,'#c8f0ff')},
-  feitico(e){const t=e.t,P=(dx,dy,w,h,c)=>r(e.x+dx/2,e.y+dy/2,w/2,h/2,c);
-    for(let i=0;i<7;i++){const yy=Math.round(Math.sin(t*5-i*.7)*2);P(6+i*2,yy,3-(i>3?1:0),3-(i>4?1:0),i%2?'#2a8a9a':'#5ad6e0')}
-    ball(P,0,0,8,8,'#1a5a6a','#2a8a9a','#7af0f8');P(-6,-3,9,7,'#0a2a34');P(-5,-1,2,2,'#e0ffff');P(-1,-1,2,2,'#e0ffff');
-    P(-7,-9,4,2,'#5ad6e0');P(-4,-11,3,2,'#5ad6e0');
-    const o=Math.sin(t*4);P(-14,-2+o*2,4,4,'#a0ffff');P(-13,-1+o*2,2,2,'#ffffff');if((t*8|0)%2)P(-16,-5+o*2,1,1,'#ffffff')},
-  ambicao(e){const t=e.t,b=Math.abs(Math.sin(t*4))*2,P=(dx,dy,w,h,c)=>r(e.x+dx/2,e.y+dy/2-b,w/2,h/2,c);
-    ball(P,0,-15,16,15,'#4a1420','#7a2a3a','#c05a70');
-    P(-13,-36,26,5,'#c9921a');P(-13,-36,26,1,'#fff0a0');for(const[cx,h]of[[-13,4],[-3,6],[8,4]])P(cx,-36-h,5,h,'#f7c948');P(-2,-35,3,3,'#e0284a');P(-11,-34,2,2,'#5ad6e0');P(9,-34,2,2,'#5ad6e0');
-    P(-12,-24,6,4,'#ffd34a');P(-12,-23,2,2,'#2a0a14');P(-3,-24,6,4,'#ffd34a');P(-3,-23,2,2,'#2a0a14');P(-13,-26,7,1,'#2a0a14');P(-4,-26,7,1,'#2a0a14');
-    P(-10,-14,14,3,'#2a0a14');P(-9,-14,12,1,'#ffffff');P(-3,-14,2,1,'#f7c948');
-    P(13,-17,9,9,'#c9921a');P(14,-18,7,2,'#f7c948');P(16,-20,3,2,'#8a5a10');P(15,-14,2,2,'#fff0a0')},
-  embriaguez(e){const t=e.t,tl=Math.round(Math.sin(t*3)*3),P=(dx,dy,w,h,c)=>r(e.x+dx/2,e.y+dy/2,w/2,h/2,c);
-    P(-5,-2,3,2,'#5a1030');P(2,-2,3,2,'#5a1030');
-    ball((dx,dy,w,h,c)=>P(dx+tl,dy,w,h,c),0,-10,8,9,'#5a1030','#8a2050','#d05a90');
-    P(-6+tl,-13,4,1,'#2a0010');P(-1+tl,-12,4,1,'#2a0010');P(-6+tl,-12,3,1,'#ffd0e0');P(-1+tl,-11,3,1,'#ffd0e0');
-    P(-7+tl,-9,3,2,'#ff7aa8');P(1+tl,-9,3,2,'#ff7aa8');P(-4+tl,-6,5,1,'#2a0010');
-    P(7+tl,-16,4,9,'#2a5a22');P(8+tl,-19,2,3,'#2a5a22');P(8+tl,-20,2,1,'#c8a070');P(8+tl,-14,1,5,'#5a9a4a');
-    if((t*2|0)%3===0){const by=-24-((t*16)%8);P(tl,by,2,2,'#ffd0e0');P(tl+3,by-3,1,1,'#ffd0e0')}},
-  impureza(e){const t=e.t,w=Math.round(Math.sin(t*4)),P=(dx,dy,w2,h,c)=>r(e.x+dx/2,e.y+dy/2,w2/2,h/2,c);
-    for(let i=0;i<5;i++)P(-10+i*5,-2,3,2+((t*6+i)|0)%3,'#3a3a10');
-    ball(P,0,-8+w,12,8,'#2a2a0a','#4a4a1a','#8a8a3a');P(-9,-4+w,18,2,'#3a3a10');
-    P(-8,-12+w,4,3,'#d8d860');P(-8,-11+w,2,2,'#1a1a08');P(-1,-12+w,4,3,'#d8d860');P(-1,-11+w,2,2,'#1a1a08');P(-6,-6+w,8,1,'#1a1a08');
-    for(let k=0;k<2;k++){const a=t*6+k*3;P(Math.cos(a)*14,-18+Math.sin(a)*4,1,1,'#1a1a08')}},
-  faccoes(e){const t=e.t,b=Math.round(Math.abs(Math.sin(t*6))*2),P=(dx,dy,w,h,c)=>r(e.x+dx/2,e.y+dy/2-b/2,w/2,h/2,c);
-    P(-4,-2,2,2,'#1a2050');P(2,-2,2,2,'#1a2050');
-    ball(P,0,-9,6,8,'#2a3a7a','#4a5aa0','#8aaaff');P(-4,-13,2,2,'#ffffff');P(0,-13,2,2,'#ffffff');P(-4,-12,1,1,'#1a2050');P(0,-12,1,1,'#1a2050');P(-3,-8,4,1,'#1a2050');
-    P(-12,-14,5,9,'#7a9aff');P(-12,-14,5,1,'#c0d0ff');P(-11,-11,3,3,'#2a3a7a');
-    P(5,-22,1,20,'#6a4a2a');P(4,-24,3,3,'#c9c9d0');P(6,-21,4,3,'#e0284a')}
+  odio(e){const t=e.t,hop=Math.abs(Math.sin(t*5))*2|0,P=MP(e,hop),R=['#9a1428','#e8303f','#ff8a7a'];
+    P(-4,-12,1,2,'#fff2d8');P(-5,-13,1,1,'#fff2d8');P(3,-12,1,2,'#fff2d8');P(4,-13,1,1,'#fff2d8');
+    box(P,-4,-10,8,9,R);eyes(P,-3,-6,4,{brow:1});P(-2,-3,4,1,INK);P(-1,-3,1,1,'#ffffff');P(1,-3,1,1,'#ffffff');
+    feet(P,t,-3,1,'#5a0816');if(hop>1)P(5,-12-((t*6|0)%3),1,1,'#ffd0c0')},
+  inveja(e){const t=e.t,f=(t*14|0)%2,P=MP(e,Math.round(Math.sin(t*3))),G=['#2a6a18','#68cc34','#b8f07a'],look=Math.round(Math.sin(t*2));
+    for(const s of[-1,1]){const W=(dx,dy,w,h)=>P(s<0?-dx-w:dx,dy,w,h,'#3c8a24');if(f){W(4,-3,2,2);W(6,-5,2,2);W(8,-6,1,2)}else{W(4,0,2,2);W(6,1,2,2);W(8,2,1,2)}}
+    box(P,-4,-3,8,7,G);P(-3,-2,5,4,'#ffffff');P(-3,-3,5,1,G[0]);P(-2+look,-1,2,2,INK);P(-2+look,-1,1,1,'#7a3a3a');P(-3,2,5,1,G[0])},
+  discordia(e){chunkSpark(e,['#a8420e','#ff8a2c','#ffd080'],0)},
+  contendinha(e){chunkSpark(e,['#7a3010','#d0662a','#f0a060'],1)},
+  contenda(e){const t=e.t,push=Math.round(Math.sin(t*6)),P=MP(e,(t*8|0)%2),R=['#8a4410','#e08a34','#ffc070'];
+    box(P,-4,-10,8,9,R);P(0,-9,3,6,'#c06a24');for(let j=0;j<6;j++)P(j%2?-1:0,-9+j,1,1,INK);
+    P(-3,-7,2,2,'#ffffff');P(-3,-6,1,1,INK);P(1,-7,2,2,'#ffffff');P(2,-6,1,1,INK);P(-3,-4,2,1,INK);P(1,-4,2,1,INK);
+    P(-6+push,-6,2,2,R[2]);P(4-push,-6,2,2,'#f0a050');feet(P,t,-3,1,'#5a2a08')},
+  gula(e){const t=e.t,m=(Math.sin(t*6)+1)*1.5|0,P=MP(e,(t*4|0)%2),R=['#4a1a7a','#9040d0','#c890ff'];
+    P(-9,-7,1,2,R[1]);P(8,-7,1,2,R[1]);box(P,-8,-14,16,13,R);P(-5,-6,9,3,'#a860ec');
+    eyes(P,-6,-12,4,{brow:1});P(-7,-9,9,2+m,'#2a0818');for(let i=0;i<3;i++)P(-6+i*3,-9,1,1,'#ffffff');
+    if(m){P(-5,-8+m,1,1,'#ffffff');P(-2,-8+m,1,1,'#ffffff');P(-5,-8+m,4,1,'#ff6a9a')}if(m>1)P(-6,-6+((t*4|0)%3),1,1,'#c8f0ff');
+    feet(P,t,-6,3,'#2a0a4a',5)},
+  feitico(e){const t=e.t,P=MP(e,Math.round(Math.sin(t*2.5)*1.5)),R=['#1a4a7a','#2a8ac8','#7ad0ff'],ox=-7+Math.round(Math.sin(t*3)),oy=-1+Math.round(Math.cos(t*3));
+    P(-1,-9,2,2,R[0]);P(-2,-7,4,2,R[1]);P(-4,-5,8,1,R[0]);P(1,-10,1,1,'#ffe36a');
+    box(P,-3,-5,7,8,R);P(-2,-3,4,3,'#0a1430');P(-2,-2,1,1,'#ffe36a');P(1,-2,1,1,'#ffe36a');
+    const f=(t*8|0)%2;P(-3,3,2,1+f,R[1]);P(0,3,2,2-f,R[1]);P(3,3,1,1,R[1]);
+    P(ox,oy,2,2,'#5af0ff');P(ox,oy,1,1,'#ffffff');if((t*6|0)%3===0)P(ox-1,oy-2,1,1,'#ffffff')},
+  ambicao(e){const t=e.t,b=Math.abs(Math.sin(t*4))*1.5|0,P=MP(e,b),R=['#8a1a3a','#d8404a','#ff8a8a'],ca=t*3;
+    P(-6,-21,12,3,'#f7c948');P(-6,-23,2,2,'#f7c948');P(-1,-24,2,3,'#f7c948');P(4,-23,2,2,'#f7c948');P(-6,-19,12,1,'#c98a1a');
+    P(-4,-20,1,1,'#2a8af0');P(0,-20,1,1,'#e0283a');P(3,-20,1,1,'#5fe08a');P(-5,-21,1,1,'#fff6c0');
+    box(P,-8,-18,16,17,R);eyes(P,-6,-14,6,{h:2,lid:R[0]});
+    P(-6,-10,4,1,'#3a1a10');P(-1,-10,4,1,'#3a1a10');P(-7,-11,1,1,'#3a1a10');P(3,-11,1,1,'#3a1a10');P(-3,-8,4,1,INK);P(1,-9,1,1,INK);
+    P(7,-9,5,6,'#c89a4a');P(8,-10,3,1,'#8a5a2a');P(9,-8,1,3,'#f7c948');P(8,-4,4,1,'#8a5a2a');
+    feet(P,t,-6,2,'#4a0a1a',6);P(Math.round(Math.cos(ca)*11),-12+Math.round(Math.sin(ca)*3),1,1,'#fff6c0')},
+  embriaguez(e){const t=e.t,tl=Math.round(Math.sin(t*3)*1.2),P=MP(e,0),R=['#9a2a5a','#f0609a','#ffb0d0'],B=(dx,dy,w,h,c)=>P(dx+tl,dy,w,h,c);
+    box(B,-4,-11,8,10,R);B(-3,-8,2,1,INK);B(1,-8,2,1,INK);B(-4,-6,2,1,'#ff3a6a');B(2,-6,2,1,'#ff3a6a');B(-1,-4,2,1,INK);B(0,-3,1,1,INK);
+    B(-6,-8,1,1,'#2a8a4a');B(-7,-7,3,4,'#2a8a4a');B(-7,-7,1,3,'#7ae0a0');
+    for(let i=0;i<3;i++){const ph=(t*.8+i/3)%1;P(2+tl+Math.round(Math.sin(ph*9+i)),-12-Math.round(ph*8),1,1,'#ffe0f0')}
+    feet(P,t,-3,1,'#5a1030',6)},
+  impureza(e){const t=e.t,w=Math.round(Math.sin(t*4)),P=MP(e,0),R=['#5a5a10','#b0b030','#e8e870'];
+    box(P,-5-w,-8+Math.abs(w),10+2*w,7-Math.abs(w),R);P(-3,-1,1,1+((t*3|0)%2),R[0]);P(2,-1,1,1+((t*3+1|0)%2),R[0]);
+    P(-4,-6,3,3,'#ffffff');P(-4,-5,2,2,INK);P(0,-6,2,2,'#ffffff');P(0,-5,1,1,INK);P(-2,-2,3,1,R[0]);if(Math.sin(t*5)>.3)P(2,-10,1,1,R[2])},
+  faccoes(e){const t=e.t,b=Math.abs(Math.sin(t*6))*1.5|0,P=MP(e,b),R=['#1a3a8a','#3a6ae0','#90b8ff'],wv=(t*6|0)%2;
+    P(3,-15,1,13,'#6a4a2a');P(4,-15,3,2,'#e0283a');P(4+wv,-13,3,1,'#b01a2a');
+    box(P,-3,-10,6,9,R);P(-3,-10,6,2,'#c0c8d8');P(-3,-9,6,1,'#8a90a8');P(-2,-7,1,2,INK);P(1,-7,1,2,INK);P(-1,-4,2,1,INK);feet(P,t,-3,1,'#0a1a4a',12)},
+  ira(e){const t=e.t,rg=e.rage?1:0,b=Math.abs(Math.sin(t*(rg?9:5)))*1.5|0,P=MP(e,b),R=rg?['#9a1010','#ff3a20','#ffa060']:['#a8380e','#ff7a28','#ffc070'],f=(t*12|0)%3;
+    for(let i=0;i<4;i++){const hg=2+((i+f)%3)+rg*2;P(-4+i*2,-10-hg,2,hg,i%2?'#ffd34a':'#ff8a2a');P(-4+i*2,-10-hg,1,1,'#fff6c0')}
+    box(P,-4,-10,8,9,R);eyes(P,-3,-6,4,{brow:1});P(-2,-3,4,2,INK);P(-1,-3,2,1,'#ff5a3a');feet(P,t,-3,1,'#5a1404',rg?16:10);
+    if(rg&&(t*8|0)%2){P(-6,-14,1,1,'#c0c0c0');P(5,-15,1,1,'#c0c0c0')}},
+  ciume(e){const t=e.t,P=MP(e,Math.round(Math.sin(t*2.2)*1.5)),R=['#1a6a5a','#3ad0a8','#a0f8e0'],side=Math.sin(t*1.5)>0?-1:1,f=(t*8|0)%2;
+    box(P,-3,-5,7,8,R);P(-3,3,2,1+f,R[1]);P(-1,3,2,2-f,R[1]);P(1,3,2,1+f,R[1]);P(3,3,1,1,R[0]);
+    P(-2,-3,2,2,'#ffffff');P(1,-3,2,2,'#ffffff');P(side<0?-2:-1,-2,1,1,INK);P(side<0?1:2,-2,1,1,INK);P(-2,-3,2,1,R[0]);P(1,-3,2,1,R[0]);P(-1,0,3,1,R[0])},
+  heresia(e){const t=e.t,sw=Math.round(Math.sin(t*3)),P=MP(e,0),R=['#3a1a6a','#7a4ad0','#b890ff'],pulse=(Math.sin(t*4)+1)/2;
+    P(-6+sw,-16,1,15,'#6a4a2a');P(-7+sw,-18,3,2,pulse>.5?'#ff8aff':'#b08aff');P(-7+sw,-18,1,1,'#ffffff');
+    box(P,-4,-12,9,11,R);P(-3,-15,7,3,R[1]);P(-2,-16,5,1,R[1]);P(-3,-15,7,1,R[2]);
+    P(-2,-13,2,4,'#f7c948');P(0,-13,2,4,'#2a1a3a');P(-2,-12,1,1,INK);P(1,-12,1,1,pulse>.5?'#ff5aff':'#c070ff');P(-1,-10,2,1,INK);
+    P(-4,-6,9,1,'#c9a24a');feet(P,t,-3,1,R[0],6)}
 };
 // ---------- the golden calf and the three bosses
 const H2=e=>(dx,dy,w,h,c)=>r(e.x+dx/2,e.y+dy/2,w/2,h/2,c);
@@ -156,27 +162,5 @@ Object.assign(SPR,{
     for(let i=0;i<6;i++){P(-37+i*4,-26,2,3,'#ffffff');P(-35+i*4,-24,2,2,'#e0f0f0')}
     P(-22,-38,6,5,rage?'#ff2020':'#ffd34a');P(-20,-38,2,5,'#111');P(-24,-40,9,1,'#0e3a44');
     for(let i=0;i<4;i++)P(-10+i*6,-46-(i%2)*3,4,6+(i%2)*3,'#5af0c0');P(-40,-30,2,1,'#0e3a44');
-    for(let i=0;i<5;i++)P(-38-i*2,-22+Math.round(Math.sin(t*4+i)*2),1,1,'#7ac0b0')},
-  ira(e){const t=e.t,rg=e.rage?1:0,b=Math.round(Math.abs(Math.sin(t*(rg?9:5)))*2),P=(dx,dy,w,h,c)=>r(e.x+dx/2,e.y+dy/2-b/2,w/2,h/2,c);
-    P(-6,-2,4,2,'#5a1404');P(2,-2,4,2,'#5a1404');
-    ball(P,0,-10,9,9,'#8a2a08',rg?'#ff3a1a':'#ff5a1a','#ffc080');
-    for(let i=0;i<5;i++){const h=3+((Math.sin(t*14+i*1.9)+1)*(rg?3:2)|0);P(-7+i*3,-19-h,2,h,i%2?'#ffd34a':'#ff8a2a');P(-7+i*3,-19-h,1,1,'#fff6c0')}
-    P(-7,-14,4,1,'#2a0800');P(-1,-13,4,1,'#2a0800');P(-7,-13,3,2,'#ffffff');P(-1,-12,3,2,'#ffffff');P(-7,-12,2,1,'#c00000');P(-1,-11,2,1,'#c00000');
-    P(-6,-7,8,2,'#2a0800');for(let i=0;i<4;i++)P(-6+i*2,-7,1,1,'#ffffff');
-    P(-11,-10,3,3,'#c0401a');P(8,-9,3,3,'#c0401a');
-    if(rg&&(t*8|0)%2){P(-10,-22,2,2,'#c0c0c0');P(8,-23,2,2,'#c0c0c0')}},
-  ciume(e){const t=e.t,P=(dx,dy,w,h,c)=>r(e.x+dx/2,e.y+dy/2,w/2,h/2,c),side=Math.sin(t*1.5)>0?-1:1;
-    for(let i=0;i<5;i++){const yy=Math.round(Math.sin(t*6-i*.9)*2);P(6+i*2,yy+i,3,3-(i>2?1:0),i%2?'#2a8a6a':'#3aa88a')}P(16,4+Math.round(Math.sin(t*6)*2),2,2,'#8af0c8');
-    ball(P,0,0,8,7,'#1a5a4a','#3aa88a','#9af8d0');P(-6,-9,2,3,'#1a5a4a');P(3,-9,2,3,'#1a5a4a');
-    for(const ex of[-6,0]){P(ex,-3,5,4,'#f0fff0');P(ex+1+side,-2,2,3,'#6a2a8a');P(ex+1+side,-2,1,1,'#ffffff');P(ex,-3,5,1,'#1a5a4a')}
-    P(-4,3,6,1,'#0a2a20');P(1,4,1,1,'#0a2a20')},
-  heresia(e){const t=e.t,sw=Math.round(Math.sin(t*3)),P=(dx,dy,w,h,c)=>r(e.x+dx/2,e.y+dy/2,w/2,h/2,c),pulse=(Math.sin(t*5)+1)/2;
-    P(-8,-18,16,18,'#4a2a6a');P(-9,-6,18,6,'#3a1a5a');P(-8,-18,3,18,'#3a1a5a');P(4,-17,2,14,'#6a4a8a');P(-9,-1,18,1,'#2a1040');
-    ball(P,0,-23,7,7,'#2a1040','#5a3a7a','#9a7ac0');P(-5,-25,8,7,'#1a0a28');P(-4,-23,2,1,'#e0c0ff');P(0,-23,2,1,'#e0c0ff');
-    P(-12,-14+sw,5,4,'#e8d8b0');P(-12,-14+sw,5,1,'#c8a878');P(-11,-12+sw,3,1,'#6a4a8a');
-    P(8,-34,2,34,'#6a4a2a');P(7,-36,4,2,'#6a4a2a');P(6,-40,6,5,pulse>.5?'#d0a8ff':'#b08aff');P(7,-39,2,2,'#ffffff')}
+    for(let i=0;i<5;i++)P(-38-i*2,-22+Math.round(Math.sin(t*4+i)*2),1,1,'#7ac0b0')}
 });
-function spark(e,dark,mid,lite,sc){const t=e.t,f=(t*16|0)%2,P=(dx,dy,w,h,c)=>r(e.x+dx*sc/2,e.y+dy*sc/2,Math.max(.5,w*sc/2),Math.max(.5,h*sc/2),c);
-  P(-3,-2,2,2+f,shade(dark,-.3));P(1,-2,2,3-f,shade(dark,-.3));
-  ball(P,0,-6,5,5,dark,mid,lite);P(-4,-12,1,2,dark);P(-1,-13,2,3,dark);P(2,-12,1,2,dark);
-  P(-4,-8,2,2,'#111');P(-1,-8,2,2,'#111');P(-4,-8,1,1,'#ffffff');P(-4,-4,5,1,'#3a1000');P(5,-6,3,1,dark);P(7,-7,1,1,dark)}

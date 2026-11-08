@@ -31,11 +31,12 @@ function r(px,py,w,h,c){const k=C.__k||1;C.fillStyle=OV||c;C.fillRect(Math.round
 const BLOBC=new Map();
 function blob(cx,cy,rx,ry,dark,mid,lite,seed){
   if(rx<=0||ry<=0)return;const k=C.__k||1,key=rx+','+ry+','+dark+mid+lite+','+seed+','+(OV||'')+','+k;let b=BLOBC.get(key);
-  if(!b){if(BLOBC.size>800)BLOBC.clear();b=mkHD(rx*2+3,ry*2+3,k);const keep=C;C=b.getContext('2d');const s=1/k;
+  if(!b){if(BLOBC.size>800)BLOBC.clear();b=mkHD(rx*2+3,ry*2+3,k);const keep=C;C=b.getContext('2d');const s=1/k,hi=shade(lite,.4);
     for(let dy=-ry;dy<=ry;dy+=s)for(let dx=-rx;dx<=rx;dx+=s){
       const d=dx*dx/(rx*rx)+dy*dy/(ry*ry),n=hs(Math.round(dx*k)+seed*31,Math.round(dy*k)+seed);
-      if(d>1.15-n*.4)continue;const l=(-dx-dy*1.3)/(rx+ry)+n*.35;
-      r(rx+1+dx,ry+1+dy,s,s,l>.4?lite:l>-.15?mid:dark)}
+      if(d>1.15-n*.4)continue;const l=(-dx-dy*1.3)/(rx+ry)+n*.3+Math.sin(dx*1.3+seed)*Math.sin(dy*1.5+seed*.7)*.22;
+      // leafy clumps: a bright speck tone on top of the lit side, a darker rim on the shaded side
+      r(rx+1+dx,ry+1+dy,s,s,d>.74&&dx+dy>0?dark:l>.62?hi:l>.34?lite:l>-.15?mid:dark)}
     C=keep;BLOBC.set(key,b)}
   C.drawImage(b,Math.round((cx-rx-1)*k)/k,Math.round((cy-ry-1)*k)/k,b.width/k,b.height/k)}
 function ring(cx,cy,rad,c){const n=Math.max(8,rad*6|0);for(let i=0;i<n;i++){const a=i/n*Math.PI*2;r(cx+Math.cos(a)*rad,cy+Math.sin(a)*rad,1,1,c)}}
