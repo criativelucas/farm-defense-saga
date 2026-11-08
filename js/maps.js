@@ -89,6 +89,20 @@ MAPS.tumulo={name:'O Jardim do Sepulcro',ww:560,water:[440,472],night:'0,0,0',fo
     blob(518,86,38,26,'#2a7a3a','#5fc060','#b0f090',77);blob(490,100,16,10,'#2a7a3a','#5fc060','#b0f090',78);blob(546,98,16,10,'#2a7a3a','#5fc060','#b0f090',79)}
 };
 MAPS.abismo={...MAPS.mar,name:'O Abismo',nightBase:.4,night:'4,8,30'};
+// the seventh world: the garden of the resurrection at dawn, the empty tomb as the home to defend (Jo 20:1, 1 Co 15:36)
+MAPS.ressurreicao={name:'Jardim da Ressurreição',ww:800,night:'24,14,44',fog:'255,210,190',rays:'eden',home:'tomb',
+  prof:[[0,168],[100,168],[130,156],[200,156],[226,164],[290,164],[318,150],[384,150],[410,160],[470,160],[500,148],[566,148],[590,158],[660,158],[690,150],[800,150]],
+  plats:[{x:40,y:130,w:40},{x:148,y:114,w:36},{x:250,y:126,w:30},{x:330,y:108,w:40,fall:'R'},{x:436,y:120,w:34},{x:516,y:106,w:40,fall:'L'},{x:610,y:118,w:36},{x:712,y:108,w:44}],
+  slots:[[160,0,'boa'],[256,0,'espinho'],[366,0,'boa'],[440,0,'pedra'],[532,0,'boa'],[624,0,'espinho'],[750,0,'boa'],
+         [60,130,'boa'],[166,114,'boa'],[265,126,'pedra'],[350,108,'boa'],[453,120,'boa'],[536,106,'espinho'],[628,118,'boa'],[734,108,'boa']],
+  pal:{fill:'#7a5444',dark:'#5c3c32',lite:'#96705a',band:'#6a483a',top2:'#4fa84e',top1:'#a6e070',grass:1},
+  fg:MAPS.eden.fg,
+  homeDraw(){// the tomb hewn in the rock, the stone rolled away, light pouring out, lilies at the door
+    blob(16,146,26,22,'#5a4a4a','#7a6a6a','#a89a9a',3);r(6,146,16,22,'#140c0c');r(8,148,12,2,'#2a1a1a');
+    for(let i=0;i<5;i++)r(10+i*2,150+i,1,18-i,'#fff6c022');
+    for(let yy=-10;yy<=10;yy++){const w=Math.sqrt(100-yy*yy);r(44-w,158+yy,w*2,1,yy<-4?'#b8a8a8':'#8a7a7a')}r(40,154,8,2,'#6a5a5a');
+    for(const lx of[26,32,54]){r(lx,160,1,8,'#4faa4a');r(lx-1,158,3,2,'#ffffff');r(lx,157,1,1,'#fff6c0')}}
+};
 Object.values(MAPS).forEach(m=>{if(Array.isArray(m.slots[0]))m.slots=m.slots.map(([x,y,soil])=>({x,y,soil}))});
 
 let MAP,SKY,FAR,MID,NEAR,GROUND,MAPID='eden';
@@ -117,5 +131,6 @@ const STORY={
   babel:['Gênesis 11:7','De tempos em tempos as línguas se confundem: as cartas ficam ilegíveis e trocam de lugar.'],
   getsemani:['Mateus 26:41','As árvores adormecem se você não passar perto delas. Vigiai e orai.'],
   abismo:['Isaías 27:1','O Leviatã, a serpente veloz, sobe do fundo do mar.'],
-  tumulo:['João 20:15','Caminhe até a Árvore da Vida.']
+  tumulo:['João 20:15','Caminhe até a Árvore da Vida.'],
+  ressurreicao:['1 Coríntios 15:36','A cada nova onda o sol nasce: toda árvore acorda, se renova e sobe um nível.']
 };

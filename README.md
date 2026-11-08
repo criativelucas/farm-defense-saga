@@ -34,3 +34,15 @@ node tools/smoke.mjs
 ```
 
 Abre o jogo no Google Chrome sem janela e passa por todas as telas e por uma batalha em cada mundo, como jogador novo, com progresso e com o controle bloqueado (como no artifact). Sai com erro se alguma tela quebrar.
+
+```bash
+node tools/visual.mjs
+```
+
+Fotografa as telas principais e compara com as fotos de referência em `tools/visual/`. Sai com erro se alguma tela mudou demais (um painel fora do lugar, uma tela preta) e guarda a foto atual em `tools/visual/out/`. Depois de uma mudança visual de propósito, rode `node tools/visual.mjs --update` para trocar as referências.
+
+```bash
+node tools/perf.mjs
+```
+
+Mede o desempenho com o processador 6 vezes mais lento, como num celular fraco: quadros por segundo e trabalho por quadro em duas batalhas, tempo para desenhar as cartas e para abrir um pacote.

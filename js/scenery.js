@@ -182,7 +182,7 @@ const SCENES={
     for(let u=10,i=0;u<wM;i++,u+=22+hs(i,1)*20)if(Math.abs(u-cx)>100)pBox(M,u,148+hs(i,2)*6,u+10+hs(i,3)*6,170,'brick',{s:.6,courses:3});
     const N=L.near,wN=N.w/N.k;for(let u=20,i=0;u<wN;i++,u+=70+hs(i,1)*60){pPalm(N,u,186,30+hs(i,2)*12,(hs(i,3)-.5)*1.2,i+40);pBox(N,u+18,170,u+30,186,'brick',{s:.5,courses:3})}}
 };
-SCENES.abismo=SCENES.mar;
+SCENES.abismo=SCENES.mar;SCENES.ressurreicao=SCENES.tumulo;
 
 // foreground plants close to the camera: painted like the rest but kept in shadow, in the light of the hour
 function paintFG(desert){const mk=(w,h,fn)=>{const c=mkHD(w,h),B=layerBuf(c,'#000000',0,1,0);fn(B);putBuf(B);return c},L=desert?'palm':'leaf';
@@ -197,7 +197,7 @@ function paintFG(desert){const mk=(w,h,fn)=>{const c=mkHD(w,h),B=layerBuf(c,'#00
 const SCN_CACHE=new Map();
 function paintScene(lw,day){const key=MAPID+(day?':d':':n'),hit=SCN_CACHE.get(key);
   if(hit){[SKY,FAR,MID,NEAR]=hit.c;Object.assign(MAP,hit.meta);return}
-  const desert=!MAP.pal.grass,mood=['getsemani','abismo'].includes(MAPID)?'night':MAPID==='tumulo'?'dawn':day?'day':'dusk';
+  const desert=!MAP.pal.grass,mood=['getsemani','abismo'].includes(MAPID)?'night':(MAPID==='tumulo'||MAPID==='ressurreicao')?'dawn':day?'day':'dusk';
   const sky=mood==='day'&&desert?SKIES.desert:SKIES[mood],haze=sky[sky.length-2];
   MAP.midFires=[];MAP.falls=[];MAP.smokes=[];MAP.mood=mood;
   SKY=mkHD(W+1,H);FAR=mkHD(lw(PAR[0]),H);MID=mkHD(lw(PAR[1]),H);NEAR=mkHD(lw(PAR[2]),H);

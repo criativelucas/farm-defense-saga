@@ -152,6 +152,12 @@ Object.assign(SPR,{
     P(-10,-66,13,12,'#c78b5a');P(-14,-70,21,7,'#f7c948');for(let i=0;i<21;i+=3)P(-14+i,-70,1,7,'#2a5bd7');P(-14,-64,5,14,'#f7c948');P(3,-64,5,14,'#f7c948');P(-14,-60,5,1,'#2a5bd7');P(3,-60,5,1,'#2a5bd7');P(-14,-56,5,1,'#2a5bd7');
     P(-8,-61,4,2,'#ffffff');P(-8,-61,2,2,rage?'#ff2020':'#111');P(-10,-62,6,1,'#111');P(-6,-55,3,6,'#2a5bd7');P(-5,-74,3,4,'#ff4f7b');P(-6,-76,2,2,'#ff4f7b');
     P(-16,-50,4,4,'#c78b5a');for(let i=0;i<10;i++)P(-18-i,-52-i+Math.round(wave*i*.3),1,1,'#7a4b2a');P(-29,-62+Math.round(wave*3),3,3,'#f7c948')},
+  // the shadow of death (Sl 23:4): a tall tattered cloak that floats a little, an empty hood with two eyes, wisps around it
+  sombra(e){const t=e.t,rage=e.ph2,P=H2(e),fl=Math.round(Math.sin(t*2)*3);
+    for(let j=0;j<80;j++){const y=-88+j+fl,w=j<20?14+j*1.1:36+(j-20)*.42,c=j<6?'#6a5a8a':j<26?'#4a3a6a':j<56?'#3a2c56':'#2a2040';P(-w,y,w*2,2,c);if(j>20&&j%3===0)P(-w,y,3,2,'#5a4a7a')}
+    for(let i=0;i<11;i++){const hx=-60+i*11,h=6+((Math.sin(t*4+i)+1)*4|0);P(hx,-8+fl,8,h,'#2a2040')}
+    P(-14,-80+fl,28,22,'#0a0612');const ec=rage?'#ff3a3a':'#c8a0ff';P(-10,-72+fl,6,4,ec);P(4,-72+fl,6,4,ec);P(-9,-72+fl,2,2,'#ffffff');P(5,-72+fl,2,2,'#ffffff');
+    for(let i=0;i<5;i++){const a=t*1.4+i*1.26;P(Math.round(Math.cos(a)*48),Math.round(-50-((t*20+i*17)%36))+fl,4,4,rage?'#a04060':'#7a6aa8')}},
   leviata(e){const t=e.t,rage=e.ph2,P=H2(e);
     for(let i=9;i>=0;i--){const cx=10+i*10,cy=-16-Math.round(Math.sin(t*3+i*.8)*10),rad=Math.max(4,Math.round(12-i*.8));
       ball(P,cx,cy,rad,rad,'#1a4250','#2a6a7a','#5ab0b0');P(cx-rad+2,cy+rad-3,rad*2-4,2,'#7ac0b0');P(cx-1,cy-rad-3,3,4,'#5af0c0');P(cx,cy-rad-5,1,2,'#bffff0')}

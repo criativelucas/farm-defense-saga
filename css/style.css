@@ -910,3 +910,46 @@ body.big #menu{font-size:max(12px,1.85cqw)}body.big .hud{font-size:max(12px,2.3c
 .tgift{animation:pkpulse 1.2s ease-in-out infinite;background:linear-gradient(#9ff7b8,#4cc46e)!important}
 .cxr{font-size:.7em;font-weight:700;text-shadow:0 1px 0 #3a2012}
 .cxr{background:#2c2420;padding:.15em .5em;border-radius:3px;text-shadow:none;line-height:1.25;text-align:center}
+/* battle log */
+.logsum{display:flex;flex-wrap:wrap;gap:.4em 1.2em;font-size:.9em}.logsum b{color:#ffd23a}
+.logworlds{display:grid;grid-template-columns:repeat(auto-fill,minmax(11em,1fr));gap:.3em .8em;margin:.4em 0;font-size:.8em}
+.logworlds div{display:grid;grid-template-columns:1fr auto;gap:0 .4em;align-items:center}.logworlds i{grid-column:1/-1;height:.45em;background:#2a140a;box-shadow:0 0 0 1px #1a0c06}.logworlds u{display:block;height:100%;background:#4cc46e}
+.logrows{display:grid;gap:.15em;font-size:.75em}.logrows span{padding:.1em .5em;background:#0003;border-left:3px solid #4cc46e}.logrows span.l{border-left-color:#ff4f7b}
+/* world map labels: bigger, with the world's own color */
+.isle b{font-size:1.05em}.isle small{font-size:.72em}
+.isle.on{animation:isleon 1.4s ease-in-out infinite}@keyframes isleon{50%{translate:0 -3px}}
+/* achievements as cards */
+.ccard.medal .ccart{aspect-ratio:4/3}.ccard.medal .ccart canvas{height:88%}.ccard.medal.off .ccart canvas{filter:grayscale(1) brightness(.6)}.ccard.medal.off{opacity:.7}
+.ccard.medal .cchead span{background:#2f8a3a}
+.modern .achtop{width:100%;display:grid;gap:.3em;justify-items:center}.modern .achtop small{color:var(--ink-dim)}
+/* greenhouse in the modern panel, with care chips */
+.modern .gbar{background:#0005;box-shadow:inset 0 0 0 1px #ffffff1a;border-radius:8px}
+.modern .gtool{border-radius:8px;background:#ffffff12!important;box-shadow:inset 0 0 0 1px #ffffff22,0 3px 0 #0006!important}
+.modern .gtool.on{background:linear-gradient(#ffd23a44,#ffd23a18)!important;box-shadow:inset 0 0 0 2px #ffd23a,0 0 12px #ffd23a55!important}
+.gcare{display:flex;flex-wrap:wrap;justify-content:center;gap:.4em}
+.gcare span{display:inline-flex;align-items:baseline;gap:.35em;padding:.25em .7em;border-radius:999px;background:#0006;box-shadow:inset 3px 0 0 var(--c);font-size:.85em}
+.gcare b{color:var(--c)}.gcare small{color:var(--ink-dim);font-size:.85em}
+/* accessibility */
+#fruits span i{display:none;font-style:normal}body.cb #fruits span i{display:inline}
+body.cb #hpfill{background:linear-gradient(#9ad8ff,#3a8ad8)!important}
+.czoom{display:flex;align-items:center;gap:.6em;flex-wrap:wrap}.czoom span{display:flex;gap:.3em}
+.czoom button,.keys button{font:inherit;cursor:pointer;border:0;color:#fbe9d0;background:#0004;box-shadow:inset 0 0 0 2px #0005;padding:.25em .6em}
+.czoom button.on{background:#ffd23a;color:#2a1408}
+.keys{display:grid;grid-template-columns:repeat(auto-fill,minmax(11em,1fr));gap:.35em;margin:.3em 0}
+.keys button{display:flex;justify-content:space-between;gap:.5em;text-align:left}.keys button span{min-width:2.2em;text-align:center;padding:0 .4em;background:#fbe9d0;color:#2a1408;font-weight:700}
+.keys button.wait span{background:#ffd23a;animation:pkblink .8s infinite}.keys button:hover{background:#0007}
+.keys button{align-items:center}
+/* ---- story scenes ---- */
+#menu.scene:has(.cutscene){padding:0;display:block}
+.cutscene{position:absolute;inset:0;font-size:max(10px,1.4cqw);cursor:pointer}
+.csbar{position:absolute;left:0;right:0;height:11%;background:#000;animation:csbar .6s ease-out both}.csbar.top{top:0}.csbar.bot{bottom:0}
+@keyframes csbar{from{height:0}}
+.cstitle{position:absolute;top:14%;left:0;right:0;display:grid;justify-items:center;text-shadow:0 3px 0 #000;animation:panelin .8s cubic-bezier(.2,1.3,.5,1) .2s backwards}
+.cstitle small{letter-spacing:.3em;text-transform:uppercase;color:#fff3d0}.cstitle b{font-family:var(--title);font-weight:400;font-size:2.6em;color:#ffe9a0;letter-spacing:.03em}
+.csline{position:absolute;left:8%;right:8%;bottom:15%;display:grid;grid-template-columns:auto 1fr;gap:1em;align-items:center;padding:.8em 1em;border-radius:10px;
+  background:linear-gradient(#1a1430ee,#0e0a1cee);box-shadow:0 0 0 3px #3a4a6a,0 0 0 6px #0a0e18,0 10px 0 4px #0006}
+.csline.in{animation:csin .4s cubic-bezier(.2,1.3,.5,1)}@keyframes csin{from{opacity:0;transform:translateY(12px)}}
+.csport{width:5.5em;aspect-ratio:1;display:grid;place-items:end center;border-radius:10px;overflow:hidden;background:radial-gradient(circle at 50% 40%,#ffe9a0,#c88a1a 70%);box-shadow:0 0 0 3px #0a0e18}
+.csport canvas{width:90%;height:auto;image-rendering:pixelated}
+.cstext{display:grid;gap:.3em;color:#eef2f8}.cstext b{color:#ffd23a;font-size:1.1em}.cstext p{margin:0;min-height:2.6em;font-size:1.05em;line-height:1.35}.cstext small{justify-self:end;color:#8aa0c0;animation:pkblink 1.4s infinite}
+.csskip{position:absolute;right:2%;top:2.5%;z-index:2}

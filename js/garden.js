@@ -129,8 +129,8 @@ function showGarden(){
   // coins the happy trees dropped while you were away (up to 3 each)
   const now=Date.now(),away=now-(G.lastVisit||now);G.lastVisit=now;gDrops=[];
   if(away>25000)G.pots.forEach((p,i)=>{if(p&&isTree(p.k)&&p.stage>=3&&(p.happy||0)>now-away){const n=Math.min(3,Math.floor(Math.min(away,(p.happy-(now-away)))/25000));const sp=GSPOTS[i];for(let k=0;k<n;k++)gDrops.push({i,x:sp.x+rnd(-14,14)*sp.s,y:sp.y+4*sp.s,vy:0,yy:0,gold:Math.random()<.12,t:0})}});
-  menu(`<div class="mbox wide garden"><div class="topbar"><button class="btn ghost" data-go="hub">‹ Menu</button><h2>Estufa</h2><span class="coins"><canvas width="12" height="12" class="coin"></canvas><b id="gcoins">${META.coins}</b> moedas</span></div>
-    <div class="gbar" id="gbar"></div>
+  menu(`<div class="mbox wide garden modern"><div class="topbar"><button class="btn ghost" data-go="hub">‹ Menu</button><h2>Estufa</h2><span class="coins"><canvas width="12" height="12" class="coin"></canvas><b id="gcoins">${META.coins}</b> moedas</span></div>
+    <div class="gbar" id="gbar"></div><div class="gcare" id="gcare">${gCare()}</div>
     <div class="gscene"><canvas id="gardc" width="${GW*2}" height="${GH*2}"></canvas></div>
     <p class="ginfo" id="ginfo"></p><div class="gbar seeds" id="gseeds"></div>
     <p class="help">Plantas crescem com o tempo real. Árvores adultas pedem água, spray ou música; atendidas, ficam felizes e soltam moedas.</p></div>`);
@@ -139,7 +139,7 @@ function showGarden(){
     const i=gSpotAt(e);if(i!==gHover){gHover=i;gInfo=gDescribe(i);$('ginfo').textContent=gInfo||' '}});
   cvs.addEventListener('pointerleave',()=>{gHover=-1;gInfo='';gardenBar()});
   cvs.addEventListener('click',e=>{const m=gPos(e);const d=gDrops.find(d=>!d.dead&&Math.hypot(d.x-m.x,d.y-m.y)<10);if(d){gPick(d);return}const i=gSpotAt(e);gAct(i,e);gInfo=gDescribe(i);$('ginfo').textContent=gInfo});
-  gardenBar();clearInterval(gLoop);drawGarden();gLoop=setInterval(()=>{drawGarden();if(gHover>=0&&$('ginfo'))$('ginfo').textContent=gDescribe(gHover)},50);
+  gardenBar();clearInterval(gLoop);drawGarden();let gTick=0;gLoop=setInterval(()=>{drawGarden();if(++gTick%20===0&&$('gcare'))$('gcare').innerHTML=gCare();if(gHover>=0&&$('ginfo'))$('ginfo').textContent=gDescribe(gHover)},50);
 }
 
 // ---------- the Tree of Life: its own place, only after you buy the seed
@@ -264,3 +264,8 @@ function showIntro(i){
   if($('iprev'))$('iprev').onclick=()=>showIntro(i-1);if($('iskip'))$('iskip').onclick=showHub;
 }
 showHub();
+// what the pots need right now, as chips under the tool bar: how many, and which tool solves it
+function gCare(){const G=META.garden,now=Date.now(),c={water:0,spray:0,harpa:0,ripe:0,happy:0};
+  G.pots.forEach(p=>{if(!p)return;const tree=isTree(p.k);if(p.stage<3&&!p.watered)c.water++;else if(tree&&p.need)c[p.need]++;else if(!tree&&p.stage>=3)c.ripe++;else if(tree&&p.happy>now)c.happy++});
+  const chips=[['water','#5ad0ff','com sede','use o Regador'],['spray','#9ff7b8','com praguinha','use o Spray'],['harpa','#ffd040','querem música','toque a Harpa'],['ripe','#ff9ab0','maduras','clique para colher'],['happy','#c47aff','felizes','soltando moedas']].filter(([k])=>c[k]);
+  return chips.length?chips.map(([k,col,t,h])=>`<span style="--c:${col}"><b>${c[k]}</b> ${t}<small>${h}</small></span>`).join(''):'<span style="--c:#8aa0c0">Tudo em ordem. Que tal plantar algo novo?</span>'}

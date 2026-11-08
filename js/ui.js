@@ -5,7 +5,7 @@ function onCardClick(i){const c=S.hand[i];if(!c)return;const I=info(c);
   playCard(i)}
 // drag a card from the hand onto a slot (or anywhere for blessings)
 let drag=null;
-function slotFromClient(cx,cy){const rc=$('stage').getBoundingClientRect(),wx=(cx-rc.left)/rc.width*W+S.cam,wy=(cy-rc.top)/rc.height*H-VY;
+function slotFromClient(cx,cy){const[wx,wy]=screenToWorld(cx,cy);
   let best=-1,bd=20;MAP.slots.forEach((s,i)=>{const d=Math.hypot(s.x-wx,s.y-8-wy);if(d<bd){bd=d;best=i}});return best}
 function startDrag(e,i,b){if(e.button>0||!S.hand[i])return;drag={i,b,x0:e.clientX,y0:e.clientY,moved:false,ghost:null};try{b.setPointerCapture(e.pointerId)}catch(_){}}
 addEventListener('pointermove',e=>{if(!drag)return;
@@ -21,7 +21,7 @@ addEventListener('pointerup',e=>{if(!drag)return;const d=drag;drag=null;if(d.gho
   else{const rc=$('stage').getBoundingClientRect();if(e.clientY<rc.top+rc.height*.72)playCard(d.i)}});
 cv.parentElement.addEventListener('pointerdown',e=>{
   if(!S||S.sel<0||(S.state!=='prep'&&S.state!=='wave')||e.target.closest('button,#menu'))return;
-  const rc=$('stage').getBoundingClientRect(),wx=(e.clientX-rc.left)/rc.width*W+S.cam,wy=(e.clientY-rc.top)/rc.height*H-VY;
+  const[wx,wy]=screenToWorld(e.clientX,e.clientY);
   let best=-1,bd=16;MAP.slots.forEach((s,i)=>{const d=Math.hypot(s.x-wx,s.y-8-wy);if(d<bd){bd=d;best=i}});
   if(best>=0)playCard(S.sel,best);
 });
@@ -50,7 +50,7 @@ function updHUD(){
   $('wfill').style.transform=`scaleX(${S.state==='wave'?S.done/S.total:0})`;
   const tm=$('timer');tm.hidden=S.state!=='prep';if(S.state==='prep')tm.textContent=S.between>99?'Enter chama a onda':`Onda em ${Math.ceil(S.between)}s · Enter`;
   const pv=$('preview');pv.hidden=S.state!=='prep'||!S.reveal;if(S.state==='prep')pv.textContent=S.reveal?'Próxima: '+waveSummary(w):'Próxima onda: ??? (use Profecia)';
-  const fr=$('fruits');if(!fr.children.length)fr.innerHTML='<b>Frutos</b>'+FRUIT_ORDER.map(f=>`<span data-f="${f}" title="${f}" style="--c:${FRUIT_COL[f]}"></span>`).join('');
+  const fr=$('fruits');if(!fr.children.length)fr.innerHTML='<b>Frutos</b>'+FRUIT_ORDER.map(f=>`<span data-f="${f}" title="${f}" style="--c:${FRUIT_COL[f]}"><i>${f.slice(0,2)}</i></span>`).join('');
   fr.querySelectorAll('span').forEach(s=>s.classList.toggle('on',S.fruits.has(s.dataset.f)));
   $('setb').textContent=S.setMult>1?'Fruto em cacho: +'+Math.round((S.setMult-1)*100)+'% de dano':'';
   const ab=$('abilbtn');if(ab){const f=(S.abil||0)/abilCD();ab.style.setProperty('--cd',f);ab.classList.toggle('ready',f<=0)}
@@ -409,7 +409,7 @@ const lvlOf=(v,cuts)=>1+cuts.filter(c=>v>=c).length;
 function showCodex(tab){
   const tabs={cartas:'Frutos e cartas',vizinhas:'Vizinhanças',inimigos:'Obras da carne',reliquias:'Relíquias',personagens:'Personagens'};let body='',cards=[];
   if(tab==='cartas'){cards=Object.keys(CARDS).map(k=>mk(k,cardKnown(k)?{}:{locked:true}));body=`<p class="help">${cards.filter(c=>!c.locked).length} de ${cards.length} cartas descobertas. Vença fases e abra pacotes na Tenda para encontrar as outras.</p><div class="grid">${cards.map(c=>{const I=info(c),rk=RAR[rarOf(c)],lv=cardLv(c.k),tree=!!I.kinds;
-    return`<div class="cx">${cardHTML(c)}<small class="cxr" style="color:${rk.c}">◆ ${rk.name}${tree&&!c.locked?` · nível ${lv+1}${lv<3?` · cópias ${(META.copies||{})[c.k]||0}/${COPY_NEED[lv]}`:''}`:''}${(META.foil||{})[c.k]&&!c.locked?' · ★':''}</small><i>${c.locked?'???':I.ref}</i></div>`}).join('')}</div>`}
+    return`<div class="cx">${cardHTML(c)}<small class="cxr" style="color:${rk.c}">${rk.sym} ${rk.name}${tree&&!c.locked?` · nível ${lv+1}${lv<3?` · cópias ${(META.copies||{})[c.k]||0}/${COPY_NEED[lv]}`:''}`:''}${(META.foil||{})[c.k]&&!c.locked?' · ★':''}</small><i>${c.locked?'???':I.ref}</i></div>`}).join('')}</div>`}
   if(tab==='vizinhas')body=`<div class="ccrules"><span style="--c:#4faa4a">Árvores a até 72 passos se ligam por ramos</span><span style="--c:#e8a020">Frutos diferentes juntos: +10% de dano</span><span style="--c:#9b5ae0">Perto de uma Videira: +25% (João 15:5)</span><span style="--c:#c8403a">A Discórdia corta ramos ao passar por baixo</span></div>
     <div class="grid ccg pairs">${PAIRS.map((p,i)=>ccard({col:FRUIT_COL[FRUIT[p.a]],name:p.name,art:`<canvas width="288" height="144" data-pair="${i}"></canvas>`,body:`<b class="ccsub">${CARDS[p.a].name} + ${CARDS[p.b].name}</b><p>Juntas, ${p.desc}.</p>`,ref:p.ref})).join('')}</div>`;
   if(tab==='inimigos')body=`<p class="help">Passe o mouse numa carta para ver a praga se mexer.</p><div class="grid ccg">${Object.entries(EN).filter(([,d])=>!d.hide).map(([k,d])=>{const seen=META.seen.e[k];
@@ -431,10 +431,9 @@ function showCodex(tab){
   $('menu').querySelectorAll('canvas[data-char]').forEach(c=>charIconTo(c,c.dataset.char));
 }
 function showAchs(){const keys=Object.keys(ACH),got=keys.filter(k=>META.ach[k]).length;
-  menu(`<div class="mbox wide cabin achs"><h2>Conquistas</h2>
+  menu(`<div class="mbox wide modern achs"><h2>Conquistas</h2>
     <div class="achtop"><b>${got} de ${keys.length} conquistadas</b><div class="xp"><i style="width:${got/keys.length*100}%"></i></div><small>Obras da carne derrotadas: ${META.stats.kills} · Jornadas vencidas: ${META.stats.wins}</small></div>
-    <div class="achgrid">${keys.map((k,i)=>{const a=ACH[k],on=!!META.ach[k];return`<div class="ach ${on?'got':'locked'}"><canvas width="64" height="80" data-medal="${i}" data-on="${on?1:0}"></canvas>
-      <div><b>${a.name}</b><small>${a.desc}</small><i>${a.ref}</i></div>${on?'<span class="tag">conquistada</span>':''}</div>`}).join('')}</div>
+    <div class="grid ccg">${keys.map((k,i)=>{const a=ACH[k],on=!!META.ach[k];return ccard({col:on?'#c9921a':'#3a4458',name:a.name,cls:'medal'+(on?'':' off'),tag:on?'✓':'',art:`<canvas width="64" height="80" data-medal="${i}" data-on="${on?1:0}"></canvas>`,body:`<p>${a.desc}</p>`,ref:a.ref})}).join('')}</div>
     <button class="btn" data-go="title">Voltar</button></div>`);
   $('menu').querySelectorAll('canvas[data-medal]').forEach(c=>medalTo(c,+c.dataset.medal,c.dataset.on==='1'))}
 // a medal on a two-color ribbon; gray with a padlock while it is still locked

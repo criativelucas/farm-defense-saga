@@ -48,7 +48,7 @@ function palm(px,py,c){for(let i=0;i<22;i++)r(px+Math.sin(i*.15)*3,py-i,2,1,c);
 // ---------- audio: blips + a small generated score in the Phrygian dominant scale
 let AC=null,MASTER=null,MUSG=null,SFXG=null,muted=false;
 const CFG=Object.assign({mus:.55,sfx:.9,lite:false},store.get('fds-cfg',{}));
-function saveCfg(){store.set('fds-cfg',CFG);if(MUSG)MUSG.gain.value=CFG.mus;if(SFXG)SFXG.gain.value=CFG.sfx;document.body.classList.toggle('lite',CFG.lite);document.body.classList.toggle('big',!!CFG.big)}
+function saveCfg(){store.set('fds-cfg',CFG);if(MUSG)MUSG.gain.value=CFG.mus;if(SFXG)SFXG.gain.value=CFG.sfx;document.body.classList.toggle('lite',CFG.lite);document.body.classList.toggle('big',!!CFG.big);document.body.classList.toggle('cb',!!CFG.cb)}
 function initAudio(){
   if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();MASTER=AC.createGain();MASTER.gain.value=muted?0:.9;MASTER.connect(AC.destination);
     MUSG=AC.createGain();MUSG.gain.value=CFG.mus;SFXG=AC.createGain();SFXG.gain.value=CFG.sfx;SFXG.connect(MASTER);
@@ -76,7 +76,7 @@ function sfx(n){if(!AC||muted)return;const now=AC.currentTime;if(lastS[n]&&now-l
   o.connect(g).connect(SFXG||MASTER);o.start(now);o.stop(now+P[2]+.02)}
 
 const MUS={mode:'calm',next:0,step:0,world:'eden'};
-const MSTYLE={eden:{t:84,tr:0,lead:'triangle',prog:[0,5,3,4]},jerico:{t:96,tr:2,lead:'square',prog:[0,3,4,0]},mar:{t:90,tr:-2,lead:'sine',prog:[0,5,6,4]},sinai:{t:78,tr:-5,lead:'triangle',prog:[0,1,0,4]},
+const MSTYLE={eden:{t:84,tr:0,lead:'triangle',prog:[0,5,3,4]},ressurreicao:{t:78,tr:2,lead:'triangle',prog:[0,3,4,5]},jerico:{t:96,tr:2,lead:'square',prog:[0,3,4,0]},mar:{t:90,tr:-2,lead:'sine',prog:[0,5,6,4]},sinai:{t:78,tr:-5,lead:'triangle',prog:[0,1,0,4]},
   babel:{t:104,tr:3,lead:'square',prog:[0,4,5,3]},getsemani:{t:66,tr:-7,lead:'sine',prog:[0,5,3,1]},abismo:{t:70,tr:-9,lead:'sine',prog:[0,1,5,4]},tumulo:{t:72,tr:5,lead:'triangle',prog:[0,3,5,4]}};
 // each world gets its own 32-step melody, built once from its name so it is always the same tune
 const MELO={};function melody(w){if(MELO[w])return MELO[w];let h=0;for(const ch of w)h=h*31+ch.charCodeAt(0)|0;const R=()=>{h=Math.imul(h^h>>>15,2246822507)+1|0;return((h>>>0)%1000)/1000};
@@ -120,7 +120,7 @@ async function loadAudio(){if(AUD.meta)return;AUD.meta={};
   try{AUD.meta=await (await fetch('assets/audio/music.json')).json();AUD.mode='files'}catch(e){AUD.mode='synth';return}
   AUD_SFX.forEach(n=>get('sfx-'+n+'.wav').then(b=>AUD.sfx[n]=b).catch(()=>{}))}
 function trackBuf(k){if(AUD.buf[k])return AUD.buf[k];if(!AUD.loading[k]){AUD.loading[k]=1;fetch('assets/audio/'+k+'.mp3').then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()}).then(a=>AC.decodeAudioData(a)).then(b=>AUD.buf[k]=b).catch(()=>{if(!/perc|vitoria|derrota/.test(k))AUD.mode='synth'})}return null}
-function wantedTrack(){if(MUS.mode==='boss')return'chefe';if(MUS.scene)return MUS.scene;const w=MUS.world==='abismo'?'mar':MUS.world;return AUD.meta.loops&&AUD.meta.loops[w]?w:'titulo'}
+function wantedTrack(){if(MUS.mode==='boss')return'chefe';if(MUS.scene)return MUS.scene;const w=MUS.world==='abismo'?'mar':MUS.world==='ressurreicao'?'tumulo':MUS.world;return AUD.meta.loops&&AUD.meta.loops[w]?w:'titulo'}
 function loopSource(buf,L,dest,when){const s=AC.createBufferSource();s.buffer=buf;s.loop=true;let lead=0;const d=buf.getChannelData(0);while(lead<4000&&Math.abs(d[lead])<1e-3)lead++;
   s.loopStart=lead/buf.sampleRate;s.loopEnd=Math.min(buf.duration,s.loopStart+L);s.connect(dest);s.start(when,s.loopStart);return s}
 function musicFiles(){const k=wantedTrack(),now=AC.currentTime,cur=AUD.cur;
@@ -136,12 +136,15 @@ function playJingle(k){if(!AC||muted||AUD.mode!=='files')return;const b=trackBuf
 // ---------- input
 const keys=new Set(),hit=new Set();
 const GAME=new Set(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space','KeyW','KeyA','KeyS','KeyD','KeyN','KeyM','Digit1','Digit2','Digit3','Digit4','KeyX','KeyJ','KeyQ','KeyE','KeyR']);
-addEventListener('keydown',e=>{if(GAME.has(e.code)&&!(e.target.closest&&e.target.closest('#menu')))e.preventDefault();if(!e.repeat)hit.add(e.code);keys.add(e.code);initAudio()});
-addEventListener('keyup',e=>keys.delete(e.code));
+// keys chosen in the settings: each one stands in for one of the game's own keys
+const KEYMAP={};function buildKeymap(){for(const k in KEYMAP)delete KEYMAP[k];for(const[c,v]of Object.entries(CFG.keys||{}))if(v)KEYMAP[v]=c}buildKeymap();
+const keyOf=e=>KEYMAP[e.code]||e.code;
+addEventListener('keydown',e=>{const c=keyOf(e);if((GAME.has(c)||KEYMAP[e.code])&&!(e.target.closest&&e.target.closest('#menu')))e.preventDefault();if(!e.repeat)hit.add(c);keys.add(c);initAudio()});
+addEventListener('keyup',e=>keys.delete(keyOf(e)));
 addEventListener('blur',()=>keys.clear());
 const dn=(...c)=>c.some(k=>keys.has(k))?1:0, pr=(...c)=>c.some(k=>hit.has(k));
 document.querySelectorAll('#touch button').forEach(b=>{const k=b.dataset.k;
   b.addEventListener('pointerdown',e=>{e.preventDefault();keys.add(k);hit.add(k);initAudio()});
   ['pointerup','pointercancel','pointerleave'].forEach(t=>b.addEventListener(t,()=>keys.delete(k)))});
 
-document.body.classList.toggle('lite',CFG.lite);document.body.classList.toggle('big',!!CFG.big);
+document.body.classList.toggle('lite',CFG.lite);document.body.classList.toggle('big',!!CFG.big);document.body.classList.toggle('cb',!!CFG.cb);

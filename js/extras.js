@@ -123,3 +123,41 @@ function unlocksAfter(n){const L=[],lv=LEVELS[n];if(!lv)return L;
   const nx=LEVELS[n+1];if(nx&&nx.goal)L.push(['sys','Fase especial: '+GOALS[nx.goal].name]);
   if(lv.id==='1-4')L.push(['mode','Estufa do jardim']);if(lv.id==='2-4')L.push(['mode','Modo Jornada']);if(lv.l===3)L.push(['mode','Modo infinito: '+WORLDS[lv.wi].name]);
   return L}
+
+// ---------- a small log of adventure battles (last 80), to tune balance from real games instead of guesses
+function logRun(win){const L=RUN&&LEVELS[RUN.level];if(!L||RUN.mini||RUN.endless)return;const worst=Object.entries(S.leaks||{}).sort((a,b)=>b[1]-a[1])[0];
+  META.log=(META.log||[]).slice(-79);META.log.push({d:Date.now(),lv:L.id,ch:RUN.char,w:win?1:0,wave:(S.wi||0)+1,hp:RUN.hp,k:S.kills||0,s:Math.round(S.t),by:worst?worst[0]:null});saveMeta()}
+function logHTML(){const L=META.log||[];if(!L.length)return'<p class="help">Nenhuma fase jogada ainda. Cada vitória ou derrota na Aventura fica anotada aqui.</p>';
+  const wins=L.filter(r=>r.w).length,by={},per=WORLDS.map(()=>[0,0]),chars={};
+  L.forEach(r=>{const wi=+r.lv.split('-')[0]-1;if(per[wi]){per[wi][1]++;if(r.w)per[wi][0]++}if(!r.w&&r.by)by[r.by]=(by[r.by]||0)+1;const c=chars[r.ch]=chars[r.ch]||[0,0];c[1]++;if(r.w)c[0]++});
+  const pct=(a,b)=>b?Math.round(a/b*100)+'%':'—',top=Object.entries(by).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  return`<div class="logsum"><span><b>${L.length}</b> fases</span><span><b>${pct(wins,L.length)}</b> vitórias</span><span>Mais derrotas por: <b>${top.map(([k,n])=>EN[k].name+' ('+n+')').join(', ')||'—'}</b></span></div>
+    <div class="logworlds">${WORLDS.map((w,i)=>`<div><small>${w.name}</small><i><u style="width:${per[i][1]?per[i][0]/per[i][1]*100:0}%"></u></i><b>${per[i][1]?pct(...per[i]):'—'}</b></div>`).join('')}</div>
+    <p class="help">Por personagem: ${Object.entries(chars).map(([k,[a,b]])=>CHARS[k].name+' '+pct(a,b)+' de '+b).join(' · ')}</p>
+    <div class="logrows">${L.slice(-8).reverse().map(r=>`<span class="${r.w?'w':'l'}">${r.lv} · ${CHARS[r.ch]?CHARS[r.ch].name:r.ch} · ${r.w?'venceu com '+r.hp+' de Vida':'caiu na onda '+r.wave+(r.by?' ('+EN[r.by].name+')':'')} · ${r.s}s</span>`).join('')}</div>`}
+
+// ---------- short story scenes before each new world: the next garden behind, cinema bars, a portrait and lines typed out
+// 'eu' is whoever the player is using
+const SCENE_TXT=[null,
+  [['narrador','Do jardim, o caminho segue até uma cidade de muralhas altas: Jericó.'],['debora','Josué rodeou a cidade sete vezes. Não há muralha que resista à fé.'],['eu','Então eu dou as sete voltas. Vamos!']],
+  [['narrador','O Faraó endureceu o coração e perseguiu o povo até a beira do mar.'],['moises','“Não temais; aquietai-vos e vede o livramento do Senhor.” (Êxodo 14:13)'],['eu','Eu levo o povo até a outra margem.']],
+  [['narrador','No deserto, enquanto Moisés subia o monte, o povo fez um bezerro de ouro.'],['moises','“Não terás outros deuses diante de mim.” (Êxodo 20:3)'],['eu','Três pisões e esse ídolo cai.']],
+  [['narrador','Na planície de Sinar, os homens quiseram uma torre até o céu, para fazer um nome para si.'],['noe','Depois do dilúvio, a terra tinha uma só língua. Mas o orgulho confunde tudo.'],['eu','Mesmo com as cartas trocadas, o jardim fica de pé.']],
+  [['narrador','Num jardim de oliveiras, à noite, o Mestre pediu: “Vigiai e orai.” (Mateus 26:41)'],['elias','Eu também me cansei um dia, debaixo de um zimbro. Mas o Senhor disse: levanta e come.'],['eu','Vou passar perto das árvores para que não adormeçam.']],
+  [['narrador','Ao terceiro dia, bem cedo, as mulheres foram ao sepulcro. A pedra tinha sido removida.'],['rute','“Por que buscais entre os mortos ao que vive?” (Lucas 24:5)'],['eu','A última sombra ainda ronda o jardim. Agora ela não vence mais.']]];
+function showScene(wi,onDone){const L=SCENE_TXT[wi];if(!L){onDone();return}
+  const w=WORLDS[wi];blankBattle(w.map,true);S.state='title';S.cam=0;MUS.mode='calm';let i=0,typing=null,done=false;
+  menu(`<div class="cutscene"><i class="csbar top"></i><i class="csbar bot"></i>
+    <div class="cstitle"><small>Capítulo ${wi+1}</small><b>${w.name}</b></div>
+    <div class="csline" id="csline"><div class="csport"><canvas width="32" height="40" id="csp"></canvas></div><div class="cstext"><b id="csname"></b><p id="cstxt"></p><small>Toque ou Enter ▸</small></div></div>
+    <button type="button" class="btn ghost csskip" id="csskip">Pular</button></div>`);
+  $('menu').classList.add('scene');
+  const pan=setInterval(()=>{if(!S||S.state!=='title'||!$('csline')){clearInterval(pan);return}S.cam=Math.min(MAP.ww-W,S.cam+.35)},30);
+  const finish=()=>{if(done)return;done=true;clearInterval(pan);clearInterval(typing);removeEventListener('keydown',key,true);onDone()};
+  const show=()=>{const[who,txt]=L[i],k=who==='eu'?META.char:who,el=$('csline');el.classList.remove('in');void el.offsetWidth;el.classList.add('in');
+    $('csname').textContent=k==='narrador'?'Narrador':CHARS[k].name;
+    const c=$('csp');if(k==='narrador'){const g=hdCtx(c,32,40);C=g;g.save();g.translate(0,4);ICONS.profecia();g.restore();C=x}else charIconTo(c,k);
+    let n=0;const p=$('cstxt');p.textContent='';clearInterval(typing);typing=setInterval(()=>{n+=2;p.textContent=txt.slice(0,n);if(n>=txt.length)clearInterval(typing)},22);sfx('card')};
+  const next=()=>{const p=$('cstxt');if(p&&p.textContent.length<L[i][1].length){clearInterval(typing);p.textContent=L[i][1];return}if(++i>=L.length)finish();else show()};
+  const key=e=>{if(e.code==='Enter'||e.code==='Space'){e.preventDefault();e.stopPropagation();next()}else if(e.code==='Escape'){e.stopPropagation();finish()}};
+  addEventListener('keydown',key,true);$('csline').onclick=next;$('csskip').onclick=finish;show()}

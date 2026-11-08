@@ -33,7 +33,7 @@ function buildTiles(P,th){
 
 // ---------- living props: torches, lanterns, a rope bridge, banners, butterflies
 function buildProps(){
-  const L=[],kind={eden:'lantern',getsemani:'lantern',tumulo:'lantern'}[MAPID]||'torch';
+  const L=[],kind={eden:'lantern',getsemani:'lantern',tumulo:'lantern',ressurreicao:'lantern'}[MAPID]||'torch';
   const bad=x0=>x0<46||MAP.slots.some(s=>Math.abs(s.x-x0)<14)||inWater(x0)||(MAP.sea&&x0>MAP.sea[0]-8&&x0<MAP.sea[1]+8);
   MAP.flats.forEach(([a,b,y],si)=>{if(b-a<40||hs(si,6)<.3)return;const x0=a+10+(hs(si,5)*(b-a-20)|0);if(!bad(x0))L.push({t:kind,x:x0,y})});
   // little animals: birds that fly off when you come close, rabbits in the grass, lizards on the hot rocks
@@ -44,7 +44,7 @@ function buildProps(){
     else spots.slice(1,4).forEach(([a,b,y],k)=>{if(hs(k,17)>.4)L.push({t:'lizard',x:(a+b)/2,y,a:a+6,b:b-6,s:k})})}
   if(MAP.water)L.push({t:'bridge',a:MAP.water[0]-6,b:MAP.water[1]+5,y:gy(MAP.water[0])});
   if(MAPID==='jerico')MAP.plats.forEach((pl,k)=>{if(pl.wall&&pl.w<30)L.push({t:'banner',x:pl.x+pl.w-4,y:pl.y})});
-  if(['eden','tumulo','jerico'].includes(MAPID))for(let k=0;k<5;k++)L.push({t:'fly',x:90+k*(MAP.ww-120)/5,y:gy(90+k*(MAP.ww-120)/5),s:k});
+  if(['eden','tumulo','jerico','ressurreicao'].includes(MAPID))for(let k=0;k<5;k++)L.push({t:'fly',x:90+k*(MAP.ww-120)/5,y:gy(90+k*(MAP.ww-120)/5),s:k});
   MAP.props=L;
 }
 function flame(X,Y,k){const f=(S.t*12+k)|0,h=3+(f%3),sw=Math.round(Math.sin(S.t*9+k));

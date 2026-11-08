@@ -2,7 +2,7 @@
 // and the name in a bar on top, a big painted window with the subject, a rarity seal and the collection number
 // on its edges, fruit marks under it, then stat bars for trees or a short rule for the rest
 const CARD_W=120,CARD_H=168,MINI_W=72,MINI_H=100,CK=3;// drawn at 3x so text and art stay sharp
-const RAR={comum:{name:'Comum',c:'#d4d8e0',d:'#5a6070'},rara:{name:'Rara',c:'#5ab8ff',d:'#14407a'},epica:{name:'Épica',c:'#c47aff',d:'#40146e'},lendaria:{name:'Lendária',c:'#ffd040',d:'#7a4a06'}};
+const RAR={comum:{name:'Comum',c:'#d4d8e0',d:'#5a6070',sym:'●'},rara:{name:'Rara',c:'#5ab8ff',d:'#14407a',sym:'◆'},epica:{name:'Épica',c:'#c47aff',d:'#40146e',sym:'▲'},lendaria:{name:'Lendária',c:'#ffd040',d:'#7a4a06',sym:'★'}};
 const RAR_ORDER=['comum','rara','epica','lendaria'];
 const RARITY={videira:'comum',roma:'comum',oliveira:'comum',lirio:'comum',mana:'comum',profecia:'comum',joio:'comum',
   figueira:'rara',tamareira:'rara',mostarda:'rara',talentos:'rara',chuva:'rara',amendoeira:'epica',sarca:'epica',semeador:'epica',jerico:'lendaria',
@@ -68,14 +68,17 @@ function subjectBuf(c,I,cat){const b=mkHD(48,48,2),keep=C;C=b.getContext('2d');
 function inked(g,src,x0,y0,w,h,ink,o){const s=mkCanvas(src.width,src.height),q=s.getContext('2d');q.drawImage(src,0,0);q.globalCompositeOperation='source-in';q.fillStyle=ink;q.fillRect(0,0,s.width,s.height);
   g.imageSmoothingEnabled=false;for(const[a,b]of[[-o,0],[o,0],[0,-o],[0,o]])g.drawImage(s,x0+a,y0+b,w,h);g.drawImage(src,x0,y0,w,h)}
 // rarity seal: a dark ring around a colored gem with a glint; the legendary one wears a little crown
-function sealDraw(x0,y0,s,rk){const R=RAR[rk],u=s/8,cx=x0+4*u,cy=y0+4*u;
-  disc(cx,cy,4*u,CINK);disc(cx,cy,3.2*u,R.d);disc(cx,cy-.4*u,2.4*u,R.c);r(cx-1.4*u,cy-2*u,u,u,'#ffffff');
-  if(rk==='lendaria'){r(cx-2.5*u,y0-2*u,5*u,1.6*u,CINK);r(cx-2*u,y0-1.6*u,4*u,u,R.c);for(const dx of[-2,0,1.6])r(cx+dx*u,y0-3*u,.8*u,1.4*u,R.c)}
-  if(rk==='epica'||rk==='lendaria')r(cx+1.2*u,cy+.6*u,.8*u,.8*u,'#ffffffaa')}
+// rarity seal: a shape per rarity so it reads without color too (circle, diamond, triangle, star), dark rim, colored gem, a glint
+function sealDraw(x0,y0,s,rk){const R=RAR[rk],u=s/8,cx=x0+4*u,cy=y0+4*u,
+    half=(j,rad)=>{const a=Math.abs(j);if(rk==='comum')return Math.sqrt(Math.max(0,rad*rad-j*j));if(rk==='rara')return rad-a;if(rk==='epica')return Math.max(0,(j+rad)*.58);
+      return Math.max(a<rad*.2?rad:0,rad*.62-a,a<rad?rad*.18:0)},
+    shape=(rad,col,dy=0)=>{for(let j=-rad;j<rad;j+=u*.5){const w=half(j+u*.25,rad);if(w>0)r(cx-w,cy+dy+j,w*2,u*.5,col)}};
+  shape(4.4*u,CINK);shape(3.5*u,R.d);shape(2.6*u,R.c,-.3*u);r(cx-1.2*u,cy-1.6*u,u,u,'#ffffff');
+  if(rk==='lendaria'){r(cx-2.5*u,y0-2.4*u,5*u,1.6*u,CINK);r(cx-2*u,y0-2*u,4*u,u,R.c);for(const dx of[-2,0,1.6])r(cx+dx*u,y0-3.4*u,.8*u,1.4*u,R.c)}}
 // the window with its painting, subject and seal, shared by both sizes
 function windowDraw(g,c,I,cat,P,ax,ay,aw,ah,sc){
-  const win=mkHD(aw,ah,CK);paintWindow(win,aw,ah,P,(c.k||'x').length*7+(c.hyb?3:0));
-  r(ax-1,ay-1,aw+2,ah+2,CINK);g.drawImage(win,ax,ay,aw,ah);
+  const win=mkHD(aw,ah,1);paintWindow(win,aw,ah,P,(c.k||'x').length*7+(c.hyb?3:0));
+  r(ax-1,ay-1,aw+2,ah+2,CINK);g.imageSmoothingEnabled=false;g.drawImage(win,ax,ay,aw,ah);
   g.save();g.beginPath();g.rect(ax,ay,aw,ah);g.clip();
   const fl=ay+ah*.82,cx=ax+aw/2;
   g.globalAlpha=.45;for(let i=0;i<3;i++)r(cx-aw*(.24-i*.05),fl+i,aw*(.48-i*.1),1,P[0]);g.globalAlpha=1;
@@ -169,9 +172,9 @@ function cardTip(c,btn){const el=$('cardtip');if(!c){el.hidden=true;return}el.in
 
 // ---------- card packs from the market: buy one, tear it open, flip the cards one by one; rarer cards make a bigger show
 const PACKS={
-  semeador:{name:'Pacote do Semeador',short:'SEMEADOR',price:150,n:4,odds:[72,22,5,1],seeds:1,col:['#1e5a2a','#4faa4a','#b8f07a'],desc:'4 cartas, quase todas sementes.'},
-  bencao:{name:'Pacote da Bênção',short:'BÊNÇÃO',price:320,n:5,odds:[55,30,12,3],min:1,col:['#7a3a08','#e8a020','#fff0a0'],desc:'5 cartas. Uma rara ou melhor garantida.'},
-  arca:{name:'Pacote da Arca',short:'ARCA',price:750,n:5,odds:[30,38,24,8],min:2,col:['#2e1460','#8a4ad8','#e8c8ff'],desc:'5 cartas. Uma épica ou melhor garantida.'}};
+  semeador:{name:'Pacote do Semeador',short:'SEMEADOR',price:120,n:4,odds:[72,22,5,1],seeds:1,col:['#1e5a2a','#4faa4a','#b8f07a'],desc:'4 cartas, quase todas sementes.'},
+  bencao:{name:'Pacote da Bênção',short:'BÊNÇÃO',price:300,n:5,odds:[55,30,12,3],min:1,col:['#7a3a08','#e8a020','#fff0a0'],desc:'5 cartas. Uma rara ou melhor garantida.'},
+  arca:{name:'Pacote da Arca',short:'ARCA',price:700,n:5,odds:[30,38,24,8],min:2,col:['#2e1460','#8a4ad8','#e8c8ff'],desc:'5 cartas. Uma épica ou melhor garantida.'}};
 const PACK_POOL=Object.keys(RARITY).filter(k=>k!=='joio');
 Object.assign(SND,{rip:[260,2400,.2,'sawtooth',.05],flip:[760,380,.11,'triangle',.05],shine:[900,2600,.35,'sine',.05],legend:[196,1568,.9,'square',.045]});
 const COPY_NEED=[2,3,4];// extra copies a tree card needs to reach level 2, 3 and 4
@@ -241,7 +244,7 @@ function openPack(id,onClose){
   const flash=cls=>{ov.classList.remove('flash','fl-epica','fl-lendaria');void ov.offsetWidth;ov.classList.add('flash');if(cls)ov.classList.add(cls)};
   const row=ov.querySelector('.prow'),flipped=new Set();let opened=false;
   got.forEach((o,i)=>{const el=document.createElement('div');el.className='pcard r-'+o.rk+(o.foil?' foil':'');el.style.setProperty('--i',i);
-    el.innerHTML=`<div class="pin"><div class="pf pback"></div><div class="pf pfront"></div></div><div class="prar">${RAR[o.rk].name}!</div><div class="ptag">${packTag(o)}</div>`;
+    el.innerHTML=`<div class="pin"><div class="pf pback"></div><div class="pf pfront"></div></div><div class="prar">${RAR[o.rk].sym} ${RAR[o.rk].name}!</div><div class="ptag">${packTag(o)}</div>`;
     el.querySelector('.pback').append(cardBack());el.querySelector('.pfront').append(cardCanvas(mk(o.k,o.foil?{rare:true}:{})));
     el.onclick=()=>flip(i);row.append(el)});
   const done=()=>{if(!alive)return;$('pall').hidden=true;ov.querySelector('.phint').textContent=got.some(o=>o.st==='nova')?'Cartas novas entram na sua coleção':'Cópias sobem o nível das árvores';
@@ -287,7 +290,7 @@ function showPacks(){
       <div class="todds">${p.odds.map((o,j)=>`<span style="--rc:${RAR[RAR_ORDER[j]].c};flex:${Math.max(o,5)}" title="${RAR[RAR_ORDER[j]].name}: ${o}%"></span>`).join('')}</div>
       <button type="button" class="btn" data-buypk="${k}" ${META.coins<p.price?'disabled':''}><canvas width="12" height="12" class="coin"></canvas>${p.price}</button></div>`).join('')}</div>
     <div class="tcol"><span>Coleção <b>${own}/${n}</b></span><span class="tbar"><i style="width:${own/n*100}%"></i></span><button type="button" class="btn ghost" data-go="codex">Ver cartas</button></div>
-    <div class="qfoot"><button class="btn ghost" data-go="hub">‹ Menu</button><span class="qpage">${RAR_ORDER.map(r=>`<i style="color:${RAR[r].c}">◆</i> ${RAR[r].name}`).join(' &nbsp; ')}</span>${coinsTag()}</div></div>`);
+    <div class="qfoot"><button class="btn ghost" data-go="hub">‹ Menu</button><span class="qpage">${RAR_ORDER.map(r=>`<i style="color:${RAR[r].c}">${RAR[r].sym}</i> ${RAR[r].name}`).join(' &nbsp; ')}</span>${coinsTag()}</div></div>`);
   paintCoins();tendaArt();paintPack3d($('menu'));
   const bub=$('qbub');
   $('menu').querySelectorAll('.tpk').forEach(el=>{const p=PACKS[el.dataset.pk];

@@ -23,7 +23,7 @@ function drawRanges(){if(!live())return;
   if(S.dragSlot>=0&&S.dragKinds)show(S.dragSlot,S.dragKinds,null,'#f7c948');
   if(S.sel>=0&&S.hoverSlot>=0&&S.hand[S.sel]){const I=info(S.hand[S.sel]);if(I.kinds)show(S.hoverSlot,I.kinds,null,'#f7c948')}
   const si=S.infoSlot>=0?S.infoSlot:S.sel<0?S.hoverSlot:-1,t=si>=0&&S.tw[si];if(t&&!t.joio)show(si,t.kinds,t,'#ffffff')}
-function treeSlotAt(cx,cy,needTree){const rc=$('stage').getBoundingClientRect(),wx=(cx-rc.left)/rc.width*W+S.cam,wy=(cy-rc.top)/rc.height*H-VY;
+function treeSlotAt(cx,cy,needTree){const[wx,wy]=screenToWorld(cx,cy);
   let best=-1,bd=needTree?22:16;MAP.slots.forEach((s,i)=>{if(needTree&&!S.tw[i])return;const d=Math.hypot(s.x-wx,(s.y-(needTree?14:8))-wy);if(d<bd){bd=d;best=i}});return best}
 cv.parentElement.addEventListener('pointermove',e=>{if(!live()||e.target.closest('#menu,#hand,#treeinfo'))return;S.hoverSlot=treeSlotAt(e.clientX,e.clientY,S.sel<0)});
 cv.parentElement.addEventListener('pointerdown',e=>{if(!live()||S.sel>=0||e.target.closest('button,#menu,#hand,#treeinfo,#itembar'))return;

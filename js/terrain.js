@@ -76,7 +76,7 @@ function drawGround(){
 // ---------- decoration baked into the ground: what grows and lies around differs from world to world
 const DECOR={
   eden:['bush','fern','flowers','flowers','mushroom','mossrock','grass','bush'],getsemani:['mossrock','fern','grass','bush','mossrock','grass'],
-  tumulo:['flowers','flowers','bush','lily','grass','flowers'],sinai:['boulder','shrub','boulder','grass','shrub','skullrock'],
+  tumulo:['flowers','flowers','bush','lily','grass','flowers'],ressurreicao:['flowers','flowers','bush','lily','grass','flowers'],sinai:['boulder','shrub','boulder','grass','shrub','skullrock'],
   mar:['shell','reeds','boulder','shrub','reeds','driftwood'],jerico:['palmlet','jar','shrub','boulder','grass','palmlet'],babel:['bricks','jar','shrub','boulder','bricks','palmlet'],abismo:['shell','reeds','boulder','driftwood']};
 function decorate(near){const M=MAP,P=M.pal,kinds=DECOR[MAPID]||DECOR.eden,G=gy,leaf=[shade(P.top2,-.45),P.top2,P.top1];
   const bad=x0=>x0<46||x0>M.ww-6||near(x0)||inWater(x0)||(M.sea&&x0>M.sea[0]-6&&x0<M.sea[1]+6)||Math.abs(G(x0+3)-G(x0-3))>3||
@@ -128,7 +128,7 @@ function varyIslands(v){const M=MAP;
   M.slots.forEach(s=>{if(s.pl!=null){const pl=M.plats[s.pl];s.x=pl.x+s.dx;s.y=pl.y}})}
 // ---------- weather by level: [first, second, third, fourth]
 const WEATHER={eden:[null,null,'petals','rain'],jerico:['wind',null,'sand',null],mar:['wind','mist','mist',null],sinai:[null,'rain','sand','rain'],
-  babel:['sand',null,'wind','sand'],getsemani:['mist','rain','mist','mist'],tumulo:['petals']};
+  babel:['sand',null,'wind','sand'],getsemani:['mist','rain','mist','mist'],tumulo:['petals'],ressurreicao:['petals',null,'petals','mist']};
 function drawWeather(){const w=S.wx;if(!w||CFG.lite&&w!=='rain')return;const t=S.t,loop=(v,m)=>((v%m)+m)%m;
   if(w==='rain'){x.globalAlpha=.55;for(let i=0;i<70;i++){const sx=loop(hs(i,1)*W*1.3-t*90-i*7,W+40)-20,sy=loop(hs(i,2)*H+t*260,H+20)-10;r(sx,sy,.5,4,'#bfe0ff');r(sx-.5,sy+4,.5,2,'#bfe0ff')}
     x.globalAlpha=1;x.fillStyle='rgba(40,60,100,.12)';x.fillRect(0,0,W+1,H);if(Math.random()<.4){const sx=S.cam+rnd(0,W);if(!inWater(sx))vfx('splash',sx,gy(sx))}}

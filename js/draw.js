@@ -4,8 +4,11 @@ function drawEnemy(e){
   const d=EN[e.k];
   if(e.dive>0){for(let i=0;i<4;i++)r(e.x-16+i*10+Math.sin(S.t*6+i)*2,e.y-3-((S.t*20+i*7)%6),2,1,'#bfe8ff');return}
   if(!d.fly){const sw=Math.min(d.w+2,30);x.fillStyle='rgba(20,8,20,.28)';x.fillRect(Math.round(e.x-sw/2),gy(e.x)-.5,sw,1.5)}
-  if(S.t-(e.born??-9)>.3){const o=1;OV=INK;for(const[ox,oy]of[[-o,0],[o,0],[0,-o],[0,o]]){x.translate(ox,oy);enemyBody(e);x.translate(-ox,-oy)}}
-  const age=S.t-(e.born??-9),sp=age<.3?Math.max(.05,easeBack(age/.3)):1,hq=e.flash>0?1:0;
+  // a furious boss: a pulsing red outline twice as thick, embers rising from it
+  if(e.ph2){const p=.5+.5*Math.sin(S.t*8);x.globalAlpha=.35+.35*p;OV='#ff2a1a';for(const[ox,oy]of[[-2,0],[2,0],[0,-2],[0,2]]){x.translate(ox,oy);enemyBody(e);x.translate(-ox,-oy)}x.globalAlpha=1;
+    if(Math.random()<.5)S.parts.push({x:e.x+rnd(-d.w/2,d.w/2),y:e.y-rnd(0,d.h),vx:rnd(-8,8),vy:rnd(-40,-20),g:-10,life:.8,max:.8,c:Math.random()<.5?'#ff6a1a':'#ffd040',s:1})}
+  if(S.t-(e.born??-9)>.3){const o=1;OV=e.ph2&&Math.sin(S.t*8)>.3?'#6a0a08':INK;for(const[ox,oy]of[[-o,0],[o,0],[0,-o],[0,o]]){x.translate(ox,oy);enemyBody(e);x.translate(-ox,-oy)}}
+  const age=S.t-(e.born??-9),sp=(age<.3?Math.max(.05,easeBack(age/.3)):1)*(e.ph2?1.06+.02*Math.sin(S.t*8):1),hq=e.flash>0?1:0;
   x.save();x.translate(e.x,e.y);x.scale(sp*(1+hq*.2),sp*(1-hq*.16));x.translate(-e.x,-e.y);
   OV=e.flash>0?'#ffffff':e.frz>0?'#a8ecff':null;enemyBody(e);OV=null;x.restore();
   if(e.shield){x.globalAlpha=.35+Math.sin(S.t*6)*.1;ring(e.x,ecy(e),Math.max(d.w,d.h)/2+3,'#9ab0ff');x.globalAlpha=1}
@@ -227,7 +230,14 @@ function drawTree(t,s,i){
 function drawCorpses(){for(const f of S.fx){if(f.k!=='corpse')continue;const k=f.t/f.max,e=f.e;x.globalAlpha=1-k;x.save();x.translate(e.x,e.y);x.scale(1+k*.8,Math.max(.05,1-k*.9));x.translate(-e.x,-e.y);
   OV=k<.4?'#ffffff':null;enemyBody(e);OV=null;x.restore();x.globalAlpha=1}}
 // the canvas is one pixel wider than the view and slides by the camera's fraction, so scrolling is smooth instead of stepping a whole pixel
-let SUBPX=-1;function subpixel(f){f=Math.round(f*8)/8;if(f===SUBPX)return;SUBPX=f;const t=`translateX(${(-f*100/(W+1)).toFixed(3)}%)`;cv.style.transform=t;gl.style.transform=t}
+// camera zoom from the settings: the canvases scale around the farmer; clicks go through screenToWorld so they still land right
+const VIEW={z:1,ox:.5,oy:.5};let SUBPX=0,VIEWK='';
+function subpixel(f){SUBPX=Math.round(f*8)/8;const live=S&&(S.state==='prep'||S.state==='wave'),z=live?(CFG.zoom||1):1;
+  VIEW.z=z;VIEW.ox=z===1?.5:clamp((S.p.x-S.cam)/W,0,1);VIEW.oy=z===1?.5:clamp((S.p.y-VY)/H,0,1);
+  const k=SUBPX+'|'+z+'|'+VIEW.ox.toFixed(3)+'|'+VIEW.oy.toFixed(3);if(k===VIEWK)return;VIEWK=k;
+  const t=`translateX(${(-SUBPX*100/(W+1)).toFixed(3)}%)`+(z!==1?` scale(${z})`:''),o=(VIEW.ox*100).toFixed(2)+'% '+(VIEW.oy*100).toFixed(2)+'%';
+  cv.style.transformOrigin=gl.style.transformOrigin=o;cv.style.transform=t;gl.style.transform=t}
+function screenToWorld(cx,cy){const rc=$('stage').getBoundingClientRect(),fx=VIEW.ox+((cx-rc.left)/rc.width-VIEW.ox)/VIEW.z,fy=VIEW.oy+((cy-rc.top)/rc.height-VIEW.oy)/VIEW.z;return[fx*W+S.cam,fy*H-VY]}
 function drawParts(){for(const p of S.parts){x.globalAlpha=Math.min(1,p.life/p.max*1.5)*(p.a??1);r(p.x,p.y,p.s,p.s,p.c)}x.globalAlpha=1}
 const PCOL={grape:['#7b2fbf','#c58cff'],oil:['#d9c24a','#fff3a0'],seed:['#e8e070','#fff'],mustard:['#c9c040','#fff8a0'],sow:['#e8c86a','#fff'],fig:['#6a2a5a','#c070b0'],date:['#d9802a','#ffc080'],almond:['#e8d0b0','#fff'],pstone:['#9a9aa8','#e0e0e8']};
 // fruit shots: a short fading trail, a dark rim so they read on any background, a bright core

@@ -46,6 +46,8 @@ async function everyScreen(label){
     ['endless',`META.done['1-4']=1;startEndless(0);startLevelBattle()`],
     ['new blessings',`startLevel(0);startLevelBattle();S.dialog=null;S.intro=null;['vento','uncao','nuvem','estrela'].forEach(k=>blessing(k));for(let i=0;i<30;i++)update(1/60)`],
     ['tent and chooser',`META.gifts=1;showPacks();startLevel(6);document.getElementById('cauto').click();document.querySelector('[data-filt=bencao]').click()`],
+    ['story scene',`showScene(6,()=>{});await new Promise(r=>setTimeout(r,600));document.getElementById('csline').click();document.getElementById('csskip').click();META.scenes={1:1,2:1,3:1,4:1,5:1,6:1}`],
+    ['shadow boss',`META.scenes={1:1,2:1,3:1,4:1,5:1,6:1};startLevel(27);startLevelBattle();S.dialog=null;S.intro=null;const e=spawn('sombra',300);e.hp=e.max*.4;S.state='wave';for(let i=0;i<300;i++){if(S.intro)closeFoeIntro();update(1/30)}draw()`],
     ['pack opening',`META.coins+=2000;showPacks();buyItem('p:arca');openPack('arca',()=>showShop2());document.querySelector('.ppack').click();await new Promise(r=>setTimeout(r,1200));document.getElementById('pall').click();await new Promise(r=>setTimeout(r,4800));document.getElementById('pclose').click()`],['tree of life',`META.garden.treeSeed=1;showTree()`]];
   for(const[n,code]of steps){const before=errors.length;await js(`(async()=>{${code};${settle}return 1})()`);check(label+': '+n,errors.length===before,errors.slice(before).join(' | ').slice(0,200))}}
 // every farmer differs, sums 15 points, and the battle uses those numbers
@@ -60,8 +62,8 @@ async function packs(label){
   const o=JSON.parse(r||'{}');check(label+': packs',o.bad===0&&o.st&&o.st.every(s=>['nova','copia','nivel','moedas'].includes(s))&&o.lv>=1,r)}
 // a short battle in every world: plant, call the wave, let it run, draw frames
 async function battles(label){
-  for(let w=0;w<6;w++){const before=errors.length;
-    const r=await js(`(async()=>{const n=${w}*4+${w%2?1:0};startLevel(n);RUN.coll=['videira','roma','oliveira','sarca'].map(k=>mk(k));RUN.deck=[...RUN.coll];startLevelBattle();
+  for(let w=0;w<7;w++){const before=errors.length;
+    const r=await js(`(async()=>{const n=${w}*4+${w%2?1:0};META.scenes={1:1,2:1,3:1,4:1,5:1,6:1};startLevel(n);RUN.coll=['videira','roma','oliveira','sarca'].map(k=>mk(k));RUN.deck=[...RUN.coll];startLevelBattle();
       S.dialog=null;S.intro=null;tutStep=-1;S.mana=MAXM;const slots=MAP.slots.map((s,i)=>i).slice(0,4);slots.forEach((si,k)=>{const hi=S.hand.findIndex(c=>c&&info(c).kinds);if(hi>=0){S.mana=MAXM;playCard(hi,si)}});
       callWave();let frames=0;for(let i=0;i<900;i++){if(S.intro)closeFoeIntro();if(S.dialog){S.dialog=null}if(S.state==='prep')startWave();if(S.state!=='wave')break;update(.033);updFx(.033);if(i%15===0){draw();frames++}}
       return MAPID+' '+S.state+' wave '+S.wi+' frames '+frames})()`);

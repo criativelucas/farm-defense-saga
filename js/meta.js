@@ -5,9 +5,12 @@ const WORLDS=[
   {id:'mar',name:'Mar Vermelho',map:'mar',act:1,boss:'farao',x:384,y:212,w:110,top:['#a0604a','#c98a5a','#f0c08a']},
   {id:'sinai',name:'Monte Sinai',map:'sinai',act:1,boss:'bezerro',x:330,y:126,w:100,top:['#8a5a3a','#b07a4a','#d9a060']},
   {id:'babel',name:'Torre de Babel',map:'babel',act:2,boss:null,x:166,y:134,w:100,top:['#6a3a2a','#9a6248','#c98a5a']},
-  {id:'getsemani',name:'Getsêmani',map:'getsemani',act:2,boss:'leviata',arena:'abismo',x:262,y:54,w:112,top:['#1e3a3a','#2a5a4a','#4a8a6a']}
+  {id:'getsemani',name:'Getsêmani',map:'getsemani',act:2,boss:'leviata',arena:'abismo',x:262,y:54,w:112,top:['#1e3a3a','#2a5a4a','#4a8a6a']},
+  {id:'ressurreicao',name:'Jardim da Ressurreição',map:'ressurreicao',act:2,boss:'sombra',x:420,y:66,w:104,top:['#3a8a4a','#6ac060','#c8f0a0']}
 ];
+// the seventh world gives the four pack cards, one per level (index = level number)
 const UNLOCK_ORDER=['roma','oliveira','chuva','sarca','figueira','jerico','lirio','talentos','tamareira','semeador','amendoeira','mostarda','profecia','regar','videira','oliveira','roma','sarca','lirio','figueira','tamareira','amendoeira','mostarda'];
+UNLOCK_ORDER.push(null,'vento','uncao','nuvem','estrela');
 const RULES={poucas:{name:'Mão curta',desc:'Só 3 cartas na mão'},sempisao:{name:'Sem pisão',desc:'O pisão não funciona'},trevas:{name:'Noite total',desc:'Escuridão quase completa'}};
 const RULE_AT={5:'poucas',9:'sempisao',13:'trevas',17:'poucas',21:'sempisao'};
 const LEVELS=[];WORLDS.forEach((w,wi)=>{for(let l=0;l<4;l++){const n=wi*4+l;LEVELS.push({id:(wi+1)+'-'+(l+1),wi,l,n,night:l%2===1||RULE_AT[n]==='trevas',boss:l===3?w.boss:null,rule:RULE_AT[n]||null})}});
@@ -138,6 +141,8 @@ function islandAt(I,top,open,landmark){
   if(!open){C.globalAlpha=.55;blob(cx,cy-6,w/2+2,w/5|0,'#8a8a9a','#a0a0b0','#c0c0d0',cx+1);C.globalAlpha=1;r(cx-4,cy-16,8,7,'#c9a24a');r(cx-3,cy-20,6,4,'#c9a24a');r(cx-2,cy-19,4,3,'#2a1e3a');r(cx-1,cy-13,2,3,'#2a1e3a')}
 }
 const LANDMARK={
+  ressurreicao(cx,cy){const gl=.5+Math.sin(wt*2)*.2;C.globalAlpha=gl*.5;disc(cx+4,cy-30,16,'#fff0b0');C.globalAlpha=1;blob(cx-6,cy-12,18,12,'#5a4a4a','#7a6a6a','#a89a9a',4);r(cx-12,cy-14,9,12,'#140c0c');
+    for(let yy=-6;yy<=6;yy++){const w=Math.sqrt(36-yy*yy);r(cx+16-w,cy-6+yy,w*2,1,'#9a8a8a')}for(const lx of[-24,-18,22,28]){r(cx+lx,cy-4,1,4,'#4faa4a');r(cx+lx-1,cy-6,3,2,'#ffffff')}},
   eden(cx,cy){r(cx-2,cy-24,5,24,'#7a4a2e');blob(cx,cy-30,20,12,'#2a7a3a','#5fc060','#b0f090',9);for(let i=0;i<6;i++)r(cx-14+hs(i,2)*28,cy-38+hs(i,3)*14,2,2,'#ffe36a');palm(cx+30,cy+2,'#3a6a3a')},
   jerico(cx,cy){r(cx-34,cy-14,68,14,'#b88a5a');for(let i=0;i<68;i+=6)r(cx-34+i,cy-17,3,3,'#b88a5a');r(cx-8,cy-28,16,28,'#a07848');for(let i=0;i<16;i+=5)r(cx-8+i,cy-31,3,3,'#a07848');r(cx-3,cy-10,6,10,'#3a2010');r(cx+20,cy-12,2,4,'#e0284a')},
   mar(cx,cy){r(cx-34,cy-4,68,6,'#2a6aa8');const o=Math.sin(wt*2)*2;r(cx-34,cy-16+o,12,14,'#4a9ad8');r(cx+22,cy-16-o,12,14,'#4a9ad8');r(cx-22,cy-2,44,3,'#e8c890');for(let i=0;i<5;i++)r(cx-30+i*14+((wt*8)%6),cy-4,3,1,'#d8f0ff');
@@ -162,6 +167,9 @@ function drawWorldMap(){
     for(let k=0;k<=n;k++){const u=k/n,px=a.x+(b.x-a.x)*u,py=a.y+(b.y-a.y)*u+Math.sin(u*Math.PI)*10;if(k%2)r(px-1,py,3,2,open?'#c9a060':'#8a8a9a')}}
   WORLDS.forEach((w,i)=>islandAt(w,w.top,levelOpen(i*4),LANDMARK[w.id]));
   if(selWorld!=null){const w=WORLDS[selWorld];C.globalAlpha=.5+Math.sin(wt*4)*.3;ring(w.x,w.y-10,w.w/2+6,'#ffe36a');C.globalAlpha=1}
+  // birds crossing the sky, and a twinkle over islands that still have levels to win
+  for(let i=0;i<6;i++){const bx=((hs(i,21)*640+wt*(10+i*3))%640)-80,by=24+hs(i,22)*150+Math.sin(wt*2+i)*4,f=(wt*6+i|0)%2;r(bx,by,1,1,'#2a2a3a');r(bx-2,by-f,2,1,'#2a2a3a');r(bx+1,by-f,2,1,'#2a2a3a')}
+  WORLDS.forEach((w,i)=>{if(!levelOpen(i*4)||!LEVELS.some(l=>l.wi===i&&!META.done[l.id]))return;for(let k=0;k<4;k++){const a=wt*1.6+k*1.57;if(Math.sin(a*2.3+i)>.2){const sx=w.x+Math.cos(a)*w.w*.38,sy=w.y-20+Math.sin(a)*7;r(sx,sy,1,1,'#fff6c0');r(sx-1,sy,3,1,'#fff6c066');r(sx,sy-1,1,3,'#fff6c066')}}});
   drawWalker(g);C=g;
   for(let i=0;i<8;i++){const cx=((hs(i,7)*660-wt*(6+i))%660+660)%660-110;g.drawImage(WMAP.cl[i%3],Math.round(cx),262+Math.round(hs(i,8)*10))}
   C=x;
@@ -194,6 +202,7 @@ function advColl(){const c=[];const cc=CHARS[META.char].card;if(cc)c.push(mk(cc)
 const levelBag=n=>{const mn=Math.min(8,3+Math.floor(n/3));return[mn,Math.min(RUN?deckMax():10,mn+2)]};
 function startLevel(n){
   const L=LEVELS[n],w=WORLDS[L.wi];UID=1;
+  if(L.l===0&&L.wi>0&&!(META.scenes||{})[L.wi]&&SCENE_TXT[L.wi]){META.scenes=META.scenes||{};META.scenes[L.wi]=1;saveMeta();return showScene(L.wi,()=>startLevel(n))}
   RUN={mode:'level',level:n,char:META.char,asc:0,daily:false,seed:0,act:w.act,row:0,rows:[],path:[],hp:20,maxhp:20,siclos:0,coll:advColl(),deck:[],relics:[],handSize:4,esau:-1,samaritano:0,seenEv:[],stats:{kills:0,bosses:0},podas:0};
   const prev=META.lastDeck&&META.lastDeck.length?META.lastDeck:null;
   RUN.deck=prev?RUN.coll.filter((c,i,a)=>prev.includes(c.k)&&a.findIndex(o=>o.k===c.k)===i).concat(RUN.coll.filter((c,i,a)=>prev.includes(c.k)&&a.findIndex(o=>o.k===c.k)!==i)).slice(0,levelBag(n)[1]):RUN.coll.slice(0,levelBag(n)[1]);
@@ -213,6 +222,7 @@ function startLevelBattle(){META.lastDeck=RUN.deck.map(c=>c.k);saveMeta();const 
   if(rule==='sempisao')S.noSlam=true;if(rule==='trevas')S.trevas=true;if(rule)banner('Regra da fase',RULES[rule].name+': '+RULES[rule].desc);goalStart();miniStart()}
 function levelWon(){
   if(RUN.mini)return miniOver(true);
+  logRun(true);
   const L=LEVELS[RUN.level],first=!META.done[L.id],treeBonus=1+(META.garden.tree.lvl||0)*.05;
   const reward=Math.round((first?60+L.n*20:30+L.n*5)*treeBonus),picked=Math.round(S.coins*treeBonus);
   META.coins+=reward+picked;META.done[L.id]=1;const stars=RUN.hp>=18?3:RUN.hp>=10?2:1;META.stars=META.stars||{};const newBest=stars>(META.stars[L.id]||0);META.stars[L.id]=Math.max(stars,META.stars[L.id]||0);
@@ -234,6 +244,7 @@ function levelWon(){
 function levelLost(){
   if(RUN.mini)return miniOver(false);
   if(RUN.endless)return endlessOver();
+  logRun(false);
   const picked=Math.round(S.coins*.5);META.coins+=picked;saveMeta();MUS.mode='calm';
   const worst=Object.entries(S.leaks||{}).sort((a,b)=>b[1]-a[1])[0],w=worst&&EN[worst[0]];
   endScreen({win:false,eyebrow:LEVELS[RUN.level].id,title:'O jardim secou',stars:0,coins:picked,coinNote:'metade das moedas recolhidas',
@@ -407,6 +418,9 @@ const treeNeed=lv=>100+lv*80;
 function potAdvance(p){const P=GPLANTS[p.k],now=Date.now();while(p.watered&&p.stage<3&&now-p.t0>=P.stage*1000){p.t0+=P.stage*1000;p.stage++;p.watered=p.stage<3?false:true}}
 
 // ---------- settings
+// actions the player can give another key, and how a key code reads on screen
+const KEYACT=[['ArrowLeft','Andar à esquerda'],['ArrowRight','Andar à direita'],['ArrowUp','Pular'],['ArrowDown','Pisão'],['KeyX','Golpe'],['KeyC','Poder'],['Enter','Chamar a onda'],['KeyQ','Cerca'],['KeyE','Espantalho'],['KeyR','Lama']];
+const keyName=c=>({ArrowLeft:'←',ArrowRight:'→',ArrowUp:'↑',ArrowDown:'↓',Space:'Espaço',Enter:'Enter',Escape:'Esc',ShiftLeft:'Shift',ShiftRight:'Shift'})[c]||c.replace(/^Key|^Digit|^Numpad/,'');
 function showConfig(){let armed=false;
   const render=()=>{menu(`<div class="mbox cabin"><div class="topbar"><button class="btn ghost" data-go="hub">‹ Menu</button><h2>Configurações</h2><span></span></div>
     <div class="cfg"><label>Música <input type="range" id="cmus" min="0" max="1" step="0.05" value="${CFG.mus}" style="--v:${CFG.mus}"></label>
@@ -414,13 +428,22 @@ function showConfig(){let armed=false;
     <label class="chk"><input type="checkbox" id="clite" ${CFG.lite?'checked':''}> Modo leve <small>sem brilho, neblina e distorção; para aparelhos mais fracos</small></label>
     <label class="chk"><input type="checkbox" id="cmute" ${muted?'checked':''}> Silenciar tudo (M)</label>
     <label class="chk"><input type="checkbox" id="cbig" ${CFG.big?'checked':''}> Texto maior <small>aumenta letras dos menus e do painel</small></label>
-    <label class="chk"><input type="checkbox" id="cshake" ${CFG.noShake?'':'checked'}> Tremor de tela <small>desligue se a tela tremendo incomoda</small></label></div>
+    <label class="chk"><input type="checkbox" id="cshake" ${CFG.noShake?'':'checked'}> Tremor de tela <small>desligue se a tela tremendo incomoda</small></label>
+    <label class="chk"><input type="checkbox" id="ccb" ${CFG.cb?"checked":""}> Modo para daltônicos <small>barra de vida em azul e iniciais nos frutos; a raridade das cartas já tem formas diferentes</small></label>
+    <div class="czoom"><b>Zoom da câmera</b><span>${[1,1.25,1.5].map(z=>`<button type="button" class="${(CFG.zoom||1)===z?"on":""}" data-zoom="${z}">${z*100}%</button>`).join("")}</span></div></div>
+    <div class="sec"><h3>Teclas</h3><p class="help">Clique numa ação e aperte a tecla nova. As teclas de sempre continuam valendo.</p><div class="keys">${KEYACT.map(([c,l])=>`<button type="button" data-key="${c}"><b>${l}</b><span>${keyName((CFG.keys||{})[c]||c)}</span></button>`).join("")}</div><button class="btn ghost" id="keyreset">Voltar às teclas de sempre</button></div>
+    <div class="sec"><h3>Registro de partidas</h3>${logHTML()}${(META.log||[]).length?'<div class="row" style="justify-content:flex-start"><button class="btn ghost" id="logcopy">Copiar registro</button><button class="btn ghost" id="logclear">Apagar registro</button></div>':''}</div>
     <div class="sec"><h3>Sprites do Aseprite</h3><p class="help">${Object.keys(ASE).length?"Carregados: "+Object.keys(ASE).join(", "):"Nenhum carregado. Exporte pelo Aseprite para assets/sprites/ (veja LEIA-ME.md na pasta)."}</p></div>
     <div class="sec"><h3>Guardar progresso</h3><p class="help">Salve um arquivo com seu progresso para levar a outro aparelho ou navegador.</p>
     <div class="row" style="justify-content:flex-start"><button class="btn ghost" id="cexp">Salvar arquivo</button><label class="btn ghost">Carregar arquivo<input type="file" id="cimp" accept="application/json,.json" hidden></label></div></div>
     <div class="sec"><h3>Progresso</h3><p class="help">Apaga fases, moedas, jardim, árvore, cartas e conquistas deste navegador.</p>
     <button class="btn ${armed?'act':'ghost'}" id="creset">${armed?'Tem certeza? Clique de novo para apagar tudo':'Reiniciar progresso'}</button></div></div>`);
+    if($('logcopy')){$('logcopy').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(JSON.stringify(META.log)).then(()=>toast('Registro copiado','Cole numa mensagem para ajustar o equilíbrio'),()=>{});sfx('card')};$('logclear').onclick=()=>{META.log=[];saveMeta();sfx('card');render()}}
     $('cmus').oninput=e=>{CFG.mus=+e.target.value;e.target.style.setProperty('--v',e.target.value);saveCfg()};$('csfx').oninput=e=>{CFG.sfx=+e.target.value;e.target.style.setProperty('--v',e.target.value);saveCfg();sfx('coin')};
+    $('ccb').onchange=e=>{CFG.cb=e.target.checked;saveCfg()};$('menu').querySelectorAll('[data-zoom]').forEach(b=>b.onclick=()=>{CFG.zoom=+b.dataset.zoom;saveCfg();sfx('card');render()});
+    $('menu').querySelectorAll('[data-key]').forEach(b=>b.onclick=()=>{const c=b.dataset.key;b.querySelector('span').textContent='aperte…';b.classList.add('wait');
+      addEventListener('keydown',e=>{e.preventDefault();e.stopImmediatePropagation();if(e.code!=='Escape'){CFG.keys=CFG.keys||{};CFG.keys[c]=e.code;saveCfg();buildKeymap();sfx('coin')}render()},{capture:true,once:true})});
+    $('keyreset').onclick=()=>{CFG.keys={};saveCfg();buildKeymap();sfx('card');render()};
     $('clite').onchange=e=>{CFG.lite=e.target.checked;saveCfg()};$('cshake').onchange=e=>{CFG.noShake=!e.target.checked;saveCfg()};$('cbig').onchange=e=>{CFG.big=e.target.checked;saveCfg()};$('cexp').onclick=exportSave;$('cimp').onchange=e=>{if(e.target.files[0])importSave(e.target.files[0])};$('cmute').onchange=e=>{initAudio();setMuted(e.target.checked)};
     $('creset').onclick=()=>{if(!armed){armed=true;return render()}['fds-meta','fds-run','jardim-do-fruto-celeiro'].forEach(k=>store.del(k));location.reload()}};render()}
 // ---------- show which works of the flesh come, on the seed screen

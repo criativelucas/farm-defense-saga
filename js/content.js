@@ -46,6 +46,7 @@ const EN={
   farao:{name:'Faraó',hp:520,spd:7,rew:60,dmg:12,fly:0,w:40,h:30,c:'#f7c948',glow:'#5a8aff',weak:null,boss:1,ref:'Êxodo 14:9',desc:'Chefe. Chama pragas de reforço. Furioso, chama ainda mais.'},
   leviata:{name:'Leviatã',hp:700,spd:7,rew:80,dmg:15,fly:0,w:44,h:24,c:'#2a6a7a',glow:'#5af0c0',weak:null,boss:1,ref:'Isaías 27:1',desc:'Chefe. Mergulha, fica intocável e surge atordoando as árvores.'}
 };
+EN.sombra={name:'A Sombra da Morte',hp:820,spd:6,rew:90,dmg:15,fly:0,w:34,h:44,c:'#4a3a6a',glow:'#3a2a5a',weak:null,boss:1,ref:'Salmos 23:4',desc:'Chefe final. Faz adormecer as árvores perto dela; um pisão acorda. Furiosa, chama pragas.'};
 const VICE_REF='Gálatas 5:19-21';
 
 // ---------- journey: three acts, each with two scenarios and a boss
@@ -126,6 +127,7 @@ const ACH={
   combo:{name:'Mil ao teu lado',ref:'Salmos 91:7',desc:'Faça um combo de 25.'},
   tribos:{name:'As 12 tribos',ref:'Gênesis 49:28',desc:'Guarde 12 cartas no celeiro.'},
   jornada:{name:'Combati o bom combate',ref:'2 Timóteo 4:7',desc:'Vença a jornada inteira.'},
+  sombra:{name:'Onde está, ó morte, a tua vitória?',ref:'1 Coríntios 15:55',desc:'Derrote a Sombra da Morte.'},
   perola:{name:'Pérola de grande valor',ref:'Mateus 13:46',desc:'Encontre uma carta lendária num pacote.'},
   tesouros:{name:'Ajuntai tesouros no céu',ref:'Mateus 6:20',desc:'Complete a coleção das cartas de pacote.'}
 };
@@ -207,7 +209,7 @@ CHARS.moises={name:'Moisés',ref:'Êxodo 14:21',desc:'Inimigos na água ficam mu
 // ---------- farmer attributes, 1 to 5. The lavrador is the 3-3-3-3-3 baseline; every farmer sums 15.
 // Corações: +1 heart per point. Velocidade: +8% walk. Força: +15% golpe and pisão. Maná: +1 at the start. Poder: -3s ability recharge.
 const ATTRS=[['vida','Corações','#ff5a6a'],['vel','Velocidade','#5ad0ff'],['for','Força','#ffa040'],['mana','Maná','#a08aff'],['poder','Poder','#ffe36a']];
-const CHAR_AT={lavrador:[3,3,3,3,3],noe:[4,2,3,4,2],rute:[2,5,2,3,3],davi:[3,4,5,2,1],elias:[3,2,2,3,5],jose:[3,3,2,5,2],debora:[4,3,4,2,2],moises:[3,2,2,4,4]};
+const CHAR_AT={lavrador:[3,3,3,3,3],noe:[4,2,3,4,2],rute:[3,5,1,3,3],davi:[3,3,5,2,2],elias:[3,2,2,3,5],jose:[3,3,2,5,2],debora:[4,3,4,2,2],moises:[3,2,2,4,4]};
 // points above (or below) the baseline for attribute s of farmer k, by default the one playing
 const atr=(s,k=(RUN&&RUN.char)||META.char)=>(CHAR_AT[k]||CHAR_AT.lavrador)[ATTRS.findIndex(a=>a[0]===s)]-3;
 
