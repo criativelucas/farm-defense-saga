@@ -53,7 +53,7 @@ function updHUD(){
   const fr=$('fruits');if(!fr.children.length)fr.innerHTML='<b>Frutos</b>'+FRUIT_ORDER.map(f=>`<span data-f="${f}" title="${f}" style="--c:${FRUIT_COL[f]}"></span>`).join('');
   fr.querySelectorAll('span').forEach(s=>s.classList.toggle('on',S.fruits.has(s.dataset.f)));
   $('setb').textContent=S.setMult>1?'Fruto em cacho: +'+Math.round((S.setMult-1)*100)+'% de dano':'';
-  const ab=$('abilbtn');if(ab){const f=(S.abil||0)/ABIL_CD;ab.style.setProperty('--cd',f);ab.classList.toggle('ready',f<=0)}
+  const ab=$('abilbtn');if(ab){const f=(S.abil||0)/abilCD();ab.style.setProperty('--cd',f);ab.classList.toggle('ready',f<=0)}
   $('fruits').hidden=!sysOn('fruitset');
   const sh=[sysOn('basket')?'Cesto '+S.basket+'/5'+(S.basket>=5?' · pisão de colheita!':''):''];
   if(MAPID==='jerico')sh.push(S.fallen?'As muralhas caíram':'Voltas pela torre: '+S.laps+'/7');
@@ -139,7 +139,7 @@ function showChars(){
   const render=()=>{
     menu(`<div class="mbox"><small class="eyebrow">Nova jornada</small><h2>Escolha o lavrador</h2>
       <div class="grid g5">${Object.entries(CHARS).map(([k,c])=>{const ok=META.chars[k];return`<button type="button" class="pick ${ch===k?'on':''} ${ok?'':'locked'}" data-ch="${k}" ${ok?'':'disabled'}>
-        <canvas width="32" height="40" data-char="${k}"></canvas><b>${c.name}</b><small>${ok?c.desc:'Bloqueado: '+c.hint}</small>${ok&&c.card?`<small>Carta: ${CARDS[c.card].name}</small>`:''}<i>${c.ref}</i></button>`}).join('')}</div>
+        <canvas width="32" height="40" data-char="${k}"></canvas><b>${c.name}</b><small>${ok?c.desc:'Bloqueado: '+c.hint}</small>${ok&&c.card?`<small>Carta: ${CARDS[c.card].name}</small>`:''}${attrRows(k)}<i>${c.ref}</i></button>`}).join('')}</div>
       <div class="sec"><h3>Ascensão ${as}</h3><div class="row" style="justify-content:flex-start">${ASC.map((t,i)=>`<button type="button" class="btn ghost ${as===i?'act':''}" data-as="${i}" ${i>META.ascMax?'disabled':''}>${i}</button>`).join('')}</div>
         <p class="help" style="text-align:left">${ASC.slice(1,as+1).map((t,i)=>(i+1)+'. '+t).join(' · ')||'Sem regras extras. Vença uma jornada para liberar a Ascensão 1.'}</p></div>
       <div class="row"><button class="btn ghost" data-go="title">Voltar</button><button class="btn" id="go">Começar com ${CHARS[ch].name}</button></div></div>`);
@@ -401,7 +401,7 @@ function showCodex(tab){
   if(tab==='vizinhas')body=`<p class="help">Árvores a até 72 passos de distância se ligam por ramos. Frutos diferentes juntos: +10% de dano. Perto de uma Videira: +25% (João 15:5). A Discórdia corta ramos ao passar por baixo.</p><div class="grid">${PAIRS.map(p=>`<div class="entry"><b>${p.name}</b><small>${CARDS[p.a].name} + ${CARDS[p.b].name}: ${p.desc}</small><i>${p.ref}</i></div>`).join('')}</div>`;
   if(tab==='inimigos')body=`<div class="grid cxg">${Object.entries(EN).filter(([,d])=>!d.hide).map(([k,d])=>META.seen.e[k]?`<div class="entry"><canvas width="48" height="48" data-enemy="${k}"></canvas><div><b>${d.name}</b><small>${d.desc}</small>${d.weak?`<small>Fraca contra: ${CARDS[d.weak].name}</small>`:''}<i>${d.ref||VICE_REF}</i></div></div>`:`<div class="entry unk"><canvas width="48" height="48" data-enemy="${k}"></canvas><div><b>???</b><small>Ainda não apareceu no seu jardim.</small></div></div>`).join('')}</div>`;
   if(tab==='reliquias')body=`<div class="grid cxg">${Object.entries(RELICS).map(([k,d])=>META.seen.r[k]?`<div class="entry"><canvas width="32" height="32" data-relic="${k}"></canvas><div><b>${d.name}</b><small>${d.desc}</small><i>${d.ref}</i></div></div>`:`<div class="entry unk"><canvas width="32" height="32" data-relic="${k}"></canvas><div><b>???</b><small>Encontre na Jornada.</small></div></div>`).join('')}</div>`;
-  if(tab==='personagens')body=`<div class="grid cxg">${Object.entries(CHARS).map(([k,c])=>META.chars[k]?`<div class="entry"><canvas width="32" height="40" data-char="${k}"></canvas><div><b>${c.name}</b><small>${c.desc}</small><i>${c.ref}</i></div></div>`:`<div class="entry unk"><canvas width="32" height="40" data-char="${k}"></canvas><div><b>${c.name} · bloqueado</b><small>Como liberar: ${c.hint}</small></div></div>`).join('')}</div>`;
+  if(tab==='personagens')body=`<div class="grid cxg">${Object.entries(CHARS).map(([k,c])=>META.chars[k]?`<div class="entry"><canvas width="32" height="40" data-char="${k}"></canvas><div><b>${c.name}</b><small>${c.desc}</small>${attrRows(k)}<i>${c.ref}</i></div></div>`:`<div class="entry unk"><canvas width="32" height="40" data-char="${k}"></canvas><div><b>${c.name} · bloqueado</b><small>Como liberar: ${c.hint}</small></div></div>`).join('')}</div>`;
   menu(`<div class="mbox wide book"><h2>Códex</h2><div class="row tabs">${Object.entries(tabs).map(([k,t])=>`<button class="btn ghost ${k===tab?'act':''}" data-tab="${k}">${t}</button>`).join('')}</div>${body}<button class="btn" data-go="title">Voltar</button></div>`,cards);
   $('menu').querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>showCodex(b.dataset.tab));
   $('menu').querySelectorAll('canvas[data-char]').forEach(c=>charIconTo(c,c.dataset.char));

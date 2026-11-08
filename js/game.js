@@ -43,7 +43,7 @@ function blankBattle(mapId,day=false,variant=0){
 function startBattle(node){
   MUS.scene=null;blankBattle(node.map,node.night===false,lvVariant(node));S.wx=(WEATHER[node.map]||[])[lvVariant(node)]||null;
   S.node=node;S.waves=node.waves;S.state='prep';S.between=12;
-  S.mana=6+(relic('arca')?4:0)+2*((META.upg&&META.upg.mana)||0);S.p.maxhp=S.p.hp=3+((META.upg&&META.upg.hearts)||0)+((META.upg&&META.upg.treeHearts)||0)+tl('hearts');S.mana+=tl('mana');S.levelNight=node.night??null;
+  S.mana=6+atr('mana')+(relic('arca')?4:0)+2*((META.upg&&META.upg.mana)||0);S.p.maxhp=S.p.hp=3+atr('vida')+((META.upg&&META.upg.hearts)||0)+((META.upg&&META.upg.treeHearts)||0)+tl('hearts');S.mana+=tl('mana');S.levelNight=node.night??null;
   S.draw=rshuffle(RUN.deck);S.hand=S.draw.splice(0,RUN.handSize);
   RUN.deck.forEach(c=>(c.hyb||[c.k]).forEach(k=>META.seen.c[k]=1));RUN.relics.forEach(k=>META.seen.r[k]=1);saveMeta();
   if(isChar('elias'))S.rain=16;
@@ -161,7 +161,7 @@ function updPlayer(dt){
   p.stun=Math.max(0,p.stun-dt);p.inv=Math.max(0,p.inv-dt);p.atkCD=Math.max(0,p.atkCD-dt);p.swing=Math.max(0,p.swing-dt);
   if(p.faint>0){p.faint-=dt;if(p.faint<=0){p.hp=p.maxhp;p.inv=2;pop(p.x,p.y-26,'de pé de novo','#9ff7b8')}}
   const L=p.stun>0?0:dn('ArrowLeft','KeyA'),R=p.stun>0?0:dn('ArrowRight','KeyD');
-  const spd=inSea(p.x)?55:100;
+  const spd=(inSea(p.x)?55:100)*(1+.08*atr('vel'));
   if(p.dash>0){p.dash-=dt;p.vx=p.face*240;if(Math.random()<.6)S.parts.push({x:p.x-p.face*4,y:p.y-1,vx:-p.face*30,vy:-20,g:100,life:.4,max:.4,c:'#8a5a3a',s:2})}
   else if(!p.slam){p.vx+=((R-L)*spd-p.vx)*Math.min(1,dt*14);if(L!==R){const nf=R?1:-1;if(nf!==p.face&&p.on)p.sq=Math.min(p.sq,.86);p.face=nf}}
   if(p.stun<=0&&pr('ArrowUp','KeyW','Space')&&p.on){p.vy=-240;p.on=false;p.sq=.7;p.jumped=1;sfx('jump');burst(p.x,p.y,4,['#c9a99a'],30,0,.3)}
@@ -187,7 +187,7 @@ function doSlam(){mission('slam',1);onoma(S.p.x,S.p.y-10,'slam',.8);
   if(harvest){S.basket=0;banner('Pisão de colheita','O cesto transbordou');burst(p.x,p.y-6,30,['#ffd34a','#ff4f7b','#9b4be0','#5fe08a'],140,250,.8,2)}
   burst(p.x,p.y,16,['#e8dcc0','#c9a99a','#fff'],90,220,.5);
   S.fx.push({k:'ring',x:p.x,y:p.y-2,r:2,max:rad,t:0,c:harvest?'#ffd34a':'#fff3c0'});S.fx.push({k:'shock',x:p.x,y:p.y-4,r:0,max:(davi?100:70)*(harvest?1.6:1),t:0});
-  for(const e of S.en){if(Math.hypot(e.x-p.x,ecy(e)-p.y)<rad+(EN[e.k].boss?16:0)){let d=3*(davi?2:1)*(harvest?3:1);if(relic('funda'))d*=EN[e.k].boss?3:2;damage(e,d);if(!EN[e.k].boss)e.x+=Math.sign(e.x-p.x||1)*6}}
+  for(const e of S.en){if(Math.hypot(e.x-p.x,ecy(e)-p.y)<rad+(EN[e.k].boss?16:0)){let d=3*(davi?2:1)*(harvest?3:1)*(1+.15*atr('for'));if(relic('funda'))d*=EN[e.k].boss?3:2;damage(e,d);if(!EN[e.k].boss)e.x+=Math.sign(e.x-p.x||1)*6}}
   MAP.slots.forEach((s,i)=>{const t=S.tw[i];if(!t||t.grow<1||Math.abs(s.x-p.x)>=14||Math.abs(s.y-p.y)>=3)return;
     if(t.joio){t.joio=false;S.fx.push({k:'ring',x:s.x,y:s.y-12,r:2,max:24,t:0,c:'#ffffff'});pop(s.x,s.y-36,'joio arrancado','#ffffff');return}
     if(t.seduced){t.seduced=false;S.fx.push({k:'ring',x:s.x,y:s.y-12,r:2,max:24,t:0,c:'#f7c948'});pop(s.x,s.y-36,'livre do ídolo','#f7c948');return}
@@ -414,7 +414,7 @@ function nearestTreeSlot(){let best=-1,bd=90;MAP.slots.forEach((s,i)=>{if(!S.tw[
 function playerAttack(){if(S.mini==='funda')return slingShot();const p=S.p;if(p.stun>0||p.atkCD>0)return;if(tutStep===4)tutNext();const w=WEAPONS[META.weapon||'enxada'];p.atkCD=w.cd;p.swing=.22;sfx('hit');
   if(w.dash){p.dash=.22;p.dashHit=new Set();sfx('wind');return}
   for(const e of S.en){if(e.dive>0)continue;const d=EN[e.k],ddx=(e.x-p.x)*p.face,ddy=ecy(e)-(p.y-8);
-    if(ddx>-(w.wide?10:4)&&ddx<w.rng+d.w/2&&Math.abs(ddy)<(w.wide?26:14)+d.h/2){damage(e,w.dmg*(isChar('davi')?1.5:1));onoma(e.x,ecy(e)-6,'hit',.45);if(!d.boss)e.x+=p.face*(w.push||8);burst(e.x,ecy(e),5,['#ffffff','#e8dcc0'],60,200,.3)}}
+    if(ddx>-(w.wide?10:4)&&ddx<w.rng+d.w/2&&Math.abs(ddy)<(w.wide?26:14)+d.h/2){damage(e,w.dmg*(1+.15*atr('for')));onoma(e.x,ecy(e)-6,'hit',.45);if(!d.boss)e.x+=p.face*(w.push||8);burst(e.x,ecy(e),5,['#ffffff','#e8dcc0'],60,200,.3)}}
   S.fx.push({k:'swing',x:p.x,y:p.y-8,f:p.face,r:w.rng,t:0,max:.2,wide:w.wide})}
 function hurtPlayer(n,src){const p=S.p;if(p.inv>0||p.faint>0)return;p.hp-=n;p.inv=1.2;p.vx=(src&&src.x>p.x?-1:1)*140;p.vy=-120;p.on=false;
   shake(6);flash(.25,'255,40,40');sfx('hurt');pop(p.x,p.y-26,'-'+n+' coração','#ff4f4f',9);

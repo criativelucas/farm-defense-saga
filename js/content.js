@@ -196,6 +196,13 @@ CHARS.debora={name:'Débora',ref:'Juízes 4:4',desc:'Juíza: seu pisão faz as �
 CHARS.moises={name:'Moisés',ref:'Êxodo 14:21',desc:'Inimigos na água ficam muito mais lentos.',hint:'Derrote o Faraó',card:'maraberto',
   pal:{tunic:'#c9b89a',hat:null,band:null,hair:'#e0e0e0',beard:'#e0e0e0'},epi:'Do alto do monte ele viu a terra prometida, verde de ponta a ponta.',epiRef:'Deuteronômio 34:1'};
 
+// ---------- farmer attributes, 1 to 5. The lavrador is the 3-3-3-3-3 baseline; every farmer sums 15.
+// Corações: +1 heart per point. Velocidade: +8% walk. Força: +15% golpe and pisão. Maná: +1 at the start. Poder: -3s ability recharge.
+const ATTRS=[['vida','Corações','#ff5a6a'],['vel','Velocidade','#5ad0ff'],['for','Força','#ffa040'],['mana','Maná','#a08aff'],['poder','Poder','#ffe36a']];
+const CHAR_AT={lavrador:[3,3,3,3,3],noe:[4,2,3,4,2],rute:[2,5,2,3,3],davi:[3,4,5,2,1],elias:[3,2,2,3,5],jose:[3,3,2,5,2],debora:[4,3,4,2,2],moises:[3,2,2,4,4]};
+// points above (or below) the baseline for attribute s of farmer k, by default the one playing
+const atr=(s,k=(RUN&&RUN.char)||META.char)=>(CHAR_AT[k]||CHAR_AT.lavrador)[ATTRS.findIndex(a=>a[0]===s)]-3;
+
 // ---------- farm tools the gardener fights with, and things he can set on the field
 const WEAPONS={
   enxada:{name:'Enxada',dmg:3,rng:16,cd:.45,price:0,desc:'Golpe curto e rápido.'},

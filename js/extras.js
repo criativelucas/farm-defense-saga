@@ -2,10 +2,10 @@
 const ABIL={lavrador:['Mutirão','Rega todas as árvores de uma vez'],noe:['Chuva de Noé','Chuva por 8 segundos'],rute:['Respiga','Frutos e maná do chão vêm até você'],
   davi:['Funda','Uma pedra de 40 na praga mais forte'],elias:['Fogo do céu','18 de dano em tudo perto de você'],jose:['Celeiro cheio','+4 de maná'],
   debora:['Toque de guerra','Todas as árvores atiram já, e mais rápido por 6s'],moises:['Cajado','Congela as pragas por 3s']};
-const ABIL_CD=30;
+const ABIL_CD=30,abilCD=(k=(RUN&&RUN.char)||META.char)=>(ABIL_CD-3*atr('poder',k))*(1-.15*tl('cd'));
 function useAbility(){if(!live()||S.paused||S.intro||S.dialog)return;const P=S.p;
   if((S.abil||0)>0){sfx('no');pop(P.x,P.y-26,'recarregando '+Math.ceil(S.abil)+'s','#c9a99a');return}
-  const k=(RUN&&RUN.char)||META.char,A=ABIL[k]||ABIL.lavrador;S.abil=ABIL_CD*(1-.15*tl('cd'));sfx('super');vfx('ring2',P.x,P.y-8,{r:46,c:'#ffe36a'});pop(P.x,P.y-30,A[0]+'!','#ffe36a',10);mission('abil',1);
+  const k=(RUN&&RUN.char)||META.char,A=ABIL[k]||ABIL.lavrador;S.abil=abilCD();sfx('super');vfx('ring2',P.x,P.y-8,{r:46,c:'#ffe36a'});pop(P.x,P.y-30,A[0]+'!','#ffe36a',10);mission('abil',1);
   if(k==='noe')S.rain=Math.max(S.rain,8);
   else if(k==='rute')S.respigar=8;
   else if(k==='davi'){let b=null;for(const e of S.en)if(e.hp>0&&!(e.dive>0)&&(!b||e.hp>b.hp))b=e;if(b){vfx('spark',b.x,ecy(b),{n:10});damage(b,40,'pedras');shake(4)}}

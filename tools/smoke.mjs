@@ -45,6 +45,11 @@ async function everyScreen(label){
     ['win screen',`startLevelBattle();S.kills=9;levelWon()`],['lose screen',`startLevel(1);startLevelBattle();levelLost()`],
     ['endless',`META.done['1-4']=1;startEndless(0);startLevelBattle()`],['tree of life',`META.garden.treeSeed=1;showTree()`]];
   for(const[n,code]of steps){const before=errors.length;await js(`(async()=>{${code};${settle}return 1})()`);check(label+': '+n,errors.length===before,errors.slice(before).join(' | ').slice(0,200))}}
+// every farmer differs, sums 15 points, and the battle uses those numbers
+async function farmers(label){
+  const r=await js(`(()=>{const keep=META.char,out=[];for(const k of Object.keys(CHARS)){META.char=k;startLevel(0);startLevelBattle();out.push([k,(CHAR_AT[k]||[]).join(""),(CHAR_AT[k]||[]).reduce((a,b)=>a+b,0),S.p.maxhp-3-((META.upg.hearts||0)+(META.upg.treeHearts||0)+tl("hearts")),atr("vida")])}META.char=keep;hideMenu();return out})()`);
+  const bad=(r||[]).filter(([k,s,sum,hp,v])=>sum!==15||hp!==v);
+  check(label+": farmer attributes",r&&r.length>=8&&!bad.length&&new Set(r.map(x=>x[1])).size===r.length,bad.map(x=>x.join(" ")).join(", ")||(r||[]).map(x=>x[0]+" "+x[1]).join(" · "))}
 // a short battle in every world: plant, call the wave, let it run, draw frames
 async function battles(label){
   for(let w=0;w<6;w++){const before=errors.length;
@@ -87,7 +92,7 @@ async function audio(label){const before=errors.length;
   check(label+': áudio '+r,errors.length===before&&r==='files,sfx,titulo,mundo,tambores',errors.slice(before).join(' | ').slice(0,200))}
 
 console.log('— new player');await load(true,false);await loopAndScene('new');
-console.log('— player with progress');await js(`Object.assign(META,{intro:1,tut:1,coins:5000});['1-1','1-2','1-3','1-4','2-1','2-4'].forEach(i=>META.done[i]=1);saveMeta();1`);await everyScreen('progress');await battles('progress');await goals('progress');await minis('progress');await audio('progress');
+console.log('— player with progress');await js(`Object.assign(META,{intro:1,tut:1,coins:5000});['1-1','1-2','1-3','1-4','2-1','2-4'].forEach(i=>META.done[i]=1);saveMeta();1`);await everyScreen('progress');await farmers('progress');await battles('progress');await goals('progress');await minis('progress');await audio('progress');
 console.log('— embed with gamepad blocked');await load(false,true);await loopAndScene('blocked-pad');
 const fails=checks.filter(c=>!c[1]);console.log(`\n${checks.length-fails.length}/${checks.length} checks passed`+(errors.length?`; ${errors.length} error(s) logged:`:''));
 errors.forEach(e=>console.log('  · '+String(e).split('\n').slice(0,3).join(' / ')));

@@ -669,3 +669,15 @@ body.big #menu{font-size:max(12px,1.85cqw)}body.big .hud{font-size:max(12px,2.3c
 .qitem{background:radial-gradient(ellipse 42% 34% at 50% 40%,#fffdf0 0 60%,#fff6dc00 100%),linear-gradient(#fbf3dc,#e8d6a8)}
 .qitem canvas{filter:drop-shadow(0 5px 0 #0005)}
 .qitem .tag{display:inline-flex;align-items:center;gap:.3em}.qitem:not(.owned) .tag::before{content:'';width:.8em;height:.8em;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff3b0,#f7c948 45%,#c88a1a);box-shadow:0 0 0 1px #6a4008}
+/* farmer attributes: five pip rows, colored per attribute */
+.cattr{display:grid;grid-template-columns:auto auto;gap:2px .4em;align-items:center;justify-content:center;font-size:.6em;color:var(--ink-dim);margin-top:.25em;line-height:1}
+.cattr span{text-align:right}
+.cattr i{display:flex;gap:2px;font-size:1em}
+.cattr u{display:block;width:.75em;height:.75em;background:#2a140a;box-shadow:0 0 0 1px #1a0c06;text-decoration:none}
+.cattr u.on{background:var(--c);box-shadow:0 0 0 1px #1a0c06,inset 0 -2px 0 #0006,inset 0 2px 0 #fff7}
+.cattr.big{grid-template-columns:auto auto 1fr;justify-content:stretch;gap:.35em .6em;font-size:.82em;color:#fbe9d0;margin:.15em 0;padding-bottom:.35em;border-bottom:1px solid #8a4a1e}
+.cattr.big span{text-align:left;font-weight:600}
+.cattr.big i{gap:3px}.cattr.big u{width:1.1em;height:.85em}
+.cattr.big em{font-style:normal;color:#ffe9b0;font-weight:700;text-align:right;font-size:.9em;white-space:nowrap}
+.entry .cattr{justify-content:start}
+.pick:has(.cattr){display:flex;flex-direction:column;align-items:center}.pick .cattr{margin-top:auto;padding-top:.3em}

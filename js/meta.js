@@ -270,25 +270,34 @@ function endScreen(o){
 }
 
 // ---------- the gardener: character and tool
+// five pip rows per farmer; big adds what each attribute gives right now
+function attrRows(k,big){const a=CHAR_AT[k]||CHAR_AT.lavrador;
+  return`<div class="cattr${big?' big':''}">${ATTRS.map(([s,l,c],i)=>`<span>${l}</span><i style="--c:${c}">${[1,2,3,4,5].map(n=>`<u class="${n<=a[i]?'on':''}"></u>`).join('')}</i>${big?`<em>${attrVal(k,s)}</em>`:''}`).join('')}</div>`}
+function attrVal(k,s){const d=atr(s,k),u=META.upg,pc=x=>Math.round(x*100)+'%';
+  if(s==='vida')return (3+d+u.hearts+u.treeHearts+tl('hearts'))+' na batalha';
+  if(s==='vel')return pc(1+.08*d);
+  if(s==='for')return 'dano '+pc(1+.15*d);
+  if(s==='mana')return 'começa com '+(6+d+2*(u.mana||0)+tl('mana'));
+  return ABIL[k][0]+' · '+Math.round(abilCD(k))+'s'}
 function sheetHTML(){
-  const ch=CHARS[META.char],w=WEAPONS[META.weapon],hearts=3+META.upg.hearts+META.upg.treeHearts,doneN=Object.keys(META.done).length,
-    stars=Object.values(META.stars||{}).reduce((a,b)=>a+b,0),mx=k=>Math.max(...Object.values(WEAPONS).map(v=>v[k])),
+  const ch=CHARS[META.char],w=WEAPONS[META.weapon],doneN=Object.keys(META.done).length,
+    stars=Object.values(META.stars||{}).reduce((a,b)=>a+b,0),
     stat=(l,v,f,g)=>`<div class="stat"><b>${l}</b><span>${v}</span><div class="meter ${g||''}"><i style="width:${Math.round(clamp(f,0,1)*100)}%"></i></div></div>`;
   const slot=(cv,name,sub,empty)=>`<div class="slotbox ${empty?'empty':''}">${cv}<b>${name}</b><small>${sub}</small></div>`;
   return `<div class="sheetrow"><div class="sheet"><div class="who"><div class="portrait"><canvas width="32" height="40" data-char="${META.char}"></canvas></div><div><h4>${ch.name}</h4><small>${ch.desc}</small></div></div>
-    ${stat('Corações',hearts+' / '+Math.max(hearts,8),hearts/Math.max(hearts,8))}${stat('Dano · '+w.name,w.dmg,w.dmg/mx('dmg'))}${stat('Alcance',w.rng,w.rng/mx('rng'))}
+    ${attrRows(META.char,1)}
     ${stat('Fases vencidas',doneN+' / '+LEVELS.length,doneN/LEVELS.length,'g')}${stat('Estrelas',stars+' / '+LEVELS.length*3,stars/(LEVELS.length*3),'g')}</div>
-    <div class="sheet"><h4>Equipamento</h4><div class="slots">${slot(`<canvas width="32" height="32" data-tool="${META.weapon}"></canvas>`,w.name,'Golpe · X')}
+    <div class="sheet"><h4>Equipamento</h4><div class="slots">${slot(`<canvas width="32" height="32" data-tool="${META.weapon}"></canvas>`,w.name,'Golpe X · dano '+w.dmg+' · alcance '+w.rng)}
     ${Object.entries(ITEMS).map(([k,it])=>slot(`<canvas width="32" height="32" data-bar="${k}"></canvas>`,it.name,'×'+(META.items[k]||0)+' · tecla '+it.key,!META.items[k])).join('')}</div></div></div>`}
 function showLavrador(){
   const render=()=>{menu(`<div class="mbox wide cabin"><div class="topbar"><button class="btn ghost" data-go="hub">‹ Menu</button><h2>O lavrador</h2>${coinsTag()}</div>
     ${sheetHTML()}
     <div class="sec"><h3>Personagem</h3><div class="grid g5">${Object.entries(CHARS).map(([k,c])=>{const ok=META.chars[k];return`<button type="button" class="pick ${META.char===k?'on':''} ${ok?'':'locked'}" data-ch="${k}" ${ok?'':'disabled'}>
-      <canvas width="32" height="40" data-char="${k}"></canvas><b>${c.name}</b><small>${ok?c.desc:'Bloqueado: '+c.hint}</small>${ok&&c.card?`<small>Carta: ${CARDS[c.card].name}</small>`:''}</button>`}).join('')}</div></div>
+      <canvas width="32" height="40" data-char="${k}"></canvas><b>${c.name}</b><small>${ok?c.desc:'Bloqueado: '+c.hint}</small>${ok&&c.card?`<small>Carta: ${CARDS[c.card].name}</small>`:''}${attrRows(k)}</button>`}).join('')}</div></div>
     <div class="sec"><h3>Ferramenta (X)</h3><div class="grid g5">${Object.entries(WEAPONS).map(([k,w])=>{const own=META.weapons[k];return`<button type="button" class="pick ${META.weapon===k?'on':''} ${own?'':'locked'}" data-wp="${k}" ${own?'':'disabled'}>
       <canvas width="32" height="32" data-tool="${k}"></canvas><b>${w.name}</b><small>${w.desc}</small><small>Dano ${w.dmg} · alcance ${w.rng}</small>${own?'':'<i>compre na loja</i>'}</button>`}).join('')}</div></div>
     ${talentsHTML()}
-    <p class="help">Corações: ${3+META.upg.hearts+META.upg.treeHearts+tl('hearts')} · Encostar nas pragas tira um coração. Sem corações, você desmaia por 3s e perde maná.</p></div>`);
+    <p class="help">Encostar nas pragas tira um coração. Sem corações, você desmaia por 3s e perde maná.</p></div>`);
     paintCoins();
     $('menu').querySelectorAll('canvas[data-char]').forEach(c=>charIconTo(c,c.dataset.char));
     $('menu').querySelectorAll('canvas[data-tool]').forEach(c=>toolIconTo(c,c.dataset.tool));
