@@ -184,13 +184,15 @@ function grantCard(o){const k=o.k,tree=CARDS[k].type==='semente'||!!CARDS[k].pla
   else{o.st='moedas';o.coins=DUP_COINS[o.rk];META.coins+=o.coins}
   if(o.foil&&!META.foil[k])META.foil[k]=1;else o.foil=false;return o}
 // the pack itself, 48x64: a foil pouch with crimped ends, a tear line, a medallion and a ribbon with its name
-function packDraw(id,label){const P=PACKS[id],[c0,c1,c2]=P.col;
+function packDraw(id,label,back){const P=PACKS[id],[c0,c1,c2]=P.col;
   rrect(3,2,42,60,3,COUT);for(let y=3;y<61;y++){const t=(y-3)/58;r(4,y,40,1,t<.5?mixHex(c2,c1,t*2):mixHex(c1,c0,(t-.5)*2))}
   for(let y=3;y<61;y++){const sx=4+((y*.55+6)%40);r(sx,y,3,1,'#ffffff30');r(sx+5,y,1,1,'#ffffff22')}
   r(4,3,2,58,'#ffffff38');r(42,3,2,58,'#00000038');
   for(const y0 of[3,55]){r(4,y0,40,6,shade(c0,-.15));for(let i=4;i<44;i+=2)r(i,y0,1,6,shade(c0,-.4));r(4,y0+(y0<9?5:0),40,1,shade(c1,.3))}
   for(let i=4;i<44;i+=2)r(i,2,1,1,c0),r(i+1,61,1,1,c0);
   for(let i=6;i<42;i+=3)r(i,10.5,2,.5,'#ffffffaa');
+  if(back){rrect(8,14,32,28,2,COUT);r(9,15,30,26,'#f4e6c4');r(9,15,30,2,'#fffbe8');for(let j=0;j<4;j++)r(12,20+j*4,(j%2?16:22),1,'#a88a5a');RAR_ORDER.forEach((rk,i)=>{disc(14+i*6.5,37,2,COUT);disc(14+i*6.5,37,1.4,RAR[rk].c)});
+    rrect(6,45,36,9,2,COUT);r(7,46,34,7,shade(c0,-.3));for(let i=0;i<14;i++)r(9+i*2.2,47,(i%3?1:.5),5,'#fff3c0');return}
   disc(24,30,13,COUT);disc(24,30,12,c0);disc(24,30,10.5,shade(c2,.2));disc(24,29,9,c2);
   if(id==='semeador'){r(23,27,2,10,'#6a3a1a');blob(19,27,6,3,'#1e6a2a','#4faa4a','#a8f07a',3);blob(29,24,6,3,'#1e6a2a','#4faa4a','#a8f07a',5);for(let i=0;i<5;i++)r(16+i*4,37+(i%2),2,2,'#c88a3a')}
   if(id==='bencao'){for(let i=0;i<8;i++){const a=i/8*Math.PI*2;r(24+Math.cos(a)*8-1,29+Math.sin(a)*8-1,2,2,'#fff6c0')}disc(24,29,5,'#ffd040');disc(23,28,3,'#fff6c0')}
@@ -198,7 +200,6 @@ function packDraw(id,label){const P=PACKS[id],[c0,c1,c2]=P.col;
   rrect(6,45,36,9,2,COUT);r(7,46,34,7,shade(c0,-.3));r(7,46,34,1,c1);
   if(label)pxText(C,P.short,24,52,'700 6px "Pixelify Sans", monospace','#fff3c0','#000000');
   [[8,14],[38,40],[12,42],[36,13]].forEach(([a,b])=>{r(a,b,1,1,'#ffffff');r(a-1,b,3,1,'#ffffff66');r(a,b-1,1,3,'#ffffff66')})}
-function packIconTo(cvs,id){itemIconTo(cvs,'pack:'+id,()=>{C.save();C.translate(3,0);C.scale(.375,.375);packDraw(id,false);C.restore()})}
 function packTag(o){const f=o.foil?'<b class="t-foil">★ Consagrada</b>':'';
   if(o.st==='nova')return'<b class="t-new">NOVA!</b>'+f;
   if(o.st==='nivel')return`<b class="t-lv">NÍVEL ${o.lv+1}!</b>`+f;
@@ -210,14 +211,11 @@ function openPack(id,onClose){
   const P=PACKS[id],got=rollPack(id).map(grantCard);saveMeta();
   const ov=document.createElement('div');ov.id='packov';ov.className='packov';
   ov.innerHTML=`<div class="prays"></div><canvas class="pfx"></canvas><div class="ptitle">${P.name}</div>
-    <div class="ppack"><canvas class="pbody"></canvas><canvas class="ptop"></canvas></div><div class="prow"></div>
+    <div class="ppack">${pack3dHTML(id)}</div><div class="prow"></div>
     <div class="phint">Toque no pacote para abrir</div>
     <div class="pbtns"><button type="button" class="btn ghost" id="pall" hidden>Virar todas</button><button type="button" class="btn" id="pagain" hidden></button><button type="button" class="btn ghost" id="pclose">Fechar</button></div>`;
   $('stage').append(ov);
-  const src=mkHD(48,64,4),keep=C;C=src.getContext('2d');packDraw(id,true);C=keep;
-  const body=ov.querySelector('.pbody'),top=ov.querySelector('.ptop');
-  body.width=top.width=src.width;body.height=src.height;top.height=12*4;
-  body.getContext('2d').drawImage(src,0,0);body.getContext('2d').clearRect(0,0,src.width,12*4);top.getContext('2d').drawImage(src,0,0);
+  paintPack3d(ov);
   // chunky sparks on a canvas over everything
   const fx=ov.querySelector('.pfx'),fg=fx.getContext('2d'),parts=[];let alive=true,last=performance.now();
   const fit=()=>{fx.width=ov.clientWidth;fx.height=ov.clientHeight};fit();
@@ -234,21 +232,21 @@ function openPack(id,onClose){
     el.innerHTML=`<div class="pin"><div class="pf pback"></div><div class="pf pfront"></div></div><div class="prar">${RAR[o.rk].name}!</div><div class="ptag">${packTag(o)}</div>`;
     el.querySelector('.pback').append(cardBack());el.querySelector('.pfront').append(cardCanvas(mk(o.k,o.foil?{rare:true}:{})));
     el.onclick=()=>flip(i);row.append(el)});
-  const done=()=>{$('pall').hidden=true;ov.querySelector('.phint').textContent=got.some(o=>o.st==='nova')?'Cartas novas entram na sua coleção':'Cópias sobem o nível das árvores';
+  const done=()=>{if(!alive)return;$('pall').hidden=true;ov.querySelector('.phint').textContent=got.some(o=>o.st==='nova')?'Cartas novas entram na sua coleção':'Cópias sobem o nível das árvores';
     const again=$('pagain');again.hidden=META.coins<P.price;again.textContent='Abrir outro · '+P.price+' moedas';again.focus({preventScroll:true})};
-  const flip=i=>{if(!opened||flipped.has(i))return;flipped.add(i);const el=row.children[i],o=got[i],ri=RAR_ORDER.indexOf(o.rk);
-    const go=()=>{el.classList.remove('charge');el.classList.add('turned');
-      setTimeout(()=>{const[cx,cy]=at(el),col=RAR[o.rk].c;burst(cx,cy,[12,26,46,80][ri],[col,'#ffffff',shade(col,.45),shade(col,-.2)],[.6,.85,1.15,1.5][ri]);
+  const flip=i=>{if(!alive||!opened||flipped.has(i))return;flipped.add(i);const el=row.children[i],o=got[i],ri=RAR_ORDER.indexOf(o.rk);
+    const go=()=>{if(!alive)return;el.classList.remove('charge');el.classList.add('turned');
+      setTimeout(()=>{if(!alive)return;const[cx,cy]=at(el),col=RAR[o.rk].c;el.classList.add('lit');burst(cx,cy,[12,26,46,80][ri],[col,'#ffffff',shade(col,.45),shade(col,-.2)],[.6,.85,1.15,1.5][ri]);
         if(ri>=2)flash('fl-'+o.rk);if(ri>=3){ov.classList.remove('quake');void ov.offsetWidth;ov.classList.add('quake');sfx('horn')}
         sfx(['card','coin','super','ach'][ri]);if(o.foil)setTimeout(()=>sfx('beam'),150);
-        el.classList.add('shown');if(flipped.size===got.length)setTimeout(done,500)},260)};
-    if(ri>=1){el.classList.add('charge');sfx('hit');setTimeout(go,[0,380,650,950][ri])}else go()};
+        el.classList.add('shown');if(flipped.size===got.length)setTimeout(done,700)},480)};
+    if(ri>=1){el.classList.add('charge');sfx('hit');setTimeout(go,[0,450,800,1150][ri])}else go()};
   const pk=ov.querySelector('.ppack');
   const open=()=>{if(opened||pk.classList.contains('shake'))return;pk.classList.add('shake');sfx('hit');
-    setTimeout(()=>{pk.classList.add('torn');sfx('pop');const[cx,cy]=at(pk);burst(cx,cy-pk.clientHeight*.38,46,[...P.col,'#ffffff','#fff3b0'],1.1);flash();
-      setTimeout(()=>{opened=true;ov.classList.add('opened');ov.querySelector('.phint').textContent='Toque nas cartas para virar';$('pall').hidden=false;sfx('card')},360)},650)};
+    setTimeout(()=>{if(!alive)return;pk.classList.add('torn');sfx('pop');const[cx,cy]=at(pk);burst(cx,cy-pk.clientHeight*.38,46,[...P.col,'#ffffff','#fff3b0'],1.1);flash();
+      setTimeout(()=>{if(!alive)return;opened=true;ov.classList.add('opened');ov.querySelector('.phint').textContent='Toque nas cartas para virar';$('pall').hidden=false;sfx('card')},360)},650)};
   pk.onclick=open;
-  $('pall').onclick=()=>{[...got.keys()].filter(i=>!flipped.has(i)).forEach((i,j)=>setTimeout(()=>flip(i),j*420))};
+  $('pall').onclick=()=>{$('pall').hidden=true;[...got.keys()].filter(i=>!flipped.has(i)).forEach((i,j)=>setTimeout(()=>flip(i),j*650))};
   const close=()=>{if(!alive)return;alive=false;removeEventListener('keydown',key,true);ov.remove();onClose&&onClose()};
   $('pclose').onclick=close;
   $('pagain').onclick=()=>{if(META.coins<P.price)return;close();if(buyItem('p:'+id))openPack(id,onClose)};
@@ -256,3 +254,57 @@ function openPack(id,onClose){
     if(!opened)open();else{const n=[...got.keys()].find(i=>!flipped.has(i));if(n!=null)flip(n)}}};
   addEventListener('keydown',key,true);
   sfx('card');return got}
+// a pack as a 3D object: front, back and two thin sides; the top strip sits on the front so it can tear off
+function pack3dHTML(id){const c=PACKS[id].col[0];return`<div class="p3d" data-pk="${id}" style="--pc:${c}"><canvas class="pbk"></canvas><i class="pedge pl"></i><i class="pedge pr"></i><canvas class="pfr"></canvas><canvas class="ptop"></canvas></div>`}
+function paintPack3d(root){root.querySelectorAll('.p3d').forEach(el=>{const id=el.dataset.pk,keep=C,src=mkHD(48,64,4),bk=mkHD(48,64,4);
+  try{C=src.getContext('2d');packDraw(id,true);C=bk.getContext('2d');packDraw(id,true,true)}finally{C=keep}
+  const fr=el.querySelector('.pfr'),top=el.querySelector('.ptop'),b=el.querySelector('.pbk');
+  for(const c of[fr,b,top]){c.width=src.width;c.height=src.height}top.height=48;
+  fr.getContext('2d').drawImage(src,0,0);fr.getContext('2d').clearRect(0,0,src.width,48);top.getContext('2d').drawImage(src,0,0);b.getContext('2d').drawImage(bk,0,0)})}
+
+// ---------- the card tent: Boaz keeps the packs on a velvet table; buy one and open it right there
+const TENDA=['Pacotes fresquinhos, direto do celeiro!','A Arca sempre traz uma épica ou melhor.','Cópias repetidas sobem o nível das suas árvores.','Passe o mouse num pacote para ver o que vem dentro.','Uma carta consagrada brilha e dá +50% de dano nas fases.'];
+function showPacks(){
+  const own=PACK_POOL.filter(k=>META.unlocked.includes(k)).length,n=PACK_POOL.length;
+  menu(`<div class="tenda"><canvas id="tbg" width="960" height="540"></canvas><i class="tlamp" style="--x:31%;--d:0s"></i><i class="tlamp" style="--x:63%;--d:-1.3s"></i><i class="tlamp" style="--x:93%;--d:-.6s"></i>
+    <div class="qsign">Tenda das Cartas</div>
+    <div class="qboaz"><canvas id="qboazc" width="256" height="384"></canvas><div class="qbubble" id="qbub">${pick(TENDA)}</div></div>
+    <div class="tpacks">${Object.entries(PACKS).map(([k,p],i)=>`<div class="tpk" data-pk="${k}" style="--pc:${p.col[1]};--n:${i}">
+      <div class="tstage">${pack3dHTML(k)}</div><b>${p.name}</b><small>${p.desc}</small>
+      <div class="todds">${p.odds.map((o,j)=>`<span style="--rc:${RAR[RAR_ORDER[j]].c};flex:${Math.max(o,5)}" title="${RAR[RAR_ORDER[j]].name}: ${o}%"></span>`).join('')}</div>
+      <button type="button" class="btn" data-buypk="${k}" ${META.coins<p.price?'disabled':''}><canvas width="12" height="12" class="coin"></canvas>${p.price}</button></div>`).join('')}</div>
+    <div class="tcol"><span>Coleção <b>${own}/${n}</b></span><span class="tbar"><i style="width:${own/n*100}%"></i></span><button type="button" class="btn ghost" data-go="codex">Ver cartas</button></div>
+    <div class="qfoot"><button class="btn ghost" data-go="hub">‹ Menu</button><span class="qpage">${RAR_ORDER.map(r=>`<i style="color:${RAR[r].c}">◆</i> ${RAR[r].name}`).join(' &nbsp; ')}</span>${coinsTag()}</div></div>`);
+  paintCoins();tendaArt();paintPack3d($('menu'));
+  const bub=$('qbub');
+  $('menu').querySelectorAll('.tpk').forEach(el=>{const p=PACKS[el.dataset.pk];
+    el.onmouseenter=()=>{bub.innerHTML=`<b>${p.name}</b><br>${p.desc} Chances: ${p.odds.map((o,j)=>RAR[RAR_ORDER[j]].name.toLowerCase()+' '+o+'%').join(', ')}.`;sfx('hit')};
+    el.onmouseleave=()=>{bub.textContent=pick(TENDA)}});
+  $('menu').querySelectorAll('[data-buypk]').forEach(b=>b.onclick=e=>{e.stopPropagation();const k=b.dataset.buypk;
+    if(buyItem('p:'+k))openPack(k,()=>showPacks());else{sfx('no');bub.innerHTML='Faltam moedas para o '+PACKS[k].name+'. Vença umas fases e volte!'}})}
+// the tent inside: striped canvas walls, a scalloped valance, shelves with card stacks, a velvet table, plank floor
+function tendaArt(){const g=hdCtx($('tbg'),480,270,2);C=g;
+  for(let i=0;i<480;i+=24){r(i,0,12,200,'#4a1e5a');r(i+12,0,12,200,'#3a1648');r(i+11,0,1,200,'#2a0e36')}
+  let gr=g.createLinearGradient(0,0,0,200);gr.addColorStop(0,'#000a');gr.addColorStop(.35,'#0000');gr.addColorStop(1,'#0006');g.fillStyle=gr;g.fillRect(0,0,480,200);
+  for(let i=0;i<480;i+=20){r(i,0,20,10,i%40?'#e8a020':'#c8302a');disc(i+10,10,9.5,i%40?'#e8a020':'#c8302a');r(i+9,17,2,4,'#f7c948')}r(0,0,480,3,'#7a1a18');
+  for(const[sx,sy]of[[150,62],[330,56]]){r(sx,sy,90,4,'#7a4a24');r(sx,sy,90,1,'#b07a40');r(sx,sy+4,90,2,'#3a1a08');
+    for(let i=0;i<6;i++){const cx=sx+8+i*14,h=8+hs(i,sx)*6,cc=['#c8403a','#2a6ad8','#9b5ae0','#e8a020','#4faa4a','#2aa8a0'][i];for(let j=0;j<h;j+=2){r(cx,sy-2-j,10,2,j%4?cc:shade(cc,-.3));r(cx,sy-2-j,10,1,'#fff3')}}}
+  for(const lx of[148,302,446]){r(lx,0,1,36,'#2a1608');const gl=g.createRadialGradient(lx,46,2,lx,46,60);gl.addColorStop(0,'#ffd27a66');gl.addColorStop(1,'#ffd27a00');g.fillStyle=gl;g.fillRect(lx-60,0,120,110);
+    r(lx-5,36,11,3,'#3a1a08');r(lx-4,39,9,12,'#f7c948');r(lx-3,40,7,10,'#fff0a0');r(lx-5,51,11,3,'#3a1a08')}
+  r(0,200,480,70,'#5a3420');for(let j=204;j<270;j+=8)r(0,j,480,1,'#3a1e10');for(let i=0;i<480;i+=36)r(i+(i%72?0:18),200,1,70,'#3a1e10');
+  r(140,176,340,8,'#3a1408');gr=g.createLinearGradient(0,184,0,238);gr.addColorStop(0,'#a8203a');gr.addColorStop(1,'#5a0e20');g.fillStyle=gr;g.fillRect(140,184,340,54);
+  r(140,184,340,3,'#f7c948');for(let i=146;i<480;i+=12){disc(i,240,4,'#7a1028');r(i-1,238,2,6,'#f7c948')}r(140,176,340,2,'#c84a5a');
+  for(let i=0;i<40;i++)r(hs(i,3)*480,20+hs(i,4)*150,1,1,'#fff6c0aa');
+  C=x;boazArt()}
+// two neighbour trees side by side under a shared light, joined by a golden branch with a heart in the middle
+function pairArtTo(cvs,p){const g=hdCtx(cvs,96,48,3),keep=C;C=g;
+  try{const A=THEME[FRUIT[p.a]],B=THEME[FRUIT[p.b]],gr=g.createLinearGradient(0,0,96,0);gr.addColorStop(0,A[2]);gr.addColorStop(1,B[2]);g.fillStyle=gr;g.fillRect(0,0,96,48);
+    const rg=g.createRadialGradient(48,20,2,48,20,44);rg.addColorStop(0,'#fff6c099');rg.addColorStop(1,'#fff6c000');g.fillStyle=rg;g.fillRect(0,0,96,48);
+    for(let i=0;i<18;i++)r(hs(i,p.a.length)*96,hs(i,9)*34,1,1,'#ffffff88');
+    r(0,41,96,7,'#1e3a22');r(0,41,96,1,'#6ab04a');for(let i=0;i<96;i+=3)r(i,40,1,1,'#4a8a3a');
+    for(const[k,x0]of[[p.a,22],[p.b,74]]){const b=mkHD(48,48,2);C=b.getContext('2d');drawTower(k,24,46,1);C=g;inked(g,b,x0-24,-5,48,48,COUT,.6)}
+    for(let t=0;t<=1;t+=.03){const x0=31+34*t,y0=21-Math.sin(Math.PI*t)*9;r(x0,y0,1.5,1.5,COUT);r(x0,y0-.5,1,1,'#f7c948')}
+    [[0,1,1,0,1,1,0],[1,1,1,1,1,1,1],[0,1,1,1,1,1,0],[0,0,1,1,1,0,0],[0,0,0,1,0,0,0]].forEach((row,j)=>row.forEach((v,i)=>v&&r(44.5+i,9+j,1,1,j===0&&i===1?'#ffd0dc':'#ff4f7b')))}
+  finally{C=keep}}
+// a relic icon redrawn sharper, with the same dark outline as the cards
+function relicCardArt(cvs,k){const t=mkHD(32,32,4),keep=C;C=t.getContext('2d');try{RICONS[k]&&RICONS[k]()}finally{C=keep}const g=hdCtx(cvs,32,32,4);inked(g,t,0,0,32,32,COUT,.7)}

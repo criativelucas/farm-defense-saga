@@ -39,12 +39,12 @@ async function loopAndScene(label){
 async function everyScreen(label){
   const steps=[
     ['hub',`showHub()`],['world',`for(let i=0;i<WORLDS.length;i++)showWorld(i)`],['shop pages',`showShop2('ferramentas');for(let i=0;i<8;i++){shopPage=i;showShop2()}`],
-    ['garden',`META.done['1-4']=1;showGarden()`],['codex tabs',`['caminho','cartas','vizinhas','inimigos','reliquias','personagens'].forEach(t=>showCodex(t))`],
+    ['garden',`META.done['1-4']=1;showGarden()`],['codex tabs',`['cartas','vizinhas','inimigos','reliquias','personagens'].forEach(t=>showCodex(t))`],
     ['lavrador',`showLavrador()`],['missions',`showMissions()`],['achievements',`showAchs()`],['config',`showConfig()`],['jornada',`showJornada()`],
     ['intro',`for(let i=0;i<INTRO.length;i++)showIntro(i)`],['choose seeds',`startLevel(0)`],
     ['win screen',`startLevelBattle();S.kills=9;levelWon()`],['lose screen',`startLevel(1);startLevelBattle();levelLost()`],
     ['endless',`META.done['1-4']=1;startEndless(0);startLevelBattle()`],
-    ['pack opening',`META.coins+=2000;showShop2('cartas');buyItem('p:arca');openPack('arca',()=>showShop2());document.querySelector('.ppack').click();await new Promise(r=>setTimeout(r,1200));document.getElementById('pall').click();await new Promise(r=>setTimeout(r,4800));document.getElementById('pclose').click()`],['tree of life',`META.garden.treeSeed=1;showTree()`]];
+    ['pack opening',`META.coins+=2000;showPacks();buyItem('p:arca');openPack('arca',()=>showShop2());document.querySelector('.ppack').click();await new Promise(r=>setTimeout(r,1200));document.getElementById('pall').click();await new Promise(r=>setTimeout(r,4800));document.getElementById('pclose').click()`],['tree of life',`META.garden.treeSeed=1;showTree()`]];
   for(const[n,code]of steps){const before=errors.length;await js(`(async()=>{${code};${settle}return 1})()`);check(label+': '+n,errors.length===before,errors.slice(before).join(' | ').slice(0,200))}}
 // every farmer differs, sums 15 points, and the battle uses those numbers
 async function farmers(label){

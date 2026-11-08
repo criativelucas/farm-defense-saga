@@ -39,13 +39,25 @@ function ensureMissions(){const day=todayKey();if(META.missions&&META.missions.d
   META.missions={day,list:pick3.map(m=>({k:m.k,n:m.n,t:m.t,p:0,got:false}))};saveMeta();return META.missions}
 function mission(k,n=1){const M=ensureMissions();for(const m of M.list)if(m.k===k&&m.p<m.n){m.p=Math.min(m.n,m.p+n);if(m.p>=m.n){toast('Missão cumprida!',m.t+' · receba no menu');sfx('ach')}saveMeta()}}
 const missionsReady=()=>ensureMissions().list.filter(m=>m.p>=m.n&&!m.got).length;
-function showMissions(){const M=ensureMissions();
-  menu(`<div class="mbox wide board"><div class="topbar"><button class="btn ghost" data-go="hub">‹ Menu</button><h2>Missões do dia</h2>${coinsTag()}</div>
-    <div class="notes">${M.list.map((m,i)=>`<div class="note ${m.got?'got':m.p>=m.n?'ready':''}" style="--tilt:${[-3,2,-1.5][i]}deg"><i class="pin"></i><b>${m.t}</b>
-      <div class="xp"><i style="width:${m.p/m.n*100}%"></i></div><small>${m.p} de ${m.n}</small>
-      ${m.got?'<span class="stamp">feito!</span>':m.p>=m.n?`<button class="btn sm" data-claim="${i}">Receber ${MISSION_PAY}</button>`:`<span class="reward">${MISSION_PAY} moedas</span>`}</div>`).join('')}</div>
-    <p class="help">Três missões novas por dia, pregadas no quadro da fazenda.</p></div>`);
-  paintCoins();$('menu').querySelectorAll('[data-claim]').forEach(b=>b.onclick=()=>{const m=M.list[+b.dataset.claim];m.got=true;META.coins+=MISSION_PAY;saveMeta();sfx('coin');showMissions()})}
+// one chunky icon per kind of mission, drawn on the 24x24 item grid
+const QICON={kill(){C.save();C.translate(12,22);C.scale(1.7,1.7);enemyBody({k:'odio',x:0,y:0,t:1});C.restore()},
+  water(){C.save();C.translate(0,1);C.scale(.75,.75);ICONS.regar();C.restore()},plant(){C.save();C.translate(12,22);C.scale(.8,.8);drawTower('videira',0,0,1);C.restore()},
+  slam(){r(7,6,7,10,'#7a4a2a');r(7,6,7,2,'#a06a3a');r(7,15,12,4,'#5a3018');r(7,15,12,1,'#8a5a30');for(let i=0;i<4;i++)r(3+i*5,21,3,2,'#c9a99a')},
+  bless(){C.save();C.translate(0,1);C.scale(.75,.75);ICONS.chuva();C.restore()},win(){r(6,3,2,19,'#5a3a1a');r(8,4,11,7,'#e0284a');r(8,4,11,2,'#ff6a7a');r(4,21,8,2,'#4faa4a')},
+  star3(){for(const[sx,sy]of[[3,10],[12,4],[15,13]]){r(sx+2,sy,2,6,'#f7c948');r(sx,sy+2,6,2,'#f7c948');r(sx+1,sy+1,4,4,'#f7c948');r(sx+2,sy+1,1,1,'#fff6c0')}},
+  evolve(){C.save();C.translate(9,22);C.scale(.65,.65);drawTower('roma',0,0,1);C.restore();r(17,8,3,10,'#4cc46e');r(15,9,7,2,'#4cc46e');r(16,7,5,2,'#9ff7b8')},
+  abil(){disc(12,12,8,'#c88a1a');disc(12,12,6,'#f7c948');disc(12,12,3,'#fff6c0');for(let i=0;i<8;i++){const a=i/8*Math.PI*2;r(12+Math.cos(a)*10-1,12+Math.sin(a)*10-1,2,2,'#fff6c0')}}};
+function showMissions(){const M=ensureMissions(),now=new Date(),mid=new Date(now.getFullYear(),now.getMonth(),now.getDate()+1),left=Math.max(0,mid-now),
+    hh=Math.floor(left/36e5),mm=Math.floor(left%36e5/6e4),done=M.list.filter(m=>m.got).length;
+  menu(`<div class="mbox wide modern quests"><div class="topbar"><button class="btn ghost" data-go="hub">‹ Menu</button><h2>Missões do dia</h2>${coinsTag()}</div>
+    <div class="qhead"><span>Novas missões em <b>${hh}h ${String(mm).padStart(2,'0')}min</b></span><span class="qdots">${M.list.map(m=>`<i class="${m.got?'on':''}"></i>`).join('')}<b>${done}/${M.list.length}</b></span></div>
+    <div class="questlist">${M.list.map((m,i)=>{const st=m.got?'got':m.p>=m.n?'ready':'';return`<div class="quest ${st}" style="--n:${i}">
+      <div class="qicon"><canvas width="24" height="24" data-qicon="${m.k}"></canvas></div>
+      <div class="qtxt"><b>${m.t}</b><div class="qbar"><i style="width:${Math.min(100,m.p/m.n*100)}%"></i><span>${Math.min(m.p,m.n)} / ${m.n}</span></div></div>
+      <div class="qrew">${m.got?'<span class="qdone">✓ Feito</span>':m.p>=m.n?`<button class="btn" data-claim="${i}">Receber ${MISSION_PAY}</button>`:`<span class="qcoin"><canvas width="12" height="12" class="coin"></canvas>${MISSION_PAY}</span>`}</div></div>`}).join('')}</div>
+    <p class="help">Três missões novas por dia. Cada uma vale ${MISSION_PAY} moedas.</p></div>`);
+  paintCoins();$('menu').querySelectorAll('canvas[data-qicon]').forEach(c=>{const k=c.dataset.qicon;itemIconTo(c,'q:'+k,QICON[k]||QICON.abil)});
+  $('menu').querySelectorAll('[data-claim]').forEach(b=>b.onclick=()=>{const m=M.list[+b.dataset.claim];m.got=true;META.coins+=MISSION_PAY;saveMeta();sfx('coin');showMissions()})}
 
 // ---------- the garden feeds the battle: growing pots give starting maná
 function gardenBonus(){const G=META.garden;if(!G||!G.pots)return 0;const grow=G.pots.filter(p=>p&&p.stage>=1).length,ripe=G.pots.filter(p=>p&&p.stage>=3).length;
@@ -98,7 +110,7 @@ const cardLv=k=>(META.cardLv&&META.cardLv[k])||0;
 
 // ---------- the road: one place that says what each win opens (cards, bag space, pests, systems, shop shelves, modes)
 const SHOP_AT={ferramentas:0,cartas:2,barreiras:3,jardim:4,arvore:4,melhorias:5};
-const SHOP_NAME={ferramentas:'Ferramentas',cartas:'Cartas e pacotes',barreiras:'Barreiras',jardim:'Jardim',arvore:'Árvore da Vida',melhorias:'Melhorias'};
+const SHOP_NAME={ferramentas:'Ferramentas',cartas:'Cartas',barreiras:'Barreiras',jardim:'Jardim',arvore:'Árvore da Vida',melhorias:'Melhorias'};
 const winsN=()=>Object.keys(META.done).length;
 const shopOpen=k=>winsN()>=SHOP_AT[k];
 function unlocksAfter(n){const L=[],lv=LEVELS[n];if(!lv)return L;
@@ -111,5 +123,3 @@ function unlocksAfter(n){const L=[],lv=LEVELS[n];if(!lv)return L;
   const nx=LEVELS[n+1];if(nx&&nx.goal)L.push(['sys','Fase especial: '+GOALS[nx.goal].name]);
   if(lv.id==='1-4')L.push(['mode','Estufa do jardim']);if(lv.id==='2-4')L.push(['mode','Modo Jornada']);if(lv.l===3)L.push(['mode','Modo infinito: '+WORLDS[lv.wi].name]);
   return L}
-function roadHTML(){return `<p class="help">O que cada fase vencida libera. Você já venceu ${winsN()} de ${LEVELS.length}.</p><div class="road">${LEVELS.map(l=>{const done=META.done[l.id],U=unlocksAfter(l.n);
-  return `<div class="rstep ${done?'got':''}"><b>${l.id}</b><span>${U.map(([k,t])=>`<i class="rk-${k}">${!done&&k==='card'?'Carta nova':t}</i>`).join('')||'<i>Moedas</i>'}</span></div>`}).join('')}</div>`}

@@ -54,7 +54,7 @@ function showHub(){
   </div>`);
   $('menu').classList.add('scene');paintCoins();barnArt();
   $('menu').querySelectorAll('canvas[data-prop]').forEach(c=>propIconTo(c,c.dataset.prop));
-  $('menu').querySelectorAll('[data-hub]').forEach(b=>{b.onmouseenter=()=>sfx('hit');b.onclick=()=>{initAudio();sfx('card');({aventura:showWorld,jardim:showGarden,arvore:showTree,intro:()=>showIntro(0),config:showConfig,loja:()=>showShop2('ferramentas'),pacotes:()=>showShop2('cartas'),personagem:showLavrador,jornada:showJornada,minijogos:showMinis,missoes:showMissions,codex:()=>showCodex('caminho'),conquistas:showAchs})[b.dataset.hub]()}});
+  $('menu').querySelectorAll('[data-hub]').forEach(b=>{b.onmouseenter=()=>sfx('hit');b.onclick=()=>{initAudio();sfx('card');({aventura:showWorld,jardim:showGarden,arvore:showTree,intro:()=>showIntro(0),config:showConfig,loja:()=>showShop2('ferramentas'),pacotes:showPacks,personagem:showLavrador,jornada:showJornada,minijogos:showMinis,missoes:showMissions,codex:()=>showCodex('cartas'),conquistas:showAchs})[b.dataset.hub]()}});
 }
 // a two-storey red barn seen from the front: the red wall rises into the gambrel gable, a band of slate shingles
 // caps it with a white fascia, hayloft door and pulley up top, braced doors below; dark outline all around
@@ -286,23 +286,25 @@ function attrVal(k,s){const d=atr(s,k),u=META.upg,pc=x=>Math.round(x*100)+'%';
   if(s==='for')return 'dano '+pc(1+.15*d);
   if(s==='mana')return 'começa com '+(6+d+2*(u.mana||0)+tl('mana'));
   return ABIL[k][0]+' · '+Math.round(abilCD(k))+'s'}
-function sheetHTML(){
-  const ch=CHARS[META.char],w=WEAPONS[META.weapon],doneN=Object.keys(META.done).length,
-    stars=Object.values(META.stars||{}).reduce((a,b)=>a+b,0),
-    stat=(l,v,f,g)=>`<div class="stat"><b>${l}</b><span>${v}</span><div class="meter ${g||''}"><i style="width:${Math.round(clamp(f,0,1)*100)}%"></i></div></div>`;
-  const slot=(cv,name,sub,empty)=>`<div class="slotbox ${empty?'empty':''}">${cv}<b>${name}</b><small>${sub}</small></div>`;
-  return `<div class="sheetrow"><div class="sheet"><div class="who"><div class="portrait"><canvas width="32" height="40" data-char="${META.char}"></canvas></div><div><h4>${ch.name}</h4><small>${ch.desc}</small></div></div>
-    ${attrRows(META.char,1)}
-    ${stat('Fases vencidas',doneN+' / '+LEVELS.length,doneN/LEVELS.length,'g')}${stat('Estrelas',stars+' / '+LEVELS.length*3,stars/(LEVELS.length*3),'g')}</div>
-    <div class="sheet"><h4>Equipamento</h4><div class="slots">${slot(`<canvas width="32" height="32" data-tool="${META.weapon}"></canvas>`,w.name,'Golpe X · dano '+w.dmg+' · alcance '+w.rng)}
-    ${Object.entries(ITEMS).map(([k,it])=>slot(`<canvas width="32" height="32" data-bar="${k}"></canvas>`,it.name,'×'+(META.items[k]||0)+' · tecla '+it.key,!META.items[k])).join('')}</div></div></div>`}
+// the farmer screen: the chosen farmer on a lit pedestal with power and card, attributes and gear beside,
+// then round tokens to switch farmer and tool
 function showLavrador(){
-  const render=()=>{menu(`<div class="mbox wide cabin"><div class="topbar"><button class="btn ghost" data-go="hub">‹ Menu</button><h2>O lavrador</h2>${coinsTag()}</div>
-    ${sheetHTML()}
-    <div class="sec"><h3>Personagem</h3><div class="grid g5">${Object.entries(CHARS).map(([k,c])=>{const ok=META.chars[k];return`<button type="button" class="pick ${META.char===k?'on':''} ${ok?'':'locked'}" data-ch="${k}" ${ok?'':'disabled'}>
-      <canvas width="32" height="40" data-char="${k}"></canvas><b>${c.name}</b><small>${ok?c.desc:'Bloqueado: '+c.hint}</small>${ok&&c.card?`<small>Carta: ${CARDS[c.card].name}</small>`:''}${attrRows(k)}</button>`}).join('')}</div></div>
-    <div class="sec"><h3>Ferramenta (X)</h3><div class="grid g5">${Object.entries(WEAPONS).map(([k,w])=>{const own=META.weapons[k];return`<button type="button" class="pick ${META.weapon===k?'on':''} ${own?'':'locked'}" data-wp="${k}" ${own?'':'disabled'}>
-      <canvas width="32" height="32" data-tool="${k}"></canvas><b>${w.name}</b><small>${w.desc}</small><small>Dano ${w.dmg} · alcance ${w.rng}</small>${own?'':'<i>compre na loja</i>'}</button>`}).join('')}</div></div>
+  const render=()=>{const k0=META.char,ch=CHARS[k0],A=ABIL[k0]||ABIL.lavrador,w=WEAPONS[META.weapon],doneN=Object.keys(META.done).length,stars=Object.values(META.stars||{}).reduce((a,b)=>a+b,0);
+    const slot=(cv,name,sub,empty)=>`<div class="slotbox ${empty?'empty':''}">${cv}<b>${name}</b><small>${sub}</small></div>`;
+    menu(`<div class="mbox wide modern hero"><div class="topbar"><button class="btn ghost" data-go="hub">‹ Menu</button><h2>O lavrador</h2>${coinsTag()}</div>
+    <div class="herogrid">
+      <div class="heroshow"><div class="hstage"><canvas width="32" height="40" data-char="${k0}"></canvas></div>
+        <div class="hname"><h3>${ch.name}</h3><i>${ch.ref}</i></div><p>${ch.desc}</p>
+        <div class="hchips"><span class="hc-abil"><b>Poder · C</b>${A[0]}: ${A[1]}</span>${ch.card?`<span class="hc-card"><b>Carta</b>${CARDS[ch.card].name}</span>`:''}</div></div>
+      <div class="herostats"><h4>Atributos</h4>${attrRows(k0,1)}
+        <div class="hprog"><span>Fases <b>${doneN}/${LEVELS.length}</b></span><span>Estrelas <b>${stars}/${LEVELS.length*3}</b></span></div>
+        <h4>Equipamento</h4><div class="slots">${slot(`<canvas width="32" height="32" data-tool="${META.weapon}"></canvas>`,w.name,'Golpe X · dano '+w.dmg)}
+        ${Object.entries(ITEMS).map(([k,it])=>slot(`<canvas width="32" height="32" data-bar="${k}"></canvas>`,it.name,'×'+(META.items[k]||0)+' · tecla '+it.key,!META.items[k])).join('')}</div></div>
+    </div>
+    <div class="sec"><h3>Personagem</h3><div class="htokens">${Object.entries(CHARS).map(([k,c],i)=>{const ok=META.chars[k];return`<button type="button" class="htok ${k0===k?'on':''} ${ok?'':'locked'}" data-ch="${k}" ${ok?'':'disabled'} style="--n:${i}" title="${ok?c.desc:'Como liberar: '+c.hint}">
+      <canvas width="32" height="40" data-char="${k}"></canvas><b>${c.name}</b><small>${ok?(ABIL[k]||ABIL.lavrador)[0]:'bloqueado'}</small></button>`}).join('')}</div></div>
+    <div class="sec"><h3>Ferramenta · X</h3><div class="htokens tools">${Object.entries(WEAPONS).map(([k,t],i)=>{const own=META.weapons[k];return`<button type="button" class="htok ${META.weapon===k?'on':''} ${own?'':'locked'}" data-wp="${k}" ${own?'':'disabled'} style="--n:${i}" title="${t.desc}">
+      <canvas width="32" height="32" data-tool="${k}"></canvas><b>${t.name}</b><small>${own?'dano '+t.dmg+' · alcance '+t.rng:'na Quitanda'}</small></button>`}).join('')}</div></div>
     ${talentsHTML()}
     <p class="help">Encostar nas pragas tira um coração. Sem corações, você desmaia por 3s e perde maná.</p></div>`);
     paintCoins();
@@ -321,7 +323,7 @@ const GPLANTS={trigo:{name:'Trigo',price:20,stage:40,sell:50,col:'#e8c86a'},uva:
 const TREE_SEED_PRICE=2000;
 // ---------- the shop is Boaz's market stall: shelves of goods, price tags, pages like a catalogue
 function shopItems(tab){let items=[];
-  if(tab==='cartas')items=Object.entries(PACKS).map(([k,p])=>({id:'p:'+k,icon:['pack',k],name:p.name,desc:p.desc+' Cópias repetidas sobem o nível das árvores.',price:p.price,rare:k!=='semeador'})).concat(META.unlocked.filter(k=>CARDS[k].type==='semente').map(k=>{const lv=cardLv(k);return{id:'c:'+k,icon:['card',k],name:CARDS[k].name+' nv '+(lv+1)+'/4',desc:'Cada nível dá +15% de dano a esta árvore.',price:CARD_LV_PRICE[lv],owned:lv>=3}}));
+  if(tab==='cartas')items=META.unlocked.filter(k=>CARDS[k].type==='semente').map(k=>{const lv=cardLv(k);return{id:'c:'+k,icon:['card',k],name:CARDS[k].name+' nv '+(lv+1)+'/4',desc:'Cada nível dá +15% de dano a esta árvore.',price:CARD_LV_PRICE[lv],owned:lv>=3}});
   if(tab==='ferramentas')items=Object.entries(WEAPONS).filter(([k])=>k!=='enxada').map(([k,w])=>({id:'w:'+k,icon:['tool',k],name:w.name,desc:w.desc,price:w.price,owned:!!META.weapons[k]}));
   if(tab==='barreiras')items=Object.entries(ITEMS).map(([k,it])=>({id:'i:'+k,icon:['bar',k],name:it.name+' ×'+it.qty,desc:it.desc+' Tecla '+it.key+'. Você tem '+(META.items[k]||0)+'.',price:it.price}));
   if(tab==='melhorias')items=Object.entries(UPGRADES).map(([k,u])=>{const lv=META.upg[k]||0;return{id:'u:'+k,icon:['shop',k],name:u.name+' '+lv+'/'+u.prices.length,desc:u.desc,price:u.prices[lv],owned:lv>=u.prices.length}});
@@ -355,11 +357,11 @@ function showShop2(tab){
     <button type="button" class="qarrow prev" id="qprev" ${shopPage?'':'disabled'}>‹</button><button type="button" class="qarrow next" id="qnext" ${shopPage<pages.length-1?'':'disabled'}>›</button>
     <div class="qfoot"><button class="btn ghost" data-go="hub">‹ Menu</button><span class="qpage">${SHOP_NAME[pg.tab]} · página ${shopPage+1} de ${pages.length}${locked.length?' · mais prateleiras abrem com as fases':''}</span>${coinsTag()}</div></div>`);
   paintCoins();quitandaArt();
-  $('menu').querySelectorAll('canvas[data-si]').forEach(c=>{const[t,...k]=c.dataset.si.split(':');const kk=k.join(':');if(t==='tool')toolIconTo(c,kk);else if(t==='bar')barrierIconTo(c,kk);else if(t==='card')treeIconTo(c,kk);else if(t==='pack')packIconTo(c,kk);else shopIconTo(c,kk)});
+  $('menu').querySelectorAll('canvas[data-si]').forEach(c=>{const[t,...k]=c.dataset.si.split(':');const kk=k.join(':');if(t==='tool')toolIconTo(c,kk);else if(t==='bar')barrierIconTo(c,kk);else if(t==='card')treeIconTo(c,kk);else shopIconTo(c,kk)});
   const bub=$('qbub'),all=pg.items;
   $('menu').querySelectorAll('[data-buy]').forEach(b=>{const it=all.find(i=>i.id===b.dataset.buy);
     b.onmouseenter=()=>{bub.innerHTML=`<b>${it.name}</b><br>${it.desc}`};b.onmouseleave=()=>{bub.textContent=pick(BOAZ)};
-    b.onclick=()=>{if(buyItem(it.id)){showShop2();if(it.id.startsWith('p:')){openPack(it.id.slice(2),()=>showShop2());return}$('qbub').innerHTML=pick(['Ótima escolha!','Que Deus abençoe a colheita!','Volte sempre!','Negócio fechado!'])}else{sfx('no');bub.innerHTML='Faltam moedas para '+it.name+'. Vença umas fases e volte!'}}});
+    b.onclick=()=>{if(buyItem(it.id)){showShop2();$('qbub').innerHTML=pick(['Ótima escolha!','Que Deus abençoe a colheita!','Volte sempre!','Negócio fechado!'])}else{sfx('no');bub.innerHTML='Faltam moedas para '+it.name+'. Vença umas fases e volte!'}}});
   $('qprev').onclick=()=>{shopPage--;sfx('card');showShop2()};$('qnext').onclick=()=>{shopPage++;sfx('card');showShop2()}}
 // painted backdrop: sky and fields, the stall with its striped awning, shelves, crates of fruit; and Boaz himself
 function quitandaArt(){let g=hdCtx($('qbg'),480,270,2);C=g;
@@ -375,8 +377,9 @@ function quitandaArt(){let g=hdCtx($('qbg'),480,270,2);C=g;
   const crate=(cx,cy,c1,c2)=>{r(cx-16,cy-12,32,16,'#c8925a');r(cx-16,cy-12,32,2,'#e0b07a');r(cx-16,cy-4,32,1,'#8a5a30');for(let i=0;i<7;i++)disc(cx-12+i*4,cy-14+(i%2),3,i%2?c1:c2)};
   crate(150,245,'#e0284a','#ff6a6a');crate(120,258,'#f7c948','#ffe08a');crate(458,252,'#5fae4a','#9fe070');crate(30,250,'#9b4be0','#c58cff');
   C=x;
-  // Boaz, drawn by hand at a finer scale: striped headscarf, full beard, robe and mantle, a basket of fruit
-  g=hdCtx($('qboazc'),64,96,4);C=g;OV='#1a0c06';for(const[ox,oy]of[[-1,0],[1,0],[0,-1],[0,1]]){g.translate(ox,oy);drawBoaz();g.translate(-ox,-oy)}OV=null;drawBoaz();C=x}
+  boazArt()}
+// Boaz, drawn by hand at a finer scale: striped headscarf, full beard, robe and mantle, a basket of fruit
+function boazArt(){const g=hdCtx($('qboazc'),64,96,4);C=g;OV='#1a0c06';for(const[ox,oy]of[[-1,0],[1,0],[0,-1],[0,1]]){g.translate(ox,oy);drawBoaz();g.translate(-ox,-oy)}OV=null;drawBoaz();C=x}
 function drawBoaz(){const sk='#e0a878',skd='#c08058',rb='#5a7a3a',rbd='#3e5a28',rbl='#7a9a50',mt='#8a5a34',mtd='#6a3e22',bd='#7a4a22',bdl='#9a6230';
   r(20,90,10,4,'#5a3a20');r(34,90,10,4,'#5a3a20');r(20,92,10,2,'#3a2414');r(34,92,10,2,'#3a2414');
   r(18,40,28,52,rb);r(18,40,4,52,rbd);r(40,44,3,46,rbl);for(const fx of[26,32,37])r(fx,64,1,26,rbd);r(17,88,30,3,rbd);

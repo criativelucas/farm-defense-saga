@@ -127,7 +127,7 @@ const NICONS={
   chefe(){disc(16,16,10,'#5a2a2a');r(10,13,4,3,'#ff3d3d');r(18,13,4,3,'#ff3d3d');r(11,20,10,2,'#111');r(8,4,16,4,'#f7c948');r(8,2,2,2,'#f7c948');r(15,1,2,3,'#f7c948');r(22,2,2,2,'#f7c948')}
 };
 function nodeIconTo(cvs,k){const g=cvs.getContext('2d');g.clearRect(0,0,32,32);C=g;NICONS[k]();C=x}
-function enemyIconTo(cvs,k){const g=hdCtx(cvs,48,48);C=g;const d=EN[k];g.save();const sc=d.boss||d.elite?.9:Math.min(2.4,34/Math.max(d.w,d.h+4)),o=1,e={k,x:0,y:d.fly?-d.h/2-2:0,t:1};g.translate(24,44);g.scale(sc,sc);
+function enemyIconTo(cvs,k,t=1){const g=hdCtx(cvs,48,48);C=g;const d=EN[k];g.save();const sc=d.boss||d.elite?.9:Math.min(2.4,34/Math.max(d.w,d.h+4)),o=1,e={k,x:0,y:d.fly?-d.h/2-2:0,t};g.translate(24,44);g.scale(sc,sc);
   OV=INK;for(const[ox,oy]of[[-o,0],[o,0],[0,-o],[0,o]]){g.translate(ox,oy);enemyBody(e);g.translate(-ox,-oy)}OV=null;enemyBody(e);g.restore();C=x}
 
 // ---------- frame

@@ -391,6 +391,7 @@ function updStory(dt){
   if(S.forbid){const f=S.forbid;f.wh-=dt;if(!f.on&&f.wh<=0&&Math.abs(P.x-f.x)<90){f.wh=7;pop(f.x,f.y-52,'“Certamente não morrereis”','#c070ff')}
     if(f.on&&S.state==='wave'){f.t-=dt;if(f.t<=0){f.t=2.5;let best=null;for(const e of S.en)if(!(e.dive>0)&&(!best||e.hp>best.hp))best=e;
       if(best){S.fx.push({k:'zap',x1:f.x,y1:f.y-30,x2:best.x,y2:ecy(best),t:0,max:.3});damage(best,20);flash(.12,'180,60,220')}}}}
+  if(S.drop&&S.drop.length)S.drop=S.drop.filter(i=>{const s=MAP.slots[i],g=gy(s.x);s.vy+=420*dt;s.y=Math.min(g,s.y+s.vy*dt);if(s.y<g)return true;burst(s.x,g,12,['#8a5c3a','#c9a99a','#ecd090'],70,220,.5);shake(3);return false});
   if(MAPID==='jerico'&&!S.fallen){const side=P.x<423;if(S.side!==undefined&&side!==S.side&&S.t-S.lastLap>.8){S.laps++;S.lastLap=S.t;pop(P.x,P.y-28,'volta '+S.laps+'/7','#f7c948',9);sfx('horn');if(S.laps>=7)fallWalls()}S.side=side}
   if(S.folk&&!S.folk.saved){const f=S.folk,[a,b]=MAP.sea;
     if(Math.abs(P.x-f.x)<60){let tx=P.x;if(!S.seaOpen&&f.x<a&&tx>a-8)tx=a-8;f.x+=clamp(tx-f.x,-45*dt,45*dt)}
@@ -407,6 +408,12 @@ function updStory(dt){
 function fallWalls(){S.fallen=true;MAP._fallen=true;C=GROUND.getContext('2d');C.clearRect(0,0,MAP.ww,H);drawGround();outlinedGround(()=>MAP.homeDraw());C=x;
   shake(14);flash(.5,'255,220,150');sfx('horn');banner('As muralhas caíram','Josué 6:20');
   MAP.plats.forEach(pl=>{if(pl.wall)burst(pl.x+pl.w/2,pl.y+20,20,['#8a5c3a','#b88a5a','#ecd090'],120,300,.9,2)});
+  // the beds on the walls come down with them: they fall to the rubble, spread out so no two trees land on the same spot
+  const walls=MAP.plats.filter(p=>p.wall),onWall=s=>walls.some(p=>Math.abs(s.y-p.y)<1&&s.x>=p.x-3&&s.x<=p.x+p.w+3);
+  S.drop=[];MAP.slots.forEach((s,i)=>{if(onWall(s)){s.vy=0;S.drop.push(i)}});
+  S.drop.forEach(i=>{const s=MAP.slots[i],free=x0=>MAP.slots.every((o,j)=>j===i||(S.drop.includes(j)&&S.drop.indexOf(j)>S.drop.indexOf(i))||Math.abs(o.x-x0)>=16);
+    const dx=[0,18,-18,36,-36,54,-54].find(d=>free(s.x+d)&&s.x+d>16&&s.x+d<MAP.ww-16);if(dx)s.x+=dx});
+  MAP.plats=MAP.plats.filter(p=>!p.wall);
   for(const e of S.en){damage(e,20);e.frz=3}}
 function nearestTreeSlot(){let best=-1,bd=90;MAP.slots.forEach((s,i)=>{if(!S.tw[i])return;const d=Math.hypot(s.x-S.p.x,s.y-S.p.y);if(d<bd){bd=d;best=i}});return best}
 

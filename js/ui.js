@@ -394,16 +394,30 @@ function foeIntro(k){const d=EN[k],el=$('foeintro');S.intro=k;sfx('horn');
   el.hidden=false;enemyIconTo(el.querySelector('canvas'),k);$('fiok').onclick=closeFoeIntro}
 function closeFoeIntro(){$('foeintro').hidden=true;S.intro=null;if(S.introQ&&S.introQ.length)foeIntro(S.introQ.shift())}
 const cardKnown=k=>META.unlocked.includes(k)||!!META.seen.c[k]||!!(CARDS[k].own&&META.chars[CARDS[k].own]);
+// codex cards: a header bar, an art window tinted by the subject's color, a body and the verse
+const ccard=o=>`<div class="ccard ${o.cls||''}" style="--cc:${o.col}"><div class="cchead"><b>${o.name}</b>${o.tag?`<span>${o.tag}</span>`:''}</div><div class="ccart">${o.art}</div><div class="ccbody">${o.body}</div>${o.ref?`<i class="ccref">${o.ref}</i>`:''}</div>`;
+const lvlOf=(v,cuts)=>1+cuts.filter(c=>v>=c).length;
 function showCodex(tab){
-  const tabs={caminho:'Caminho',cartas:'Frutos e cartas',vizinhas:'Vizinhanças',inimigos:'Obras da carne',reliquias:'Relíquias',personagens:'Personagens'};let body='',cards=[];
-  if(tab==='caminho')body=roadHTML();
+  const tabs={cartas:'Frutos e cartas',vizinhas:'Vizinhanças',inimigos:'Obras da carne',reliquias:'Relíquias',personagens:'Personagens'};let body='',cards=[];
   if(tab==='cartas'){cards=Object.keys(CARDS).map(k=>mk(k,cardKnown(k)?{}:{locked:true}));body=`<p class="help">${cards.filter(c=>!c.locked).length} de ${cards.length} cartas descobertas. Vença fases para encontrar as outras.</p><div class="grid">${cards.map(c=>{const I=info(c);return`<div class="cx">${cardHTML(c)}<i>${c.locked?'???':I.ref}</i></div>`}).join('')}</div>`}
-  if(tab==='vizinhas')body=`<p class="help">Árvores a até 72 passos de distância se ligam por ramos. Frutos diferentes juntos: +10% de dano. Perto de uma Videira: +25% (João 15:5). A Discórdia corta ramos ao passar por baixo.</p><div class="grid">${PAIRS.map(p=>`<div class="entry"><b>${p.name}</b><small>${CARDS[p.a].name} + ${CARDS[p.b].name}: ${p.desc}</small><i>${p.ref}</i></div>`).join('')}</div>`;
-  if(tab==='inimigos')body=`<div class="grid cxg">${Object.entries(EN).filter(([,d])=>!d.hide).map(([k,d])=>META.seen.e[k]?`<div class="entry"><canvas width="48" height="48" data-enemy="${k}"></canvas><div><b>${d.name}</b><small>${d.desc}</small>${d.weak?`<small>Fraca contra: ${CARDS[d.weak].name}</small>`:''}<i>${d.ref||VICE_REF}</i></div></div>`:`<div class="entry unk"><canvas width="48" height="48" data-enemy="${k}"></canvas><div><b>???</b><small>Ainda não apareceu no seu jardim.</small></div></div>`).join('')}</div>`;
-  if(tab==='reliquias')body=`<div class="grid cxg">${Object.entries(RELICS).map(([k,d])=>META.seen.r[k]?`<div class="entry"><canvas width="32" height="32" data-relic="${k}"></canvas><div><b>${d.name}</b><small>${d.desc}</small><i>${d.ref}</i></div></div>`:`<div class="entry unk"><canvas width="32" height="32" data-relic="${k}"></canvas><div><b>???</b><small>Encontre na Jornada.</small></div></div>`).join('')}</div>`;
+  if(tab==='vizinhas')body=`<div class="ccrules"><span style="--c:#4faa4a">Árvores a até 72 passos se ligam por ramos</span><span style="--c:#e8a020">Frutos diferentes juntos: +10% de dano</span><span style="--c:#9b5ae0">Perto de uma Videira: +25% (João 15:5)</span><span style="--c:#c8403a">A Discórdia corta ramos ao passar por baixo</span></div>
+    <div class="grid ccg pairs">${PAIRS.map((p,i)=>ccard({col:FRUIT_COL[FRUIT[p.a]],name:p.name,art:`<canvas width="288" height="144" data-pair="${i}"></canvas>`,body:`<b class="ccsub">${CARDS[p.a].name} + ${CARDS[p.b].name}</b><p>Juntas, ${p.desc}.</p>`,ref:p.ref})).join('')}</div>`;
+  if(tab==='inimigos')body=`<p class="help">Passe o mouse numa carta para ver a praga se mexer.</p><div class="grid ccg">${Object.entries(EN).filter(([,d])=>!d.hide).map(([k,d])=>{const seen=META.seen.e[k];
+    return seen?ccard({col:d.c,name:d.name,tag:d.boss?'Chefe':d.elite?'Elite':'',art:`<canvas width="48" height="48" data-enemy="${k}" data-anim="${k}"></canvas>`,
+      body:`<div class="cattr">${[['Vida',lvlOf(d.hp,[4,8,12,30]),'#ff5a6a'],['Velocidade',lvlOf(d.spd,[12,18,25,33]),'#5ad0ff'],['Dano',lvlOf(d.dmg,[2,3,5,8]),'#ffa040']].map(([l,v,c])=>`<span>${l}</span><i style="--c:${c}">${[1,2,3,4,5].map(n=>`<u class="${n<=v?'on':''}"></u>`).join('')}</i>`).join('')}</div>
+        <p>${d.desc}</p>${d.weak?`<div class="ccweak"><canvas width="12" height="12" data-emb="${FRUIT[d.weak]}"></canvas>Fraca contra ${CARDS[d.weak].name}</div>`:''}`,ref:d.ref||VICE_REF})
+      :ccard({col:'#3a3040',name:'???',cls:'unk',art:`<canvas width="48" height="48" data-enemy="${k}"></canvas>`,body:'<p>Ainda não apareceu no seu jardim.</p>'})}).join('')}</div>`;
+  if(tab==='reliquias')body=`<div class="grid ccg">${Object.entries(RELICS).map(([k,d])=>META.seen.r[k]?ccard({col:'#c9921a',name:d.name,art:`<canvas width="32" height="32" data-relic="${k}"></canvas>`,body:`<p>${d.desc}</p>`,ref:d.ref,cls:'relic'})
+    :ccard({col:'#3a3040',name:'???',cls:'unk relic',art:`<canvas width="32" height="32" data-relic="${k}"></canvas>`,body:'<p>Encontre na Jornada.</p>'})).join('')}</div>`;
   if(tab==='personagens')body=`<div class="grid cxg">${Object.entries(CHARS).map(([k,c])=>META.chars[k]?`<div class="entry"><canvas width="32" height="40" data-char="${k}"></canvas><div><b>${c.name}</b><small>${c.desc}</small>${attrRows(k)}<i>${c.ref}</i></div></div>`:`<div class="entry unk"><canvas width="32" height="40" data-char="${k}"></canvas><div><b>${c.name} · bloqueado</b><small>Como liberar: ${c.hint}</small></div></div>`).join('')}</div>`;
   menu(`<div class="mbox wide book"><h2>Códex</h2><div class="row tabs">${Object.entries(tabs).map(([k,t])=>`<button class="btn ghost ${k===tab?'act':''}" data-tab="${k}">${t}</button>`).join('')}</div>${body}<button class="btn" data-go="title">Voltar</button></div>`,cards);
   $('menu').querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>showCodex(b.dataset.tab));
+  $('menu').querySelectorAll('canvas[data-pair]').forEach(c=>pairArtTo(c,PAIRS[+c.dataset.pair]));
+  $('menu').querySelectorAll('.relic:not(.unk) canvas[data-relic]').forEach(c=>relicCardArt(c,c.dataset.relic));
+  // pests move while the mouse is over their card
+  $('menu').querySelectorAll('canvas[data-anim]').forEach(cv=>{const k=cv.dataset.anim,card=cv.closest('.ccard');let raf=0,t=1,last=0;
+    const step=now=>{if(!cv.isConnected)return;t+=Math.min(.05,(now-(last||now))/1000);last=now;enemyIconTo(cv,k,t);raf=requestAnimationFrame(step)};
+    card.onmouseenter=()=>{last=0;cancelAnimationFrame(raf);raf=requestAnimationFrame(step)};card.onmouseleave=()=>cancelAnimationFrame(raf)});
   $('menu').querySelectorAll('canvas[data-char]').forEach(c=>charIconTo(c,c.dataset.char));
 }
 function showAchs(){const keys=Object.keys(ACH),got=keys.filter(k=>META.ach[k]).length;
