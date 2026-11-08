@@ -260,7 +260,7 @@ function draw(){
   dl(x,NEAR,lay(PAR[2]),0);
   if(!MAP.day)for(let i=0;i<18;i++){const fx=(hs(i,5)*W+S.t*(6+hs(i,6)*8))%W,fy=60+hs(i,7)*90+Math.sin(S.t*1.5+i)*6;if(Math.sin(S.t*3+i*2)>-.2)r(fx,fy,1,1,'#fff4a0')}
   x.save();x.translate(-cam,0);
-  dl(x,GROUND,0,0);r(cam-2,H,W+6,-VY+2,shade(MAP.pal.fill,-.4));
+  dl(x,GROUND,0,0);r(cam-2,H,W+6,-VY+2,shade(MAP.pal.fill,-.4));drawGFalls();
   const gc=S.wet>.3?'#8affb0':MAP.pal.top1;
   for(const t of MAP.tufts){if(t.x<cam-4||t.x>cam+W+4)continue;const l=Math.sin(S.t*2.2+t.x*.07)>.25?1:0;r(t.x,t.y-t.h,1,t.h,gc);r(t.x+l,t.y-t.h-1,1,1,gc)}
   for(const v of MAP.vines)for(let i=0;i<v.len;i++){const px=v.x+Math.sin(S.t*1.3+v.x+i*.3)*i*.08;r(px,v.y+i,1,1,'#2f9a5a');if(i%3===1)r(px+1,v.y+i,1,1,gc)}

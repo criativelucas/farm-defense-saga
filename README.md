@@ -14,8 +14,9 @@ Abra `jardim-do-fruto.html` num navegador (ou sirva a pasta com `python3 -m http
 - `jardim-do-fruto.html` — página, HUD e estilos
 - `js/engine.js` — utilitários, áudio, música, entrada
 - `js/content.js` — cartas, inimigos, relíquias, eventos, personagens
-- `js/maps.js` — fases (chão, plataformas, canteiros)
-- `js/tiles.js` — tileset do chão, adereços animados
+- `js/maps.js` — fases (perfil do relevo, ilhas, canteiros)
+- `js/tiles.js` — tileset (torres de Jericó), adereços e bichinhos animados
+- `js/terrain.js` — relevo orgânico: perfil com rampas e paredões, chão pintado, ilhas flutuantes, cachoeiras, decoração por mundo
 - `js/scenery.js` — fundos pintados pixel a pixel (céu, nuvens, montanhas, penhascos, florestas, cidades)
 - `js/game.js` — lógica da batalha
 - `js/draw.js` — desenho em pixel art

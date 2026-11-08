@@ -3,10 +3,10 @@ function oliveTree(tx,ty,c){r(tx-2,ty,4,26,c);r(tx-6,ty+8,4,2,c);r(tx+2,ty+4,5,2
 
 const MAPS={
  eden:{name:'Jardim do Éden',ww:768,water:[420,462],night:'22,10,48',fog:'255,170,170',rays:'eden',home:'tree',
-  seg:[[0,110,170],[110,170,158],[170,250,166],[250,320,152],[320,400,162],[400,470,170],[470,540,156],[540,620,146],[620,700,158],[700,768,164]],
-  plats:[{x:44,y:126,w:40},{x:150,y:116,w:40},{x:262,y:106,w:40},{x:360,y:120,w:44},{x:470,y:112,w:40},{x:580,y:100,w:40},{x:680,y:118,w:40}],
-  slots:[[140,158,'boa'],[210,166,'espinho'],[285,152,'boa'],[360,162,'pedra'],[408,170,'boa'],[505,156,'espinho'],[580,146,'boa'],[660,158,'pedra'],
-         [64,126,'boa'],[170,116,'boa'],[282,106,'pedra'],[382,120,'boa'],[490,112,'boa'],[600,100,'espinho'],[700,118,'boa']],
+  prof:[[0,170],[92,170],[128,152],[196,152],[230,166],[262,166],[264,146],[318,146],[350,160],[390,160],[404,170],[476,170],[500,154],[548,154],[566,144],[612,144],[614,160],[668,160],[696,152],[768,152]],
+  plats:[{x:30,y:128,w:46},{x:150,y:110,w:34},{x:226,y:124,w:28},{x:292,y:104,w:44,fall:'L'},{x:430,y:128,w:36,fall:'R'},{x:560,y:102,w:40},{x:684,y:110,w:42}],
+  slots:[[150,0,'boa'],[248,0,'espinho'],[290,0,'boa'],[372,0,'pedra'],[506,0,'espinho'],[590,0,'boa'],[640,0,'pedra'],[730,0,'boa'],
+         [54,128,'boa'],[166,110,'boa'],[240,124,'pedra'],[312,104,'boa'],[446,128,'boa'],[578,102,'espinho'],[702,110,'boa']],
   pal:{fill:'#7c4a34',dark:'#5e3428',lite:'#9a6444',band:'#6c3e2e',top2:'#4a9a3e',top1:'#9ad85a',grass:1},
   fg(w){const a=[];for(let x0=20,k=0;x0<w;x0+=70+hs(k,31)*110,k++){a.push({t:'vine',x:x0,len:10+(hs(k,32)*28|0),s:k});if(hs(k,33)>.55)a.push({t:'fern',x:x0+40,s:k})}return a},
   homeDraw(){r(12,124,9,46,'#7a4a2e');r(10,160,13,10,'#7a4a2e');r(14,130,2,30,'#9a6040');
@@ -14,10 +14,11 @@ const MAPS={
     r(28,146,2,24,'#c9a24a');r(34,146,2,24,'#c9a24a');r(27,144,10,2,'#f7c948')}
  },
  sinai:{name:'Monte Sinai',ww:832,storm:1,night:'8,8,34',fog:'170,140,220',rays:'sinai',home:'tabernacle',
-  seg:[[0,100,168],[100,180,160],[180,240,170],[240,330,154],[330,420,164],[420,500,150],[500,590,160],[590,660,144],[660,740,156],[740,832,162]],
-  plats:[{x:40,y:124,w:40},{x:190,y:124,w:44},{x:300,y:110,w:40},{x:440,y:104,w:44},{x:560,y:112,w:40},{x:650,y:100,w:40},{x:760,y:118,w:40}],
-  slots:[[130,160,'pedra'],[210,170,'boa'],[280,154,'espinho'],[370,164,'boa'],[460,150,'boa'],[540,160,'pedra'],[620,144,'boa'],[700,156,'espinho'],[790,162,'boa'],
-         [60,124,'boa'],[212,124,'boa'],[320,110,'pedra'],[462,104,'boa'],[580,112,'espinho'],[670,100,'boa']],
+  prof:[[0,168],[88,168],[118,158],[150,158],[166,150],[236,150],[238,166],[300,166],[330,150],[400,150],[428,140],[510,140],[512,158],[580,158],[600,146],[660,146],[690,160],[760,160],[788,154],[832,154]],
+  plats:[{x:34,y:126,w:44},{x:176,y:108,w:38},{x:262,y:124,w:30},{x:420,y:98,w:34},{x:536,y:116,w:36},{x:632,y:104,w:42},{x:748,y:118,w:40}],
+  rockFall:{x:231,y0:153},
+  slots:[[132,0,'pedra'],[200,0,'boa'],[268,0,'espinho'],[362,0,'boa'],[494,0,'boa'],[545,0,'pedra'],[628,0,'boa'],[722,0,'espinho'],[808,0,'boa'],
+         [56,126,'boa'],[195,108,'boa'],[277,124,'pedra'],[437,98,'boa'],[554,116,'espinho'],[653,104,'boa'],[768,118,'boa']],
   pal:{fill:'#b4703e',dark:'#8e5232',lite:'#d4945a',band:'#a0603a',top2:'#e0a85a',top1:'#f8d890',grass:0},
   fg(w){const a=[];for(let x0=40,k=0;x0<w;x0+=90+hs(k,51)*120,k++){a.push({t:'rock',x:x0,s:k});if(hs(k,52)>.6)a.push({t:'frond',x:x0+50,s:k})}return a},
   homeDraw(){// the Tabernacle: curtains of blue, purple and scarlet (Ex 26:1)
@@ -25,10 +26,10 @@ const MAPS={
     r(15,156,10,14,'#2a1a10');r(4,149,1,21,'#c9a24a');r(35,149,1,21,'#c9a24a')}
  },
  mar:{name:'Mar Vermelho',ww:800,sea:[300,460,158],night:'10,14,44',fog:'200,170,220',rays:'eden',home:'pillar',
-  seg:[[0,110,166],[110,190,158],[190,280,162],[280,300,170],[300,460,180],[460,480,170],[480,570,160],[570,660,150],[660,740,158],[740,800,164]],
-  plats:[{x:40,y:122,w:40},{x:170,y:114,w:40},{x:330,y:128,w:40},{x:410,y:120,w:36},{x:520,y:116,w:40},{x:600,y:104,w:40},{x:700,y:116,w:40}],
-  slots:[[90,166,'boa'],[150,158,'boa'],[240,162,'espinho'],[520,160,'boa'],[610,150,'pedra'],[700,158,'boa'],[770,164,'espinho'],
-         [60,122,'boa'],[190,114,'boa'],[350,128,'boa'],[428,120,'pedra'],[540,116,'boa'],[620,104,'espinho'],[720,116,'boa']],
+  prof:[[0,166],[70,166],[96,158],[170,158],[196,166],[262,166],[300,180],[460,180],[492,164],[560,164],[590,150],[640,150],[664,160],[740,160],[762,154],[800,154]],
+  plats:[{x:30,y:124,w:44},{x:176,y:118,w:34},{x:316,y:138,w:34},{x:404,y:134,w:30},{x:500,y:122,w:36},{x:596,y:108,w:40},{x:696,y:118,w:44}],
+  slots:[[110,0,'boa'],[150,0,'boa'],[236,0,'espinho'],[520,0,'boa'],[612,0,'pedra'],[700,0,'boa'],[780,0,'espinho'],
+         [52,124,'boa'],[193,118,'boa'],[333,138,'boa'],[419,134,'pedra'],[518,122,'boa'],[616,108,'espinho'],[718,118,'boa']],
   pal:{fill:'#b47c50',dark:'#8e5c3c',lite:'#d29c68',band:'#a06c46',top2:'#e8c088',top1:'#fae4b0',grass:0},
   fg(w){const a=[];for(let x0=30,k=0;x0<w;x0+=80+hs(k,61)*120,k++){a.push({t:'rock',x:x0,s:k});if(hs(k,62)>.5)a.push({t:'fern',x:x0+50,s:k})}return a},
   homeDraw(){r(10,150,16,20,'#3a1a10');r(8,166,20,4,'#2a120a')}
@@ -79,22 +80,20 @@ Object.values(MAPS).forEach(m=>{if(Array.isArray(m.slots[0]))m.slots=m.slots.map
 let MAP,SKY,FAR,MID,NEAR,GROUND,MAPID='eden';
 const PAR=[.15,.45,.75],FGK=1.3;
 const VIG=mkCanvas(W,H);{const g=VIG.getContext('2d'),gr=g.createRadialGradient(W/2,H/2,H*.42,W/2,H/2,W*.72);gr.addColorStop(0,'rgba(6,2,14,0)');gr.addColorStop(1,'rgba(6,2,14,.6)');g.fillStyle=gr;g.fillRect(0,0,W,H)}
-function gy(px){for(const s of MAP.seg)if(px>=s[0]&&px<s[1])return s[2];return MAP.seg[MAP.seg.length-1][2]}
+function gy(px){const T=MAP.gyT,j=Math.round(px*2);return T[j<0?0:j>=T.length?T.length-1:j]}
 const inWater=px=>!!MAP.water&&px>=MAP.water[0]&&px<MAP.water[1];
 const inSea=px=>!!MAP.sea&&S&&!S.seaOpen&&px>=MAP.sea[0]&&px<MAP.sea[1];
 function buildMap(id,day=false){
-  MAPID=id;MAP=MAPS[id];MUS.world=id;MAP.day=day;
+  MAPID=id;MAP=MAPS[id];MUS.world=id;MAP.day=day;buildProfile();
   const lw=f=>Math.ceil(W+2+(MAP.ww-W)*f);
   paintScene(lw,day);GROUND=mkHD(MAP.ww,H);
   C=GROUND.getContext('2d');drawGround();MAP.homeDraw();
   C=x;
   MAP.fgItems=MAP.fg(Math.ceil(MAP.ww*FGK+W));buildProps();
   MAP.tufts=[];MAP.vines=[];MAP.puddles=[];
-  MAP.seg.forEach(([a,b,y],si)=>{
-    if(MAP.pal.grass)for(let i=a;i<b;i+=3)if(hs(i,si)>.55&&!inWater(i))MAP.tufts.push({x:i,y,h:1+(hs(i,9)*2|0)});
-    const seaSeg=MAP.sea&&a>=MAP.sea[0]&&b<=MAP.sea[1];
-    if(b-a>50&&!seaSeg&&!inWater(a+20)&&!inWater(b-20))MAP.puddles.push({x:a+12+(hs(a,7)*(b-a-34)|0),y,w:8+(hs(a,8)*8|0)})});
-  if(MAP.pal.grass)MAP.plats.forEach((pl,k)=>{for(let j=0;j<3;j++)MAP.vines.push({x:Math.round(pl.x+4+hs(k,j+60)*(pl.w-8)),y:pl.y+14,len:5+(hs(k,j+70)*10|0)})});
+  if(MAP.pal.grass)for(let i=4;i<MAP.ww-4;i+=3){if(hs(i,9)<.45||inWater(i)||Math.abs(gy(i+2)-gy(i-2))>2)continue;MAP.tufts.push({x:i,y:gy(i),h:1+(hs(i,9)*2|0)})}
+  MAP.flats.forEach(([a,b,y])=>{if(b-a>50&&!(MAP.sea&&a>=MAP.sea[0]&&b<=MAP.sea[1])&&!inWater(a+20)&&!inWater(b-20))MAP.puddles.push({x:a+12+(hs(a,7)*(b-a-34)|0),y,w:8+(hs(a,8)*8|0)})});
+  if(MAP.pal.grass)MAP.plats.forEach((pl,k)=>{if(pl.wall)return;for(let j=0;j<3+(pl.w>36?2:0);j++){const vx=Math.round(pl.x+4+hs(k,j+60)*(pl.w-8));MAP.vines.push({x:vx,y:Math.round(pl.y+islandDepth(pl,vx)-2),len:5+(hs(k,j+70)*12|0)})}});
 }
 const STORY={
   eden:['Gênesis 3:6','A serpente está enrolada na árvore do conhecimento. Um pisão nela dá poder, mas custa 2 de Vida a cada onda.'],

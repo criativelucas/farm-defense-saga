@@ -132,6 +132,13 @@ function pReeds(B,x0,x1,base,seed){for(let u=x0,i=0;u<x1;u+=.5+hs(i,seed)*1.2,i+
 function pAcacia(B,x,base,s,seed){pTrunk(B,x,base-s*1.3,base,1.3,seed);pTrunk(B,x+s*.25,base-s*1.25,base-s*.5,.9,seed+1);
   for(let j=-2;j<=2;j++)pCrown(B,x+j*s*.32+s*.1,base-s*1.4+Math.abs(j)*.6,s*.32,seed+j*3,'olive')}
 function pBush(B,x,base,rr,seed,m='leaf',fl){pCrown(B,x,base-rr*.6,rr,seed,m);if(fl)for(let i=0;i<5;i++){const u=x+(hs(seed,i)-.5)*rr*1.4,v=base-rr*.6+(hs(seed,i+5)-.6)*rr;dot(B,u,v,u32(graded(fl)));dot(B,u,v-.5,u32(graded('#fff4e0')))}}
+// a far floating island: grass cap, a rock wedge tapering to a point, sometimes a thread of water falling off it
+function pIsle(B,cx,top,wd,seed,fall){const{d,w,h,k}=B,hw=wd/2;
+  for(let X=Math.max(0,Math.floor((cx-hw-1)*k));X<Math.min(w,Math.ceil((cx+hw+1)*k));X++){const u=(X+.5)/k,q=(u-cx)/hw;if(Math.abs(q)>=1)continue;
+    const dep=wd*.6*Math.pow(1-q*q,.7)*(.8+.3*vn(u*.3,seed)),bump=vn(u*.8,seed+1)*1.4;
+    for(let Y=Math.max(0,Math.floor((top-bump)*k));Y<Math.min(h,Math.ceil((top+dep)*k));Y++){const v=(Y+.5)/k,dd=v-top;
+      d[Y*w+X]=dd<2.5?ink(B,'grass',.85-dd*.2-q*.1,X,Y,v):ink(B,'rock',.6-q*.3-dd/dep*.4+(fbm(u*.3,v*.3,seed)-.5)*.3,X,Y,v,2.2)}}
+  if(fall)pFall(B,cx+hw*.4,2.5,top,top+wd*1.6,seed)}
 function hillsAndRanges(F,o){const wF=F.w/F.k;
   for(let i=0,u=-20;u<wF+60;i++,u+=46+hs(i,1)*48)pPeak(F,u,o.peakY+hs(i,2)*22,46+hs(i,3)*30,i,{m:o.far||'range',jag:5,snow:o.snow?8+hs(i,4)*8:0,bot:172});
   for(let i=0,u=0;u<wF+60;i++,u+=44+hs(i,5)*40)pPeak(F,u,o.hillY+hs(i,6)*12,46+hs(i,7)*26,i+50,{m:o.near||'hills',jag:3,round:1,bot:172})}
@@ -140,6 +147,7 @@ function hillsAndRanges(F,o){const wF=F.w/F.k;
 const SCENES={
   eden(L){L.clouds(6);hillsAndRanges(L.far,{peakY:72,hillY:104,snow:1});
     const M=L.mid,wM=M.w/M.k;for(let u=10,i=0;u<wM;i++,u+=100+hs(i,1)*70){const x1=u+50+hs(i,2)*50;pCliff(M,u,x1,84+hs(i,3)*22,i,{cap:'grass',fall:hs(i,4)>.35?.3+hs(i,5)*.4:0,fallTo:136})}
+    for(let i=0,u=60;u<wM-30;i++,u+=130+hs(i,61)*80)pIsle(M,u,62+hs(i,62)*22,18+hs(i,63)*12,i+40,hs(i,64)>.4);
     pForest(M,-10,wM+10,152,8,7);
     const N=L.near,wN=N.w/N.k;for(let u=30,i=0;u<wN;i++,u+=80+hs(i,1)*70){pTree(N,u,184,13+hs(i,2)*6,i);if(hs(i,3)>.3)pBush(N,u+38,176,6+hs(i,4)*3,i+40,'leaf',['#ff8ab0','#ffe36a','#ffffff'][i%3])}},
   getsemani(L){L.clouds(3);const F=L.far,wF=F.w/F.k;hillsAndRanges(F,{peakY:96,hillY:116});
