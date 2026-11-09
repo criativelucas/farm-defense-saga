@@ -9,7 +9,9 @@
   "getsemani": 58.1818,
   "estufa": 50.5263,
   "chefe": 32.0,
-  "tumulo": 53.3333
+  "tumulo": 53.3333,
+  "ressurreicao": 41.7391,
+  "sombra": 36.9231
  },
  "perc": [
   "eden",
@@ -17,6 +19,8 @@
   "mar",
   "sinai",
   "babel",
-  "chefe"
+  "chefe",
+  "ressurreicao",
+  "sombra"
  ]
 }

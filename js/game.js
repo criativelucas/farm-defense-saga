@@ -66,7 +66,7 @@ function startWave(){
   if(isChar('noe')&&S.wi===1)S.floodIn=8;
   banner('Onda '+(S.wi+1)+' de '+S.waves.length,w.name);sfx('wave');
   if(relic('vara')){const i=MAP.slots.findIndex((s,j)=>!S.tw[j]&&s.soil==='boa');if(i>=0){plantAt(i,[rpick(['videira','roma','oliveira'])],false,.2);pop(MAP.slots[i].x,MAP.slots[i].y-40,'a vara floresceu','#f7c948')}}
-  if(tutStep===5)tutNext();
+  tutEvent('wave');
 }
 function endWave(){
   if(MUS.mode==='wave')MUS.mode='calm';
@@ -220,13 +220,13 @@ function plantAt(si,kinds,rare,delay=.6,plus=false){
   if(S.tw[si])burst(s.x,s.y-10,10,['#7a5a3a','#5fe08a'],50,200,.5);
   S.tw[si]={kinds,cd:{},dcd:0,grow:-delay,t:0,pulse:0,soil:s.soil,rare,plus,age:0,lvl:0,joio:false,stun:0,charge:0,heal:0,awake:20,fruitT:rnd(0,6),mods:null,ark:0,seduced:false,sleep:false};
   sfx('card');pop(s.x,s.y-30,...SOIL_MSG[s.soil]);mission('plant',1);
-  if(tutStep===2)tutNext();
+  tutEvent('plant',si);
 }
 function leaf(s,k){if(Math.random()<.6)S.parts.push({x:s.x+rnd(-8,8),y:s.y-rnd(12,24),vx:rnd(-12,12),vy:rnd(-15,0),g:25,life:1.6,max:1.6,
   c:{oliveira:'#b8cf9a',sarca:'#ffd34a',mostarda:'#e8e070',amendoeira:'#ffd0e8',lirio:'#ffffff',tamareira:'#d9a050'}[k]||'#5fe08a',s:1,sway:1})}
 function superTower(t,s){
   t.dcd=6;t.pulse=1;sfx('super');S.stop=.08;flash(.3,'255,240,180');pop(s.x,s.y-48,'GLÓRIA!','#ffe36a',9);
-  if(tutStep===3)tutNext();
+  tutEvent('slam');
   const m=tmult(t);
   for(const k of t.kinds){
     if(k==='videira')for(let i=0;i<16;i++)S.proj.push({x:s.x+rnd(-70,70),y:rnd(-40,0),vx:rnd(-10,10),vy:rnd(40,90),g:260,kind:'grape',dmg:3*m,src:k,life:3});
@@ -335,7 +335,7 @@ function playCard(i,si=null){
   else if(c.k==='joio'){RUN.deck=RUN.deck.filter(k=>k!==c);RUN.coll=RUN.coll.filter(k=>k!==c);pop(P.x,P.y-24,'joio arrancado da bolsa','#ffffff')}
   else{if(c.k==='chuva'){tx=W/2;ty=30}if(blessing(c.k)===false)return}
   flyCard(i,c,tx,ty);
-  S.mana-=I.cost;if(CARDS[c.k]&&CARDS[c.k].type==='bencao'){vfx('holy',S.p.x,0);mission('bless',1)}if(S.goal==='esteira'||S.mini==='chuva')S.hand[i]=null;else{if(c.k!=='joio')S.draw.push(c);S.hand[i]=S.draw.shift()}S.sel=-1;S.newIdx=i;renderHand();S.newIdx=-1;
+  S.mana-=I.cost;if(CARDS[c.k]&&CARDS[c.k].type==='bencao'){tutEvent('bless');vfx('holy',S.p.x,0);mission('bless',1)}if(S.goal==='esteira'||S.mini==='chuva')S.hand[i]=null;else{if(c.k!=='joio')S.draw.push(c);S.hand[i]=S.draw.shift()}S.sel=-1;S.newIdx=i;renderHand();S.newIdx=-1;
 }
 function blessing(k){
   const P=S.p;sfx('card');
@@ -430,7 +430,7 @@ function fallWalls(){S.fallen=true;MAP._fallen=true;C=GROUND.getContext('2d');C.
 function nearestTreeSlot(){let best=-1,bd=90;MAP.slots.forEach((s,i)=>{if(!S.tw[i])return;const d=Math.hypot(s.x-S.p.x,s.y-S.p.y);if(d<bd){bd=d;best=i}});return best}
 
 // ---------- the gardener fights back, and gets hurt
-function playerAttack(){if(S.mini==='funda')return slingShot();const p=S.p;if(p.stun>0||p.atkCD>0)return;if(tutStep===4)tutNext();const w=WEAPONS[META.weapon||'enxada'];p.atkCD=w.cd;p.swing=.22;sfx('hit');
+function playerAttack(){if(S.mini==='funda')return slingShot();const p=S.p;if(p.stun>0||p.atkCD>0)return;tutEvent('attack');const w=WEAPONS[META.weapon||'enxada'];p.atkCD=w.cd;p.swing=.22;sfx('hit');
   if(w.dash){p.dash=.22;p.dashHit=new Set();sfx('wind');return}
   for(const e of S.en){if(e.dive>0)continue;const d=EN[e.k],ddx=(e.x-p.x)*p.face,ddy=ecy(e)-(p.y-8);
     if(ddx>-(w.wide?10:4)&&ddx<w.rng+d.w/2&&Math.abs(ddy)<(w.wide?26:14)+d.h/2){damage(e,w.dmg*(1+.15*atr('for')));onoma(e.x,ecy(e)-6,'hit',.45);if(!d.boss)e.x+=p.face*(w.push||8);burst(e.x,ecy(e),5,['#ffffff','#e8dcc0'],60,200,.3)}}
@@ -469,7 +469,7 @@ function update(dt){
     S.sandOn-=dt;S.sand+=((S.sandOn>0?1:0)-S.sand)*Math.min(1,dt*1.2);
   }
   if(MAP.sea&&S.state==='wave'){S.seaT-=dt;if(S.seaT<=0){S.seaOpen=!S.seaOpen;S.seaT=S.seaOpen?11:9;banner(MAP.name,S.seaOpen?'As águas se abriram':'As águas se fecharam');shake(4);sfx('wind')}}
-  if(S.state==='prep'){if(tutStep<0||tutStep>=5)S.between-=dt;if(pr('Enter','KeyN'))callWave();else if(S.between<=0)startWave()}
+  if(S.state==='prep'){if(tutStep<0||TUT[tutStep].id==='wave')S.between-=dt;if(pr('Enter','KeyN'))callWave();else if(S.between<=0)startWave()}
   if(S.state==='wave'){
     S.qt-=dt;if(S.q.length&&S.qt<=0){const[k,gap]=S.q.shift();spawn(k);S.qt=gap}
     if(S.talents>0&&S.mana>=MAXM){S.fullT+=dt;if(S.fullT>5){pop(S.p.x,S.p.y-26,'talento enterrado!','#ff4f7b');sfx('no');S.talents=0;S.fullT=0}}else S.fullT=0;

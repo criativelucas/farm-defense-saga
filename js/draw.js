@@ -295,6 +295,7 @@ function draw(){
   drawRanges();drawCorpses();for(const e of S.en)drawEnemy(e);
   drawSea();drawDragPreview();
   if(S.state!=='title')drawGardener(P);
+  drawTutWorld();
   drawProj();drawBeams();drawDrops();drawFruitDrops();drawParts();drawVfx();
   for(const e of S.en)if(!(e.dive>0)&&!(S.mini==='escuro'&&!darkVisible(e)))drawIntent(e);
   x.textAlign='center';

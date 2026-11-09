@@ -77,14 +77,44 @@ function toast(t,sub){toasts.push([t,sub]);if(!toastBusy)nextToast()}
 function nextToast(){const n=toasts.shift();if(!n){toastBusy=false;return}toastBusy=true;const el=$('toast');el.innerHTML=`<b>${n[0]}</b>${n[1]?`<small>${n[1]}</small>`:''}`;el.hidden=false;
   el.classList.remove('show');void el.offsetWidth;el.classList.add('show');setTimeout(()=>{el.hidden=true;nextToast()},3200)}
 let tutStep=-1;
-const TUT=['Ande com ← → (ou A e D)','Pule com ↑ (ou W)','Pare sobre um canteiro (os brotinhos) e aperte 1 para plantar a primeira carta','No ar, aperte ↓ em cima de uma árvore crescida: é o pisão','Aperte X para golpear com a sua ferramenta. Cuidado: encostar nas pragas tira corações','Aperte Enter para chamar a onda quando estiver pronto'];
-function startTutorial(){tutStep=0;showTut()}
-function showTut(){const el=$('tut');if(tutStep<0||tutStep>=TUT.length){el.hidden=true;return}
-  el.hidden=false;el.innerHTML=`<small>Tutorial ${tutStep+1}/${TUT.length}</small><span>${TUT[tutStep]}</span><button type="button" id="tutskip">Pular</button>`;
+// the guided tutorial of the first level: each step shows the key to press, two or three words, and a bouncing arrow
+// on the spot in the world (a bed, the tree) or on the card in the hand; the step ends when the player does it
+let tutTree=-1;
+const freeBed=()=>{let b=-1,bd=1e9;MAP.slots.forEach((s,i)=>{if(S.tw[i]||s.y<150||MAP.plats.some(p=>s.x>p.x-6&&s.x<p.x+p.w+6&&p.y<s.y))return;const d=Math.abs(s.x-S.p.x)+(s.x<S.p.x?40:0);if(d<bd){bd=d;b=i}});return b};
+const handIdx=f=>S.hand.findIndex(c=>c&&f(c));
+const TUT=[
+  {id:'walk',keys:['←','→'],txt:'Ande até o canteiro',world:()=>{const i=freeBed();return i<0?null:MAP.slots[i]},done:()=>S.p.moved>30},
+  {id:'jump',keys:['↑'],txt:'Pule',world:()=>({x:S.p.x,y:S.p.y-26}),done:()=>S.p.jumped},
+  {id:'plant',keys:['1'],txt:'Pare no canteiro e plante',world:()=>{const i=freeBed();return i<0?null:MAP.slots[i]},card:()=>handIdx(c=>info(c).kinds)},
+  {id:'water',keys:[],txt:'Fique perto: ela é regada e cresce',world:()=>tutTree>=0?{x:MAP.slots[tutTree].x,y:MAP.slots[tutTree].y-22}:null,done:()=>tutTree>=0&&S.tw[tutTree]&&(S.tw[tutTree].water||0)>=1},
+  {id:'slam',keys:['↑','↓'],txt:'Pule e caia em cima dela',world:()=>tutTree>=0?{x:MAP.slots[tutTree].x,y:MAP.slots[tutTree].y-34}:null},
+  {id:'bless',keys:['2'],txt:'Use a bênção',card:()=>handIdx(c=>catOf(c)==='bencao'),enter:()=>{
+    if(handIdx(c=>catOf(c)==='bencao')<0){const j=S.hand.findIndex(c=>c&&!info(c).kinds);const k=j>=0?j:S.hand.length-1;if(S.hand[k])S.draw.push(S.hand[k]);S.hand[k]=mk('mana');S.newIdx=k;renderHand()}
+    S.mana=Math.max(S.mana,3)}},
+  {id:'attack',keys:['X'],txt:'Golpeie com a ferramenta',world:()=>({x:S.p.x+S.p.face*14,y:S.p.y-10})},
+  {id:'wave',keys:['Enter'],txt:'Chame a onda quando quiser',dom:()=>$('timer')}];
+function startTutorial(){tutStep=0;tutTree=-1;TUT.forEach(t=>delete t._in);showTut()}
+function showTut(){const el=$('tut');if(tutStep<0||tutStep>=TUT.length){el.hidden=true;tutArrow(null);return}const T=TUT[tutStep];if(T.enter&&!T._in){T._in=1;T.enter()}
+  el.hidden=false;el.innerHTML=`<i class="tutdots">${TUT.map((_,i)=>`<b class="${i<tutStep?'ok':i===tutStep?'now':''}"></b>`).join('')}</i>${T.keys.map(k=>`<kbd>${k}</kbd>`).join('')}<span>${T.txt}</span><button type="button" id="tutskip">Pular</button>`;
+  el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop');
   $('tutskip').onclick=e=>{e.currentTarget.blur();endTutorial()}}
-function tutNext(){tutStep++;sfx('coin');if(tutStep>=TUT.length)endTutorial();else showTut()}
-function endTutorial(){tutStep=-1;META.tut=1;saveMeta();$('tut').hidden=true}
-function tutCheck(){if(tutStep===0&&S.p.moved>30)tutNext();else if(tutStep===1&&S.p.jumped)tutNext()}
+function tutNext(){tutStep++;sfx('coin');burst(S.p.x,S.p.y-20,12,['#ffe36a','#9ff7b8','#ffffff'],70,200,.5);if(tutStep>=TUT.length)endTutorial();else showTut()}
+function endTutorial(){tutStep=-1;META.tut=1;saveMeta();$('tut').hidden=true;tutArrow(null);document.querySelectorAll('.tutglow').forEach(e=>e.classList.remove('tutglow'))}
+// an event from the game (plant, slam, bless, attack, wave): moves on when it is the step being taught
+function tutEvent(id,arg){if(tutStep<0||!TUT[tutStep]||TUT[tutStep].id!==id)return;if(id==='plant')tutTree=arg;tutNext()}
+function tutCheck(){if(tutStep<0||!S)return;const T=TUT[tutStep];if(!T)return;if(T.done&&T.done())return tutNext();
+  // the arrow over a card in the hand or over a HUD element, placed on the stage
+  let tgt=null;const ci=T.card?T.card():-1;document.querySelectorAll('.tutglow').forEach(e=>e.classList.remove('tutglow'));
+  if(ci>=0){tgt=$('cards').children[ci];if(tgt){tgt.classList.add('tutglow');const k=T.keys[0];if(k&&k!==String(ci+1)){T.keys=[String(ci+1)];showTut()}}}
+  else if(T.dom){tgt=T.dom();if(tgt)tgt.classList.add('tutglow')}tutArrow(tgt)}
+function tutArrow(tgt){const a=$('tutarrow');if(!tgt||tgt.hidden){a.hidden=true;return}const st=$('stage').getBoundingClientRect(),b=tgt.getBoundingClientRect();
+  a.hidden=false;a.style.left=((b.left+b.width/2-st.left)/st.width*100)+'%';a.style.top=((b.top-st.top)/st.height*100)+'%'}
+// the arrow in the world, drawn with the scene: chunky, gold with a dark outline, bobbing over the target
+function drawTutWorld(){if(tutStep<0||!TUT[tutStep]||!TUT[tutStep].world)return;const p=TUT[tutStep].world();if(!p)return;
+  const X=Math.round(clamp(p.x,S.cam+12,S.cam+W-12)),Y=Math.round(p.y-14-Math.abs(Math.sin(S.t*5))*5);
+  const A=[[0,0,7,0],[0,1,7,1],[0,2,7,2],[0,3,7,3],[-3,4,13,4],[-2,5,11,5],[-1,6,9,6],[0,7,7,7],[1,8,5,8],[2,9,3,9]];
+  for(const[dx,dy,w]of A)r(X-4+dx-1,Y+dy-1,w+2,3,'#1a0806');for(const[dx,dy,w]of A)r(X-4+dx,Y+dy,w,1,dy<4?'#ffe36a':'#f7b030');
+  r(X-3,Y,2,3,'#fff6c0');x.globalAlpha=.35+.25*Math.sin(S.t*6);ring(p.x,p.y+(p.y<S.p.y-18?0:2),8,'#ffe36a');x.globalAlpha=1}
 
 // ---------- menus
 const catOf=c=>c.hyb?'hibrida':CARDS[c.k]&&CARDS[c.k].own?'propria':info(c).type;

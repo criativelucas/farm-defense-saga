@@ -5,15 +5,16 @@ const WORLDS=[
   {id:'mar',name:'Mar Vermelho',map:'mar',act:1,boss:'farao',x:384,y:212,w:110,top:['#a0604a','#c98a5a','#f0c08a']},
   {id:'sinai',name:'Monte Sinai',map:'sinai',act:1,boss:'bezerro',x:330,y:126,w:100,top:['#8a5a3a','#b07a4a','#d9a060']},
   {id:'babel',name:'Torre de Babel',map:'babel',act:2,boss:null,x:166,y:134,w:100,top:['#6a3a2a','#9a6248','#c98a5a']},
-  {id:'getsemani',name:'Getsêmani',map:'getsemani',act:2,boss:'leviata',arena:'abismo',x:262,y:54,w:112,top:['#1e3a3a','#2a5a4a','#4a8a6a']},
-  {id:'ressurreicao',name:'Jardim da Ressurreição',map:'ressurreicao',act:2,boss:'sombra',x:420,y:66,w:104,top:['#3a8a4a','#6ac060','#c8f0a0']}
+  {id:'getsemani',name:'Getsêmani',map:'getsemani',act:2,boss:'leviata',arena:'abismo',sky:'night',x:262,y:54,w:112,top:['#1e3a3a','#2a5a4a','#4a8a6a']},
+  {id:'ressurreicao',name:'Jardim da Ressurreição',map:'ressurreicao',act:2,boss:'sombra',sky:'day',x:420,y:66,w:104,top:['#3a8a4a','#6ac060','#c8f0a0']}
 ];
 // the seventh world gives the four pack cards, one per level (index = level number)
 const UNLOCK_ORDER=['roma','oliveira','chuva','sarca','figueira','jerico','lirio','talentos','tamareira','semeador','amendoeira','mostarda','profecia','regar','videira','oliveira','roma','sarca','lirio','figueira','tamareira','amendoeira','mostarda'];
 UNLOCK_ORDER.push(null,'vento','uncao','nuvem','estrela');
 const RULES={poucas:{name:'Mão curta',desc:'Só 3 cartas na mão'},sempisao:{name:'Sem pisão',desc:'O pisão não funciona'},trevas:{name:'Noite total',desc:'Escuridão quase completa'}};
 const RULE_AT={5:'poucas',9:'sempisao',13:'trevas',17:'poucas',21:'sempisao'};
-const LEVELS=[];WORLDS.forEach((w,wi)=>{for(let l=0;l<4;l++){const n=wi*4+l;LEVELS.push({id:(wi+1)+'-'+(l+1),wi,l,n,night:l%2===1||RULE_AT[n]==='trevas',boss:l===3?w.boss:null,rule:RULE_AT[n]||null})}});
+// a world with a fixed sky (Getsêmani at night, the resurrection garden at dawn) keeps it on all four levels
+const LEVELS=[];WORLDS.forEach((w,wi)=>{for(let l=0;l<4;l++){const n=wi*4+l;LEVELS.push({id:(wi+1)+'-'+(l+1),wi,l,n,night:w.sky?w.sky==='night':l%2===1||RULE_AT[n]==='trevas',boss:l===3?w.boss:null,rule:RULE_AT[n]||null})}});
 const starsOf=id=>(META.stars||{})[id]||0;
 const starStr=n=>'★'.repeat(n)+'☆'.repeat(3-n);
 const levelOpen=n=>n===0||!!META.done[LEVELS[n-1].id];

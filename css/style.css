@@ -995,3 +995,15 @@ body.cb #hpfill{background:linear-gradient(#9ad8ff,#3a8ad8)!important}
 .garden.modern .gtool.seed{background:#fff3d018!important}.garden.modern>.help{color:var(--ink-dim)!important;margin:0}
 .garden.modern .ginfo{font-size:.85em;text-align:left}
 #menu.measuring,#menu.measuring *{animation:none!important;transition:none!important}
+/* guided tutorial: key caps, progress dots, an arrow bouncing over cards and buttons */
+#tut{gap:.5em;padding:.35em .6em;border-radius:999px;box-shadow:0 0 0 3px #1a0c06,0 6px 0 2px #0006,0 0 18px #ffd23a55}
+#tut.pop{animation:tutpop .45s cubic-bezier(.2,1.6,.4,1)}@keyframes tutpop{from{transform:translateX(-50%) scale(.6);opacity:0}}
+#tut span{font-weight:700;color:#fff3d0;white-space:nowrap}
+#tut kbd{display:inline-grid;place-items:center;min-width:1.6em;height:1.6em;padding:0 .35em;font:inherit;font-weight:700;color:#2a1408;background:linear-gradient(#fffbe8,#e8d8b0);border-radius:4px;box-shadow:0 0 0 2px #1a0c06,inset 0 -3px 0 #b8a07a;animation:kbdtap 1s ease-in-out infinite}
+#tut kbd+kbd{animation-delay:.25s}@keyframes kbdtap{50%{transform:translateY(2px);box-shadow:0 0 0 2px #1a0c06,inset 0 -1px 0 #b8a07a}}
+.tutdots{display:flex;gap:3px;margin-right:.2em}.tutdots b{width:.45em;height:.45em;border-radius:50%;background:#ffffff33}.tutdots b.ok{background:#4cc46e}.tutdots b.now{background:#ffd23a;box-shadow:0 0 6px #ffd23a}
+#tutarrow{position:absolute;z-index:30;width:2.2cqw;min-width:18px;aspect-ratio:13/10;translate:-50% -115%;pointer-events:none;
+  background:#ffd23a;clip-path:polygon(30% 0,70% 0,70% 45%,100% 45%,50% 100%,0 45%,30% 45%);filter:drop-shadow(0 0 0 #1a0c06) drop-shadow(2px 0 0 #1a0c06) drop-shadow(-2px 0 0 #1a0c06) drop-shadow(0 2px 0 #1a0c06);animation:tutbob .6s ease-in-out infinite alternate}
+@keyframes tutbob{to{translate:-50% -145%}}
+.hc2.tutglow{filter:drop-shadow(0 0 6px #ffd23a) drop-shadow(0 0 2px #fff) drop-shadow(0 4px 0 #000b)!important;transform:rotate(0) translateY(-10px)!important;z-index:3}
+#timer.tutglow{box-shadow:0 0 0 2px #ffd23a,0 0 12px #ffd23a}

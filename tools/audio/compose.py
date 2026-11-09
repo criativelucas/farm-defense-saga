@@ -7,7 +7,7 @@ choir pads, bells, frame drums), so there are no third-party samples or licenses
 
 usage: python3 tools/audio/compose.py        (writes assets/audio/*.mp3, *.wav and music.json)
 """
-import json, os, subprocess, wave
+import json, os, subprocess, sys, wave
 import numpy as np
 
 SR = 44100
@@ -219,6 +219,19 @@ MARCH = [(0, 'doum', 1), (1, 'tek', .7), (2, 'doum', 1), (3, 'tek', .7), (3.5, '
 def tumulo_extra(base, spb, bars):
     for b in range(0, bars, 2): place(base, bell(hz(86), spb * 2), b * 4 * spb + 3 * spb, .5)
 
+def ressurreicao_extra(base, spb, bars):
+    # morning bells climbing the scale every two bars, and a high shimmer
+    for b in range(0, bars, 2):
+        for k, m in enumerate((79, 83, 86, 91)): place(base, bell(hz(m), spb * 2), (b * 4 + 2 + k * .5) * spb, .32)
+
+def sombra_extra(base, spb, bars):
+    # a low funeral bell on every bar, a rising choir cluster before each phrase returns
+    for b in range(bars): place(base, bell(hz(45), spb * 3), b * 4 * spb, .55)
+    for b in range(3, bars, 4):
+        for m in (57, 58, 64): place(base, choir(hz(m), spb * 4), b * 4 * spb, .5)
+
+HEAVY = [(0, 'doum', 1), (0.75, 'doum', .7), (2, 'doum', 1), (2.5, 'tek', .8), (3, 'doum', .9), (3.5, 'tek', .7)] + [(k / 2, 'shaker', .45) for k in range(8)]
+
 TRACKS = {
     'titulo':    dict(tempo=84, root=62, scale='ionian', prog=[0, 3, 4, 0, 5, 3, 4, 4], lead=ney, harmony={'pad': strings, 'arp': lyre}, perc=[], lead_seed=11),
     'eden':      dict(tempo=88, root=65, scale='lydian', prog=[0, 1, 4, 0, 3, 1, 4, 4], lead=ney, harmony={'pad': strings, 'arp': harp}, perc=SOFT, lead_seed=3),
@@ -230,6 +243,9 @@ TRACKS = {
     'estufa':    dict(tempo=76, root=67, scale='ionian', prog=[0, 5, 3, 4, 0, 5, 1, 4], lead=bell, harmony={'arp': harp, 'pad': strings}, perc=[], lead_seed=29),
     'chefe':     dict(tempo=120, root=57, scale='hijaz', prog=[0, 0, 1, 0, 6, 5, 1, 0], lead=brass, harmony={'arp': oud, 'pad': strings, 'pattern': [0, 0, 1, 0, 2, 0, 1, 0]}, perc=MAQSUM + [(0.5, 'doum', .7), (2, 'doum', 1)], lead_seed=33),
     'tumulo':    dict(tempo=72, root=67, scale='ionian', prog=[0, 3, 4, 0, 5, 3, 1, 4], lead=ney, harmony={'pad': choir, 'arp': harp}, perc=[], lead_seed=41, extra=tumulo_extra),
+    # the seventh world: dawn after the long night, bright lydian with bells; and the last boss, the shadow of death
+    'ressurreicao': dict(tempo=92, root=67, scale='lydian', prog=[0, 4, 5, 3, 0, 1, 4, 4], lead=ney, harmony={'pad': choir, 'arp': harp, 'pattern': [0, 1, 2, 1, 2, 1, 0, 2]}, perc=SOFT, lead_seed=47, extra=ressurreicao_extra),
+    'sombra':    dict(tempo=104, root=50, scale='phrygian', prog=[0, 1, 0, 6, 0, 1, 5, 6], lead=brass, harmony={'pad': choir, 'drone': strings, 'arp': oud, 'pattern': [0, 0, 1, 0, 2, 1, 0, 1]}, perc=HEAVY, lead_seed=53, extra=sombra_extra),
 }
 
 def jingle(name, notes, inst, tempo=120):
@@ -280,6 +296,15 @@ def make_sfx():
     a, t = sweep(900, 1500, .08, 'tri'); sfx_write('pop', a * np.exp(-t * 30))
 
 if __name__ == '__main__':
+    # python3 compose.py ressurreicao sombra  -> renders only those tracks and keeps the rest of music.json
+    only = [a for a in sys.argv[1:] if a in TRACKS]
+    mj = os.path.join(OUT, 'music.json')
+    if only:
+        meta = json.load(open(mj))
+        for name in only:
+            meta['loops'][name] = round(render_track(name, **TRACKS[name]), 4); print('track', name, meta['loops'][name], 's')
+        meta['perc'] = [k for k, c in TRACKS.items() if c['perc'] and k in meta['loops']]
+        json.dump(meta, open(mj, 'w'), indent=1); sys.exit()
     lengths = {}
     for name, cfg in TRACKS.items():
         lengths[name] = render_track(name, **cfg); print('track', name, round(lengths[name], 1), 's')

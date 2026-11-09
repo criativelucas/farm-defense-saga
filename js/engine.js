@@ -120,7 +120,7 @@ async function loadAudio(){if(AUD.meta)return;AUD.meta={};
   try{AUD.meta=await (await fetch('assets/audio/music.json')).json();AUD.mode='files'}catch(e){AUD.mode='synth';return}
   AUD_SFX.forEach(n=>get('sfx-'+n+'.wav').then(b=>AUD.sfx[n]=b).catch(()=>{}))}
 function trackBuf(k){if(AUD.buf[k])return AUD.buf[k];if(!AUD.loading[k]){AUD.loading[k]=1;fetch('assets/audio/'+k+'.mp3').then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()}).then(a=>AC.decodeAudioData(a)).then(b=>AUD.buf[k]=b).catch(()=>{if(!/perc|vitoria|derrota/.test(k))AUD.mode='synth'})}return null}
-function wantedTrack(){if(MUS.mode==='boss')return'chefe';if(MUS.scene)return MUS.scene;const w=MUS.world==='abismo'?'mar':MUS.world==='ressurreicao'?'tumulo':MUS.world;return AUD.meta.loops&&AUD.meta.loops[w]?w:'titulo'}
+function wantedTrack(){if(MUS.mode==='boss'){const wv=S&&S.waves&&S.waves[S.wi];return wv&&wv.list.some(([k])=>k==='sombra')&&AUD.meta.loops&&AUD.meta.loops.sombra?'sombra':'chefe'}if(MUS.scene)return MUS.scene;const w=MUS.world==='abismo'?'mar':MUS.world;return AUD.meta.loops&&AUD.meta.loops[w]?w:'titulo'}
 function loopSource(buf,L,dest,when){const s=AC.createBufferSource();s.buffer=buf;s.loop=true;let lead=0;const d=buf.getChannelData(0);while(lead<4000&&Math.abs(d[lead])<1e-3)lead++;
   s.loopStart=lead/buf.sampleRate;s.loopEnd=Math.min(buf.duration,s.loopStart+L);s.connect(dest);s.start(when,s.loopStart);return s}
 function musicFiles(){const k=wantedTrack(),now=AC.currentTime,cur=AUD.cur;
