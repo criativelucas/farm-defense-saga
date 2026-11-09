@@ -24,7 +24,7 @@ function enemyBody(e){SPR[e.k]&&SPR[e.k](e)}
 
 // ---------- sprites: trees. sz is the size factor: each species has its own build and grows as it is watered.
 // Shapes scale with sz but fruit and leaf pixels stay 1:1, so a grown tree reads as bigger, not blurrier.
-const TREE={videira:{b:1.35,h:24},roma:{b:1.55,h:27},oliveira:{b:1.75,h:25},sarca:{b:1.25,h:14},figueira:{b:1.85,h:26},tamareira:{b:2.05,h:30},amendoeira:{b:1.65,h:26},lirio:{b:1.1,h:12},mostarda:{b:1,h:20}};
+const TREE={videira:{b:1.35,h:24},roma:{b:1.55,h:27},oliveira:{b:1.75,h:25},sarca:{b:1.25,h:14},figueira:{b:1.85,h:26},tamareira:{b:2.05,h:30},amendoeira:{b:1.65,h:26},lirio:{b:1.1,h:12},mostarda:{b:1,h:20},hissopo:{b:1.3,h:14},cedro:{b:1.5,h:32}};
 function extraFruit(X,Y,sz,n,cx,cy,rx,ry,c1,c2,seed){for(let i=0;i<n;i++){const a=hs(i,seed)*Math.PI*2,d=Math.sqrt(hs(i,seed+1)),fx=X+Math.round(Math.cos(a)*rx*d*.8),fy=Y-cy+Math.round(Math.sin(a)*ry*d*.8);r(fx-1,fy-1,3,3,c1);r(fx-1,fy-1,1,1,c2)}}
 function drawTower(k,X,Y,t,tr,sz=1){
   const q=v=>Math.round(v*sz),tw=sz>1.6?4:3,more=Math.max(0,Math.round((sz-1)*7));
@@ -64,6 +64,13 @@ function drawTower(k,X,Y,t,tr,sz=1){
       for(let i=0;i<n;i++){const lx=X-q(6)+Math.round(i*q(12)/(n-1)),h=q(6+(i%2)*4)+Math.round(Math.sin(t*2+i)*.6);r(lx,Y-h,1,h,'#3f8a3a');r(lx-1,Y-3-(i%3),1,2,'#5faa4a');
         r(lx-1,Y-h-2,3,2,'#ffffff');r(lx,Y-h-3,1,1,'#ffffff');r(lx,Y-h-1,1,1,'#ffd34a')}break}
     case 'mostarda':drawMostarda(X,Y,2);break;
+    case 'hissopo':{const n=6+more;// a low bushy clump with spikes of small violet flowers (Sl 51:7)
+      blob(X,Y-q(5),q(8),q(5),'#2a5a3a','#4a8a4a','#8ac070',71);
+      for(let i=0;i<n;i++){const lx=X-q(6)+Math.round(i*q(12)/(n-1)),h=q(8+(i%3)*3)+Math.round(Math.sin(t*2+i)*.6);r(lx,Y-h,1,h-q(3),'#3a6a3a');for(let j=0;j<3;j++)r(lx-(j%2),Y-h+j*2,2,1,j?'#8a7ae0':'#c8b8ff')}break}
+    case 'cedro':{const th=q(30),w0=q(13);// the cedar of Lebanon: a straight trunk with flat dark tiers (Sl 92:12)
+      r(X-1,Y-th,tw,th,'#5a3a24');r(X,Y-th,1,th,'#7a5434');r(X-q(3),Y-1,q(7),1,'#3a2414');
+      for(let k=0;k<4;k++){const yy=Y-q(9)-k*q(6),ww=w0-k*q(3),sw=Math.round(Math.sin(t*1.5+k)*.6);r(X-ww+sw,yy,ww*2,q(3),'#1e4a32');r(X-ww+1+sw,yy,ww*2-2,1,'#3a7a4a');r(X-ww+sw,yy+q(3)-1,ww*2,1,'#123a24')}
+      r(X-1,Y-th-q(2),2,q(3),'#2a5a3a');break}
   }
 }
 function drawMostarda(X,Y,age){
@@ -139,7 +146,7 @@ function enemyIconTo(cvs,k,t=1){const g=hdCtx(cvs,48,48);C=g;const d=EN[k];g.sav
 
 // ---------- frame
 const dc=mkHD(W+1,H),dx=dc.getContext('2d');
-const LC={videira:'#a05ae8',roma:'#ff4f7b',oliveira:'#d8f0a8',sarca:'#ff8a2a',mostarda:'#f7d050',figueira:'#9ae060',tamareira:'#ffa64a',amendoeira:'#ffc8e4',lirio:'#f4f4ff'};
+const LC={hissopo:'#b8c0ff',cedro:'#a8e0a0',videira:'#a05ae8',roma:'#ff4f7b',oliveira:'#d8f0a8',sarca:'#ff8a2a',mostarda:'#f7d050',figueira:'#9ae060',tamareira:'#ffa64a',amendoeira:'#ffc8e4',lirio:'#f4f4ff'};
 let LIGHTS=[];
 const easeBack=g=>1+2.70158*Math.pow(g-1,3)+1.70158*Math.pow(g-1,2);
 const HOMEY={tree:118,tabernacle:158,pillar:120,rahab:146,altar:150,rock:150,tomb:150};
@@ -431,7 +438,8 @@ const TOOLS={
 };
 function drawBarriers(){
   for(const m of S.muds){x.globalAlpha=Math.min(1,m.t);r(m.x-15,m.y-1,30,2,'#5a3a20');r(m.x-12,m.y-2,24,1,'#6a4428');if(Math.sin(S.t*3+m.x)>.7)r(m.x+rnd(-10,10),m.y-3,2,1,'#8a6a4a');x.globalAlpha=1}
-  for(const f of S.fences){const X=f.x,Y=f.y,dmg=1-f.hp/f.max;r(X-5,Y-14,2,14,'#8a5a2a');r(X+3,Y-14,2,14,'#8a5a2a');r(X-6,Y-12,12,2,'#b07a40');r(X-6,Y-6,12,2,'#b07a40');r(X-5,Y-15,2,1,'#c9a060');r(X+3,Y-15,2,1,'#c9a060');
+  if(S.fire){const X=S.fire.x;for(let i=0;i<5;i++){const h=8+((Math.sin(S.t*12+i*1.7)+1)*6|0),fx=X-6+i*3,fy=gy(fx);r(fx,fy-h,3,h,'#e0402a');r(fx+1,fy-h+3,1,h-3,'#ffa040');r(fx+1,fy-3,1,3,'#ffe36a')}if(Math.random()<.5)S.parts.push({x:X+rnd(-6,6),y:gy(X)-10,vx:rnd(-6,6),vy:rnd(-40,-20),g:-20,life:.5,max:.5,c:Math.random()<.5?'#ff6a1a':'#ffd34a',s:1})}
+  for(const f of S.fences){const X=f.x,Y=f.y,dmg=1-f.hp/f.max;if(f.stone){r(X-7,Y-13,14,13,'#1a1a22');r(X-6,Y-12,12,12,'#7a7a88');r(X-6,Y-12,12,2,'#b8b8c8');r(X+4,Y-12,2,12,'#5a5a68');r(X-4,Y-7,6,1,'#5a5a68');if(dmg>.5)r(X-1,Y-12,1,6,'#2a2a32');continue}r(X-5,Y-14,2,14,'#8a5a2a');r(X+3,Y-14,2,14,'#8a5a2a');r(X-6,Y-12,12,2,'#b07a40');r(X-6,Y-6,12,2,'#b07a40');r(X-5,Y-15,2,1,'#c9a060');r(X+3,Y-15,2,1,'#c9a060');
     if(dmg>.4)r(X-1,Y-12,1,2,'#3a2010');if(dmg>.7)r(X+1,Y-6,1,2,'#3a2010')}
   for(const s of S.scares){const X=s.x,Y=s.y,sw=Math.sin(S.t*3)*1;if(s.t<3&&(S.t*8|0)%2)continue;r(X,Y-24,1,24,'#8a5a2a');r(X-7+sw,Y-19,15,1,'#8a5a2a');r(X-3,Y-20,7,8,'#c23b4f');r(X-2,Y-26,5,5,'#e8c86a');r(X-4,Y-27,9,1,'#d9b45a');r(X-2,Y-29,5,2,'#d9b45a');
     r(X-1,Y-24,1,1,'#111');r(X+1,Y-24,1,1,'#111');r(X-8+sw,Y-18,2,2,'#e8c86a');r(X+7+sw,Y-18,2,2,'#e8c86a');if(Math.sin(S.t*2)>.5)r(X-10,Y-30,1,1,'#2a2030')}

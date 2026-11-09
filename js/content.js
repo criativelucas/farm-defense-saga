@@ -22,7 +22,7 @@ const CARDS={
   joio:{type:'joio',name:'Joio',cost:2,ref:'Mateus 13:25',desc:'Ocupa a mão. Jogue para arrancar da bolsa.'}
 };
 const SEED_KEYS=['videira','roma','oliveira','sarca','figueira','tamareira','amendoeira','lirio'];
-const POOL=[...SEED_KEYS,'videira','roma','oliveira','mostarda','talentos','semeador','chuva','mana','jerico','profecia'];
+const POOL=[...SEED_KEYS,'videira','roma','oliveira','mostarda','talentos','semeador','chuva','mana','jerico','profecia','hissopo','cedro','luz','paz','fogo','pedra','fermento','ovelha'];
 const START=['videira','videira','videira','roma','roma','oliveira','sarca','mana','chuva','semeador','oliveira','jerico','mostarda','talentos','mana','lirio','figueira'];
 
 // ---------- works of the flesh (Gl 5:19-21), the elite and the three bosses
@@ -206,6 +206,19 @@ Object.assign(CARDS,{
   nuvem:{type:'bencao',name:'Coluna de Nuvem',cost:4,ref:'Êxodo 13:21',desc:'Uma nuvem desce: todos os inimigos andam na metade da velocidade por 8s.'},
   estrela:{type:'bencao',name:'Estrela da Manhã',cost:5,ref:'Apocalipse 22:16',desc:'Toda árvore sobe 1 nível e atira na hora. Você ganha 3 de maná.'}
 });
+Object.assign(CARDS,{
+  hissopo:{type:'semente',name:'Hissopo',cost:4,ref:'Salmos 51:7',desc:'Purifica em volta a cada 4s: revela disfarces, arranca raízes, quebra espelhos e coroas, limpa as árvores vizinhas e fere as pragas.'},
+  cedro:{type:'semente',name:'Cedro do Líbano',cost:6,ref:'Salmos 92:12',desc:'Árvore alta e firme: a cada 2,4s lança uma agulha que atravessa todas as pragas em fila, bem longe.'},
+  luz:{type:'bencao',name:'Luz do Mundo',cost:2,ref:'Mateus 5:14',desc:'Revela tudo o que está escondido: disfarces e raízes aparecem, espelhos quebram, coroas caem. 4 de dano em todos.'},
+  paz:{type:'bencao',name:'Paz de Deus',cost:3,ref:'Filipenses 4:7',desc:'Todas as árvores acordam, se livram de atordoamento, ídolo e joio, e ficam protegidas por 10s.'},
+  fogo:{type:'bencao',name:'Muro de Fogo',cost:4,ref:'Zacarias 2:5',desc:'Ergue um muro de fogo onde você está por 8s. Quem atravessa queima e fica lento.'},
+  pedra:{type:'bencao',name:'Pedra Angular',cost:2,ref:'Salmos 118:22',desc:'Coloca à sua frente uma pedra que segura as pragas, três vezes mais firme que uma cerca.'},
+  fermento:{type:'parabola',name:'Fermento',cost:2,ref:'Mateus 13:33',desc:'Um pouco de fermento leveda tudo: o maná recarrega o dobro de rápido por 12s.'},
+  ovelha:{type:'parabola',name:'Ovelha Perdida',cost:3,ref:'Lucas 15:4',desc:'As 3 pragas mais perto do jardim (menos chefes) são levadas de volta para o começo do caminho.'}
+});
+STATS.hissopo={dmg:'2',rng:55,cd:'4s'};STATS.cedro={dmg:'5',rng:140,cd:'2,4s'};
+Object.assign(SHORT,{hissopo:'Purifica em volta: revela e limpa.',cedro:'Agulha longa que atravessa a fila.',luz:'Revela tudo; espelhos e coroas caem.',paz:'Árvores livres e protegidas por 10s.',
+  fogo:'Muro de fogo por 8s onde você está.',pedra:'Uma pedra firme segura as pragas.',fermento:'Maná recarrega o dobro por 12s.',ovelha:'As 3 pragas mais adiantadas voltam ao começo.'});
 Object.assign(SHORT,{vento:'Empurra todos os inimigos para trás.',uncao:'+4 de Vida e corações cheios.',nuvem:'Inimigos lentos por 8s.',estrela:'Toda árvore sobe 1 nível e atira.'});
 
 // ---------- neighbours: trees close to each other strengthen each other

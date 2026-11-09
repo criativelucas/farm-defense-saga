@@ -6,12 +6,21 @@ const RAR={comum:{name:'Comum',c:'#d4d8e0',d:'#5a6070',sym:'●'},rara:{name:'Ra
 const RAR_ORDER=['comum','rara','epica','lendaria'];
 const RARITY={videira:'comum',roma:'comum',oliveira:'comum',lirio:'comum',mana:'comum',profecia:'comum',joio:'comum',
   figueira:'rara',tamareira:'rara',mostarda:'rara',talentos:'rara',chuva:'rara',amendoeira:'epica',sarca:'epica',semeador:'epica',jerico:'lendaria',
-  vento:'comum',uncao:'rara',nuvem:'epica',estrela:'lendaria'};
+  vento:'comum',uncao:'rara',nuvem:'epica',estrela:'lendaria',
+  paz:'comum',pedra:'comum',luz:'rara',fermento:'rara',hissopo:'rara',fogo:'epica',cedro:'epica',ovelha:'lendaria'};
 // art for the cards found only in packs, on the 32x32 icon grid
 Object.assign(ICONS,{
   vento(){for(let i=0;i<5;i++){const y0=6+i*5;for(let x0=2+i%2*3;x0<28;x0+=1)r(x0,y0+Math.sin(x0*.35+i)*1.5,1,1,i%2?'#e8f4ff':'#b8d8f0')}for(let i=0;i<4;i++)r(20+i*2,8+i*6,2,1,'#7ac050')},
   uncao(){r(10,10,12,16,'#c8a040');r(10,10,12,2,'#f0d070');r(12,6,8,5,'#a07a28');r(14,3,4,4,'#7a4a2a');r(12,13,4,10,'#e8c860');for(let i=0;i<4;i++)r(23+i,22+i*2,2,2,'#ffe08a');disc(26,29,2,'#ffe08a')},
   nuvem(){blob(16,9,12,6,'#c8d0e0','#e8eef8','#ffffff',4);for(let j=12;j<30;j++){const w2=10-(j-12)*.35;r(16-w2/2,j,w2,1,j%3?'#e8eef8':'#c8d0e0')}},
+  luz(){r(14,22,4,8,'#8a5a2a');r(10,29,12,2,'#5a3a18');r(12,18,8,4,'#c89a28');r(12,18,8,1,'#ffe08a');r(15,12,2,6,'#fff6c0');r(15,10,2,2,'#ffd34a');
+    for(let i=0;i<8;i++){const a=i/8*Math.PI*2;r(16+Math.cos(a)*9,13+Math.sin(a)*8,2,1,'#fff6c0')}},
+  paz(){r(6,14,14,6,'#f4f4ff');r(18,12,5,5,'#f4f4ff');r(21,13,1,1,'#111');r(23,14,3,1,'#e0a040');r(4,10,9,4,'#d8d8f0');r(8,8,6,3,'#e8e8ff');
+    r(24,15,6,1,'#5a8a3a');r(27,13,2,2,'#7ab050');r(29,16,2,2,'#7ab050')},
+  fogo(){for(let i=0;i<7;i++){const x0=3+i*4,h=10+(i%3)*5;r(x0,30-h,4,h,'#e0402a');r(x0+1,30-h+3,2,h-3,'#ffa040');r(x0+1,30-4,2,4,'#ffe36a')}r(2,29,28,2,'#5a1a0a')},
+  pedra(){r(7,12,18,16,'#6a6a78');r(7,12,18,3,'#a8a8b8');r(22,12,3,16,'#4a4a58');r(9,17,7,1,'#4a4a58');r(13,22,9,1,'#4a4a58');r(10,9,12,3,'#8a8a98');r(10,9,12,1,'#c8c8d8')},
+  fermento(){r(6,20,20,8,'#b07a40');r(6,20,20,2,'#e0b070');r(4,19,24,2,'#7a4a24');blob(16,15,10,6,'#e8d0a0','#f8e8c8','#ffffff',7);for(let i=0;i<4;i++)r(10+i*4,12-(i%2)*2,1,1,'#d8b070')},
+  ovelha(){blob(15,17,9,6,'#d8d8d0','#f4f4ec','#ffffff',3);r(22,13,6,6,'#2a2a2a');r(25,14,1,1,'#ffffff');r(21,13,2,2,'#2a2a2a');for(const lx of[9,13,17,20])r(lx,22,2,6,'#2a2a2a');r(4,8,2,22,'#8a5a2a');r(4,8,6,2,'#8a5a2a');r(9,8,2,4,'#8a5a2a')},
   estrela(){const c='#ffe9a0';r(15,2,2,28,c);r(2,15,28,2,c);for(let i=0;i<9;i++){r(16-i,16-i,1,1,'#fff6c0');r(15+i,16-i,1,1,'#fff6c0');r(16-i,15+i,1,1,'#fff6c0');r(15+i,15+i,1,1,'#fff6c0')}disc(16,16,4,'#ffd040');disc(15,15,2,'#ffffff')}});
 const rarOf=c=>c.hyb?'epica':RARITY[c.k]||(CARDS[c.k]&&CARDS[c.k].own?'lendaria':'comum');
 // the window's palette, dark to light: trees by their fruit, the rest by category
@@ -21,12 +30,12 @@ const THEME={Amor:['#3a0a1a','#7a1a2a','#c8402a','#f08a3a','#ffd08a'],Alegria:['
   Fé:['#20180a','#4a3a10','#8a7a20','#d8c040','#fff6b0'],Mansidão:['#0a1a3a','#1a3a6a','#3a6aa8','#7ab0e0','#e0f4ff'],
   Domínio:['#200808','#5a1408','#a8300a','#f0702a','#ffd060'],
   bencao:['#1e1438','#4a2a6a','#a0602a','#f0b040','#fff0b0'],parabola:['#0e2a34','#1e5a5a','#3a8a7a','#8ac0a0','#e8f0c8'],
-  propria:['#2a1030','#5a2058','#a0407a','#e07a8a','#ffd0b0'],joio:['#14140a','#2a2a14','#4a4a22','#6a6a30','#9a9a50'],hibrida:['#1a2a40','#3a3a7a','#7a4aa0','#5ab08a','#d0f0b0']};
+  propria:['#2a1030','#5a2058','#a0407a','#e07a8a','#ffd0b0'],hissopo:['#14203a','#2a3a6a','#5a6ab0','#a0a8e8','#e8ecff'],cedro:['#0e1a14','#1e3a2a','#3a6a4a','#7aa070','#d8e8c0'],joio:['#14140a','#2a2a14','#4a4a22','#6a6a30','#9a9a50'],hibrida:['#1a2a40','#3a3a7a','#7a4aa0','#5ab08a','#d0f0b0']};
 // tree bars: damage, range, rhythm, 1 to 5
-const RATE={videira:[2,4,4],roma:[5,1,1],oliveira:[1,4,3],sarca:[3,2,5],figueira:[4,5,1],tamareira:[1,3,3],amendoeira:[2,3,4],lirio:[1,3,1],mostarda:[3,5,2]};
+const RATE={hissopo:[2,2,2],cedro:[4,5,2],videira:[2,4,4],roma:[5,1,1],oliveira:[1,4,3],sarca:[3,2,5],figueira:[4,5,1],tamareira:[1,3,3],amendoeira:[2,3,4],lirio:[1,3,1],mostarda:[3,5,2]};
 const BARS=[['dmg','#f0b030'],['rng','#e85a50'],['cd','#3ab8b0']];
 const cardNo=k=>String(Object.keys(CARDS).indexOf(k)+1).padStart(3,'0');
-const themeOf=(c,I,cat)=>THEME[c.hyb?'hibrida':I.kinds?I.fruits[0]:cat]||THEME.parabola;
+const themeOf=(c,I,cat)=>THEME[c.k]||THEME[c.hyb?'hibrida':I.kinds?I.fruits[0]:cat]||THEME.parabola;
 const rateOf=c=>c.hyb?[0,1,2].map(i=>Math.max(1,Math.round((RATE[c.hyb[0]][i]+RATE[c.hyb[1]][i])/2))):RATE[c.k]||[1,1,1];
 const CINK='#140e0c',COUT='#1e1614';
 

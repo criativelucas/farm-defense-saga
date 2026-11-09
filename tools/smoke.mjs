@@ -77,6 +77,19 @@ async function pests(label){
     e=T('rebeldia',300);e.jt=0;update(1/60);o.vault=e.vault>0;
     for(let i=0;i<120;i++)update(1/60);draw();return JSON.stringify(o)})()`);
   const o=JSON.parse(r||'{}'),bad=Object.entries(o).filter(([,v])=>!v).map(([k])=>k);check(label+': new pests',Object.keys(o).length===13&&!bad.length,bad.join(', ')||r)}
+// the eight newer cards do what they say
+async function newCards(label){
+  const r=await js(`(()=>{Object.keys(EN).forEach(k=>META.seen.e[k]=1);startLevel(0);startLevelBattle();S.dialog=null;S.intro=null;tutStep=-1;S.state='wave';S.q=[];S.en=[];const o={};
+    let m=spawn('mentira',400),s=spawn('soberba',300),v=spawn('vaidade',320),a=spawn('amargura',600);blessing('luz');o.luz=!(m.dive>0)&&!(a.dive>0)&&!v.mirror&&!s.armor;
+    plantAt(0,['videira'],false,0);S.tw[0].grow=1;S.tw[0].stun=3;S.tw[0].joio=true;blessing('paz');o.paz=S.tw[0].stun===0&&!S.tw[0].joio&&S.tw[0].ark>0;
+    S.en=[];const f=S.fences.length;blessing('pedra');o.pedra=S.fences.length===f+1&&S.fences[f].stone&&S.fences[f].hp===90;
+    blessing('fogo');const e=spawn('odio',S.fire.x);const h=e.hp;for(let i=0;i<30;i++)update(1/60);o.fogo=e.hp<h;
+    S.mana=0;blessing('fermento');const m0=S.mana;update(.5);o.fermento=S.leaven>0&&S.mana-m0>.6;
+    S.en=[];const w=spawn('odio',60),w2=spawn('ira',70);blessing('ovelha');o.ovelha=w.x>MAP.ww-60&&w2.x>MAP.ww-60;
+    S.en=[];const sl=MAP.slots[2];plantAt(2,['hissopo'],false,0);S.tw[2].grow=1;S.tw[2].cd={};const hm=spawn('mentira',sl.x+20);hm.y=gy(hm.x);for(let i=0;i<60;i++)update(1/60);o.hissopo=!(hm.dive>0);
+    S.en=[];const sc=MAP.slots[4];plantAt(4,['cedro'],false,0);S.tw[4].grow=1;S.tw[4].cd={};const c1=spawn('gula',sc.x+40),c2=spawn('gula',sc.x+90);const h1=c1.hp,h2=c2.hp;for(let i=0;i<60;i++)update(1/60);o.cedro=c1.hp<h1&&c2.hp<h2;
+    draw();Object.keys(CARDS).forEach(k=>cardCanvas(mk(k)));return JSON.stringify(o)})()`);
+  const o=JSON.parse(r||'{}'),bad=Object.entries(o).filter(([,v])=>!v).map(([k])=>k);check(label+': new cards',Object.keys(o).length===8&&!bad.length,bad.join(', ')||r)}
 // a short battle in every world: plant, call the wave, let it run, draw frames
 async function battles(label){
   for(let w=0;w<7;w++){const before=errors.length;
@@ -119,7 +132,7 @@ async function audio(label){const before=errors.length;
   check(label+': áudio '+r,errors.length===before&&r==='files,sfx,titulo,mundo,tambores',errors.slice(before).join(' | ').slice(0,200))}
 
 console.log('— new player');await load(true,false);await loopAndScene('new');
-console.log('— player with progress');await js(`Object.assign(META,{intro:1,tut:1,coins:5000});['1-1','1-2','1-3','1-4','2-1','2-4'].forEach(i=>META.done[i]=1);saveMeta();1`);await everyScreen('progress');await farmers('progress');await packs('progress');await pests('progress');await battles('progress');await goals('progress');await minis('progress');await audio('progress');
+console.log('— player with progress');await js(`Object.assign(META,{intro:1,tut:1,coins:5000});['1-1','1-2','1-3','1-4','2-1','2-4'].forEach(i=>META.done[i]=1);saveMeta();1`);await everyScreen('progress');await farmers('progress');await packs('progress');await pests('progress');await newCards('progress');await battles('progress');await goals('progress');await minis('progress');await audio('progress');
 console.log('— embed with gamepad blocked');await load(false,true);await loopAndScene('blocked-pad');
 const fails=checks.filter(c=>!c[1]);console.log(`\n${checks.length-fails.length}/${checks.length} checks passed`+(errors.length?`; ${errors.length} error(s) logged:`:''));
 errors.forEach(e=>console.log('  · '+String(e).split('\n').slice(0,3).join(' / ')));

@@ -16,7 +16,7 @@ const isChar=k=>!!RUN&&RUN.char===k;
 const ascN=()=>RUN?RUN.asc:0;
 function info(c){
   let I;
-  if(c.hyb){const[a,b]=c.hyb;I={type:'semente',name:CARDS[a].name+'-'+CARDS[b].name,cost:Math.max(CARDS[a].cost,CARDS[b].cost)+1,fruit:FRUIT[a]+' + '+FRUIT[b],fruits:[FRUIT[a],FRUIT[b]],
+  if(c.hyb){const[a,b]=c.hyb;I={type:'semente',name:CARDS[a].name+'-'+CARDS[b].name,cost:Math.max(CARDS[a].cost,CARDS[b].cost)+1,fruit:[FRUIT[a],FRUIT[b]].filter(Boolean).join(' + '),fruits:[FRUIT[a],FRUIT[b]].filter(Boolean),
     desc:'Enxerto: faz o que as duas fazem, com 80% da força.',short:'Faz o que as duas fazem (80%).',kinds:[a,b],ref:'Romanos 11:17',key:a}}
   else{const d=CARDS[c.k];I={type:d.type,name:d.name,cost:d.cost,fruit:FRUIT[c.k]||'',fruits:FRUIT[c.k]?[FRUIT[c.k]]:[],desc:d.desc,short:SHORT[c.k]||d.desc,
     kinds:(d.type==='semente'||d.plant)?[c.k]:null,ref:d.ref,key:c.k}}
@@ -297,6 +297,9 @@ function updTowers(dt){
       else if(k==='figueira'){const e=nearest(s.x,top,95*RG);if(e&&t.charge>=1.2){lob(s.x,top,e,'fig',(2+t.charge*3)*m,k);t.charge=0;t.cd[k]=.6;t.pulse=.6;leaf(s,k)}}
       else if(k==='tamareira'){const e=nearest(s.x,s.y-24,60*RG);if(e){lob(s.x,s.y-24,e,'date',1*m,k);t.cd[k]=1.2}}
       else if(k==='amendoeira'){const e=nearest(s.x,top,70*RG);if(e){lob(s.x,top,e,'almond',1.5*m,k);t.cd[k]=1;leaf(s,k)}}
+      else if(k==='hissopo'){if(S.en.some(e=>Math.hypot(e.x-s.x,ecy(e)-s.y)<55)){purify(s.x,s.y,55,2*m,k);t.cd[k]=4;t.pulse=.6}}
+      else if(k==='cedro'){const L=S.en.filter(e=>!(e.dive>0)&&e.hp>0&&e.x>s.x-4&&e.x-s.x<140*RG&&Math.abs(ecy(e)-(s.y-14))<34);if(L.length){const far=L.reduce((a,b)=>b.x>a.x?b:a);
+        L.forEach(e=>damage(e,5*m,k));S.fx.push({k:'zap',x1:s.x,y1:s.y-26,x2:far.x+6,y2:ecy(far),t:0,max:.25});sfx('sling');t.cd[k]=2.4;t.pulse=.6;leaf(s,k)}}
       else if(k==='lirio'){if(S.en.some(e=>Math.abs(e.x-s.x)<55&&Math.abs(ecy(e)-s.y)<40&&e.hp>0)){wind(s,55,22,.5*m,md.slowWind);t.cd[k]=3;t.pulse=.5;leaf(s,k)}}
     }
   });
@@ -328,7 +331,7 @@ function computeLinks(dt){
   if(L.some(l=>!l.cut&&l.pair&&l.pair.a==='roma')&&S.state==='wave'){S.pairHeal+=dt;if(S.pairHeal>=15){S.pairHeal=0;if(RUN.hp<RUN.maxhp){RUN.hp++;sfx('heal');pop(30,120,'+1 Vida · Amor e Paz','#ff9ab0')}}}
 }
 function updSet(){
-  const fr=new Set();S.tw.forEach(t=>t&&!t.joio&&t.grow>0&&t.kinds.forEach(k=>fr.add(FRUIT[k])));
+  const fr=new Set();S.tw.forEach(t=>t&&!t.joio&&t.grow>0&&t.kinds.forEach(k=>FRUIT[k]&&fr.add(FRUIT[k])));
   const prim=fr.has('Amor')&&fr.has('Alegria')&&fr.has('Paz');
   let m=1,tier=0;if(!sysOn('fruitset')){S.setTier=0;S.setMult=1;S.fruits=fr;return}if(fr.size>=3){m+=.15;tier=1}if(prim){m+=.3;tier=2;unlockAch('primicias')}if(fr.size>=5){m+=.35;tier=3}if(fr.size>=9){m+=.5;tier=4;unlockAch('completo')}
   if(tier>S.setTier){banner('Fruto em cacho',['','3 frutos: +15% de dano','Primícias: Amor, Alegria e Paz','5 frutos: +80% de dano','Os 9 frutos: +130% de dano'][tier]);sfx('super')}
@@ -356,6 +359,15 @@ function blessing(k){
     for(const e of S.en)if(!EN[e.k].fly&&e.x>S.cam-10&&e.x<S.cam+W+10){damage(e,14);if(!EN[e.k].boss)e.x+=10}banner('As trombetas soaram','Muralha de Jericó')}
   if(k==='talentos'){S.talents+=6;pop(P.x,P.y-24,'investido: +6 na próxima onda','#f7c948')}
   if(k==='semeador'){for(let i=0;i<3;i++)S.proj.push({x:P.x,y:P.y-12,vx:rnd(-150,150),vy:rnd(-210,-130),g:300,kind:'sow',life:4})}
+  if(k==='luz'){flash(.5,'255,250,220');sfx('super');for(const e of S.en){if(e.hp<=0)continue;const D=EN[e.k];if(e.dive>0&&(D.ai==='disguise'||D.ai==='burrow')){e.dive=0;vfx('blink',e.x,e.y)}
+      if(e.mirror>0){e.mirror=0;burst(e.x,ecy(e),10,['#ffffff','#ffc8ff'],80,200,.4)}if(e.armor>0){e.armor=0;e.humbled=1}if(e.x>S.cam-10&&e.x<S.cam+W+10)damage(e,4)}banner('Bênção','Vós sois a luz do mundo')}
+  if(k==='paz'){S.tw.forEach((t,i)=>{if(!t)return;t.stun=0;t.sleep=false;t.awake=20;t.seduced=false;t.joio=false;t.ark=10;const s=MAP.slots[i];S.fx.push({k:'ring',x:s.x,y:s.y-14,r:2,max:22,t:0,c:'#bfe8ff'})});sfx('heal');banner('Bênção','A paz que excede todo entendimento')}
+  if(k==='fogo'){S.fire={x:P.x+P.face*10,t:8};sfx('beam');shake(4);banner('Bênção','Eu serei para ela um muro de fogo')}
+  if(k==='pedra'){const x0=clamp(P.x+P.face*14,10,MAP.ww-10);S.fences.push({x:x0,y:gy(x0),hp:90,max:90,stone:1});burst(x0,gy(x0)-6,14,['#9a9aa8','#d0d0d8','#6a6a78'],60,240,.5,2);shake(3);sfx('stone')}
+  if(k==='fermento'){S.leaven=12;pop(P.x,P.y-24,'o maná leveda!','#e8c86a',9)}
+  if(k==='ovelha'){const L=S.en.filter(e=>e.hp>0&&!EN[e.k].boss&&!EN[e.k].elite).sort((a,b)=>a.x-b.x).slice(0,3);
+    if(!L.length){pop(P.x,P.y-24,'nenhuma praga no caminho','#c9a99a');return false}
+    L.forEach((e,i)=>{vfx('blink',e.x,e.y);e.x=MAP.ww-10-i*14;e.y=gy(e.x);vfx('blink',e.x,e.y)});sfx('bleat');banner('Parábola','Alegrai-vos: achei a ovelha perdida')}
   if(k==='vento'){sfx('wind');shake(6);for(let i=0;i<30;i++)S.parts.push({x:S.cam+rnd(0,W),y:rnd(40,170),vx:rnd(160,260),vy:rnd(-10,10),g:0,life:.7,max:.7,c:i%2?'#e8f4ff':'#b8d8a8',s:1});
     for(const e of S.en)if(e.x>S.cam-10&&e.x<S.cam+W+10){e.x+=EN[e.k].boss?9:36;e.slow=Math.max(e.slow,1)}banner('Bênção','Vento do Senhor')}
   if(k==='uncao'){RUN.hp=Math.min(RUN.maxhp,RUN.hp+4);P.hp=P.maxhp;sfx('heal');pop(30,120,'+4 Vida','#ffa64a',9);S.fx.push({k:'ring',x:P.x,y:P.y-8,r:2,max:40,t:0,c:'#f7c948'});banner('Bênção','O meu cálice transborda')}
@@ -453,6 +465,7 @@ function updHazards(dt){const p=S.p;
   for(const e of S.en){if(e.dive>0||e.hp<=0)continue;const d=EN[e.k];if(Math.abs(e.x-p.x)<d.w/2+3&&Math.abs(ecy(e)-(p.y-6))<d.h/2+6){
     if(p.dash>0){if(!p.dashHit.has(e)){p.dashHit.add(e);damage(e,WEAPONS.arado.dmg);if(!d.boss)e.x+=p.face*14}}else if(!p.slam)hurtPlayer(d.boss||d.elite?2:1,e)}}
   S.fences=S.fences.filter(f=>{if(f.hp<=0){burst(f.x,f.y-6,14,['#8a5a2a','#c9a060'],70,300,.6);pop(f.x,f.y-20,'a cerca quebrou','#c9a060');return false}return true});
+  if(S.fire){S.fire.t-=dt;if(S.fire.t<=0)S.fire=null;else for(const e of S.en)if(!EN[e.k].fly&&e.hp>0&&!(e.dive>0)&&Math.abs(e.x-S.fire.x)<9){damage(e,6*dt);e.slow=Math.max(e.slow,.5)}}
   S.scares=S.scares.filter(s=>(s.t-=dt)>0);S.muds=S.muds.filter(m=>(m.t-=dt)>0)}
 function placeItem(k){const p=S.p;if(p.stun>0||!sysOn('barriers'))return;if(!META.items||!META.items[k]){sfx('no');pop(p.x,p.y-24,'sem '+ITEMS[k].name.toLowerCase()+': compre na loja','#c9a99a');return}
   const x0=clamp(p.x+p.face*12,10,MAP.ww-10),y0=gy(x0);META.items[k]--;saveMeta();sfx('plant');burst(x0,y0-4,10,['#8a5a2a','#c9a060'],50,200,.4);
@@ -468,7 +481,7 @@ function update(dt){
   computeLinks(dt);updStory(dt);
   if(pr('KeyX','KeyJ'))playerAttack();if(pr('KeyQ'))placeItem('cerca');if(pr('KeyE'))placeItem('espantalho');if(pr('KeyR'))placeItem('lama');updHazards(dt);
   const regen=.75*(relic('jarro')?1.2:1)*(ascN()>=2?.85:1)*(S.goal==='seca'?.5:1)*(S.mini==='ultima'?0:1);goalUpdate(dt);miniUpdate(dt);
-  if(S.mana<MAXM)S.mana=Math.min(MAXM,S.mana+regen*dt);
+  S.leaven=Math.max(0,(S.leaven||0)-dt);if(S.mana<MAXM)S.mana=Math.min(MAXM,S.mana+regen*(S.leaven>0?2:1)*dt);
   S.rain=Math.max(0,S.rain-dt);
   S.wet+=((S.rain>0?1:0)-S.wet)*Math.min(1,dt*(S.rain>0?1.5:.12));
   if(S.rain>0&&Math.random()<dt*70)S.parts.push({x:S.cam+rnd(0,W+40),y:-4,vx:-30,vy:260,g:0,life:.9,max:.9,c:'#8ac8ff',s:1,a:.7});
@@ -554,6 +567,11 @@ function update(dt){
   tutCheck();
   if(S.state==='wave'&&!S.q.length&&!S.en.length)endWave();
 }
+// the hyssop's cleansing ring: reveals, strips crowns and mirrors, frees nearby trees, and hurts what it touches
+function purify(x0,y0,rad,dmg,src){S.fx.push({k:'ring',x:x0,y:y0-10,r:2,max:rad,t:0,c:'#b8c0ff'});for(let i=0;i<10;i++)S.parts.push({x:x0+rnd(-rad,rad)*.7,y:y0-rnd(4,30),vx:0,vy:-rnd(10,30),g:-10,life:.7,max:.7,c:i%2?'#e8ecff':'#a0a8e8',s:1});
+  for(const e of S.en){if(e.hp<=0||Math.hypot(e.x-x0,ecy(e)-y0)>rad)continue;const D=EN[e.k];if(e.dive>0&&(D.ai==='disguise'||D.ai==='burrow')){e.dive=0;pop(e.x,e.y-14,'purificada!','#e8ecff',8)}
+    if(e.mirror>0)e.mirror=0;if(e.armor>0){e.armor=Math.max(0,e.armor-5);if(!e.armor)e.humbled=1}damage(e,dmg,src)}
+  MAP.slots.forEach((s,i)=>{const t=S.tw[i];if(t&&Math.abs(s.x-x0)<rad){t.joio=false;t.seduced=false;t.stun=0}})}
 function hitProj(p,e){
   if(p.kind==='grape'){damage(e,p.dmg,p.src);burst(p.x,p.y,9,['#7b2fbf','#c58cff','#5a1a9a'],80,340,.5)}
   else if(p.kind==='seed'||p.kind==='date'||p.kind==='almond'){damage(e,p.dmg,p.src);burst(p.x,p.y,5,p.kind==='date'?['#d9802a','#ffc080']:p.kind==='almond'?['#e8d0b0','#ffd0e8']:['#e8e070','#fff'],40,200,.3)}
