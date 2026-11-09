@@ -179,9 +179,9 @@ function drawWorldMap(){
   wt+=.05;const g=cvs.getContext('2d');C=g;
   // the painted sky and clouds of the battles, made once
   if(!WMAP){const bg=mkHD(480,300,1),B=layerBuf(bg,'#d8f0e8',0,1);pSky(B,{sky:SKIES.day,hor:330,sun:{...SUNS.day,x:420,y:40,r:14}});putBuf(B);
-    WMAP={bg,cl:[0,1,2].map(i=>{const c=mkHD(110,44,1),B2=layerBuf(c,'#fff',0,1);pCloud(B2,55,24,56+i*14,16+i*4,i*5+2,CLOUDS.day);putBuf(B2);return c})}}
+    WMAP={bg,cl:[0,1,2].map(i=>{const c=mkHD(150,74,1),B2=layerBuf(c,'#fff',0,1);pCloud(B2,75,44,56+i*14,16+i*4,i*5+2,CLOUDS.day);putBuf(B2);return c})}}
   g.drawImage(WMAP.bg,0,0);
-  for(let i=0;i<7;i++){const cx=((hs(i,1)*620+wt*(4+i))%660)-110,cy=hs(i,2)*120-6;g.drawImage(WMAP.cl[i%3],Math.round(cx),Math.round(cy))}
+  for(let i=0;i<7;i++){const cx=((hs(i,1)*620+wt*(4+i))%660)-110,cy=hs(i,2)*120-6;g.drawImage(WMAP.cl[i%3],Math.round(cx)-20,Math.round(cy)-20)}
   // stone bridges between consecutive islands
   for(let i=0;i<WORLDS.length-1;i++){const a=WORLDS[i],b=WORLDS[i+1],open=levelOpen(i*4+4);const n=Math.hypot(b.x-a.x,b.y-a.y)/4|0;
     for(let k=0;k<=n;k++){const u=k/n,px=a.x+(b.x-a.x)*u,py=a.y+(b.y-a.y)*u+Math.sin(u*Math.PI)*10;if(k%2)r(px-1,py,3,2,open?'#c9a060':'#8a8a9a')}}
@@ -191,7 +191,7 @@ function drawWorldMap(){
   for(let i=0;i<6;i++){const bx=((hs(i,21)*640+wt*(10+i*3))%640)-80,by=24+hs(i,22)*150+Math.sin(wt*2+i)*4,f=(wt*6+i|0)%2;r(bx,by,1,1,'#2a2a3a');r(bx-2,by-f,2,1,'#2a2a3a');r(bx+1,by-f,2,1,'#2a2a3a')}
   WORLDS.forEach((w,i)=>{if(!levelOpen(i*4)||!LEVELS.some(l=>l.wi===i&&!META.done[l.id]))return;for(let k=0;k<4;k++){const a=wt*1.6+k*1.57;if(Math.sin(a*2.3+i)>.2){const sx=w.x+Math.cos(a)*w.w*.38,sy=w.y-20+Math.sin(a)*7;r(sx,sy,1,1,'#fff6c0');r(sx-1,sy,3,1,'#fff6c066');r(sx,sy-1,1,3,'#fff6c066')}}});
   drawWalker(g);C=g;
-  for(let i=0;i<8;i++){const cx=((hs(i,7)*660-wt*(6+i))%660+660)%660-110;g.drawImage(WMAP.cl[i%3],Math.round(cx),262+Math.round(hs(i,8)*10))}
+  for(let i=0;i<8;i++){const cx=((hs(i,7)*660-wt*(6+i))%660+660)%660-110;g.drawImage(WMAP.cl[i%3],Math.round(cx)-20,242+Math.round(hs(i,8)*10))}
   C=x;
 }
 function showWorld(sel){

@@ -14,47 +14,75 @@ function buildProfile(){const M=MAP,P=M.prof||(M.prof=growProf(M)),n=Math.ceil(M
   for(let j=0;j<n;j++){const u=j/2;while(i<P.length-1&&u>=P[i][0])i++;const[a,ya]=P[i-1],[b,yb]=P[i];T[j]=u<=a?ya:u>=b?yb:ya+(yb-ya)*sstep((u-a)/(b-a))}
   M.gyT=T;M.flats=[];for(let k=1;k<P.length;k++)if(P[k][1]===P[k-1][1]&&P[k][0]-P[k-1][0]>=16)M.flats.push([P[k-1][0],P[k][0],P[k][1]]);
   M.slots.forEach(s=>{if(s.pl==null)s.y=gy(s.x)})}
-// how far an island's earth hangs below its top at x: a rounded wedge with a few stalactite rocks
-function islandDepth(pl,u){if(pl.wall)return 4;const cx=pl.x+pl.w/2,hw=pl.w/2+2,q=(u-cx)/hw;if(Math.abs(q)>=1)return 0;
-  const k=Math.floor(u/1.5);return(8+pl.w*.3)*Math.pow(1-q*q,.65)*(.78+.3*vn(u*.28,pl.x|0))+(hs(k,pl.x|0)>.8&&Math.abs(q)<.6?2+hs(k,pl.y|0)*5:0)}
+// how far an island's body hangs below its top at x: a rounded wedge with lumpy lobes, never a smooth curve
+function islandDepth(pl,u){if(pl.wall)return 4;const cx=pl.x+pl.w/2,hw=pl.w/2+1,q=(u-cx)/hw;if(Math.abs(q)>=1)return 0;const s=pl.x|0,e=1-q*q;
+  let dep=(8+Math.min(pl.w,46)*.4)*Math.pow(e,.75)*(.8+.35*vn(u*.12,s));
+  for(let j=0;j<2+pl.w/24;j++){const lx=cx+(hs(s,j+1)-.5)*pl.w*.75,lw=2.5+hs(j+5,s)*4;dep+=(3+hs(s,j+9)*9)*Math.exp(-(((u-lx)/lw)**2))*e}
+  return Math.max(0,dep+(vn(u*.6,s+3)-.5)*3)}
+// rounded stones packed together: [edge, shade]. Edge near 0 is the crack between two stones; each stone is lit from the top left
+function stoneAt(u,v,sx,sy,seed){const cx=Math.floor(u/sx),cy=Math.floor(v/sy);let d1=9,d2=9,nx=0,ny=0,id=0;
+  for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){const a=cx+i,b=cy+j,px=(a+.2+hs(a+seed,b)*.6)*sx,py=(b+.2+hs(a,b+seed)*.6)*sy,dx=(u-px)/sx,dy=(v-py)/sy,dd=dx*dx+dy*dy;
+    if(dd<d1){d2=d1;d1=dd;nx=dx;ny=dy;id=hs(a*7+seed,b*13+1)}else if(dd<d2)d2=dd}
+  return[Math.sqrt(d2)-Math.sqrt(d1),.42+id*.22-(nx+ny)*.5]}
+// the moss of each world: deserts get an olive moss over their sand-colored earth
+const MOSS={sinai:['#4f8a34','#a6cc52'],mar:['#3f8a4a','#94c85a'],abismo:['#2e6a4e','#6aa86a'],jerico:['#5c9238','#b4d458'],babel:['#58883a','#a8c858']};
 
 function drawGround(){
-  const M=MAP,P=M.pal,th=theme(P),grassy=th==='grass';M.atlas=buildTiles(P,th);M.gfalls=[];
+  const M=MAP,P=M.pal,th=theme(P),desert=!P.grass;M.atlas=buildTiles(P,th);M.gfalls=[];
   const B=layerBuf(GROUND,'#000000',0,1,0),{d,w,h,k}=B,R=a=>a.map(u32),T=M.gyT,G=u=>T[Math.max(0,Math.min(T.length-1,Math.round(u*2)))];
-  const soil=R([shade(P.fill,-.55),shade(P.fill,-.32),shade(P.fill,-.14),P.fill,P.lite,shade(P.lite,.22)]);
-  const lip=R(grassy?[shade(P.top2,-.5),shade(P.top2,-.25),P.top2,P.top1,shade(P.top1,.35)]:[shade(P.top2,-.4),shade(P.top2,-.15),P.top2,P.top1,shade(P.top1,.3)]);
-  const deep=R(['#081428','#0c2040','#14305a','#1e4a7a']),stone=R(grassy?['#34343e','#5a5a68','#84849a','#b4b4c4']:[shade(P.fill,-.5),shade(P.fill,-.15),shade(P.lite,.1),shade(P.lite,.4)]);
+  const[m2,m1]=MOSS[MAPID]||[P.top2,P.top1];M.mossTop=m1;
+  const moss=R([shade(m2,-.66),shade(m2,-.46),shade(m2,-.24),m2,mixHex(m2,m1,.5),m1,shade(m1,.32)]);
+  const soil=R([shade(P.fill,-.84),shade(P.fill,-.72),shade(P.fill,-.58),shade(P.fill,-.42),shade(P.fill,-.24),P.fill,P.lite]);
+  const sb=mixHex('#6e7080',P.fill,desert?.5:.15),stone=R([shade(sb,-.72),shade(sb,-.52),shade(sb,-.3),sb,shade(sb,.22),shade(sb,.45)]);
+  const deep=R(['#081428','#0c2040','#14305a','#1e4a7a']),rootC=[u32(shade(P.fill,-.66)),u32(shade(P.fill,-.32)),u32(shade(P.lite,.08))];
   const near=x0=>M.slots.some(s=>Math.abs(s.x-x0)<12&&Math.abs(s.y-G(x0))<2);
-  // the ground: one column at a time
+  // moss drips: most columns hang a little, some hang long, each narrowing to a point
+  const drip=(u,s)=>{const i=Math.floor(u*1.4),n=hs(i,s),f=u*1.4-i,L=n>.86?5+hs(i,s+1)*11:n>.45?1+hs(i,s+1)*3:0;return L*(1-Math.abs(f-.5)*1.5)};
+  const rock=(u,v,dark,seed=3,sx=5.5,sy=4)=>{const[e,s]=stoneAt(u,v,sx,sy,seed);return e<.07?0:e<.15?Math.max(.05,s-.32-dark):s-dark};
+  // the ground: one column at a time. A thick moss cap with a ragged top and drips, dark earth that deepens with depth,
+  // rock walls under every drop
   const bowl=u=>{if(!M.water)return 0;const[a,b]=M.water,t=(u-a)/(b-a);return t<=0||t>=1?0:6+22*Math.pow(Math.sin(Math.PI*t),.7)};
   for(let X=0;X<w;X++){const u=(X+.5)/k,top=G(u),bw=bowl(u),wet=bw>0,slope=G(u+1.5)-G(u-1.5);
     let eR=9,eL=9,dR=0,dL=0;for(let q=1;q<=8;q++){if(eR===9&&G(u+q)-top>5){eR=q;dR=G(u+q+2)-top}if(eL===9&&G(u-q)-top>5){eL=q;dL=G(u-q-2)-top}}
-    const capH=grassy?2.6+vn(u*.35,7)*1.8:1.5+vn(u*.4,7)*.9,drip=grassy&&hs(X>>1,31)>.8?1+hs(X>>1,32)*4:0,bump=grassy&&!wet?vn(u*.7,9)*1.7:0;
+    const cliff=Math.min(eR,eL)<4,blade=hs(X,17)>.7?hs(X,18)*1.6:0,bump=wet?0:vn(u*.6,9)*1.1+blade;
+    const capH=3+vn(u*.3,7)*2.2+(cliff?1.2:0),dr=wet?0:drip(u,31)*(cliff?1.8:1);
     for(let Y=Math.max(0,Math.floor((top-bump)*k));Y<h;Y++){const v=(Y+.5)/k,dd=v-top;let c;
       if(wet&&dd<bw+.5){if(dd<.5)continue;c=rp(deep,1-Math.min(1,dd/bw),X,Y,1.6)}
       else if(wet&&dd<bw+2.5)c=rp(stone,.35+hs(X,Y)*.4,X,Y)
-      else if(dd<capH){c=rp(lip,(dd<0?.9:.84-dd/capH*.45)+(slope<-1?.12:slope>1?-.1:0)+(eL<4?.1:0)-(eR<4?.16:0),X,Y,2.2)}
-      else if(dd<capH+drip+.7)c=rp(lip,.04,X,Y);
-      else{const sv=dd+(vn(u*.05,3)-.5)*8,ph=((sv%15)+15)%15;let s=.56+(fbm(u*.18,v*.18,5)-.5)*.3-Math.min(.34,dd*.0055);
-        if(ph<1.1)s-=grassy?.2:.28;else if(ph<2.2)s+=.1;if(eR<5&&dd<dR+3)s-=.34*(1-eR/5);if(eL<5&&dd<dL+3)s+=.22*(1-eL/5);
-        if(Math.abs(slope)>4)s+=(slope<0?.12:-.14);c=rp(soil,s,X,Y,2.2)}
+      else if(dd<capH)c=rp(moss,(dd<0?.95:.88-dd/capH*.5)+(fbm(u*.8,v*.8,3)-.5)*.42+(slope<-1?.08:slope>1?-.08:0)+(eL<4?.08:0)-(eR<4?.1:0),X,Y,2.4);
+      else if(dd<capH+dr){const t=(dd-capH)/dr;c=rp(moss,t>.85?.62:.42-t*.25,X,Y,2)}
+      else{const e=dd-capH,occ=e<2.5?.28*(1-e/2.5):0,dark=Math.min(.55,e*.0105);
+        const wall=(eR<5&&dd<dR+3)||(eL<5&&dd<dL+3);
+        if(wall)c=rp(stone,rock(u,v,dark+occ)+(eL<5?.08:0),X,Y,2.2);
+        else c=rp(soil,.66-dark-occ+(fbm(u*.16,v*.16,5)-.5)*.32,X,Y,2.2)}
       d[Y*w+X]=c}}
-  // stones bedded in the earth and roots creeping down from the grass
+  // stones bedded in the earth, moss on the ones near the top
   const egg=(cx,cy,rx,ry,ramp,lit=.5)=>{for(let Y=Math.floor((cy-ry)*k);Y<=Math.ceil((cy+ry)*k);Y++)for(let X=Math.floor((cx-rx)*k);X<=Math.ceil((cx+rx)*k);X++){
     if(X<0||Y<0||X>=w||Y>=h)continue;const nx=((X+.5)/k-cx)/rx,ny=((Y+.5)/k-cy)/ry,q=nx*nx+ny*ny;if(q>1)continue;d[Y*w+X]=rp(ramp,q>.7&&nx+ny>.3?0:light(nx,ny)*lit*2-.1,X,Y,2.2)}};
-  for(let i=0;i<M.ww/12;i++){const sx=hs(i,201)*M.ww;if(inWater(sx))continue;const y0=G(sx)+7+hs(i,202)*48;egg(sx,y0,1.4+hs(i,203)*3,1+hs(i,204)*1.8,stone)}
-  if(grassy){const rc=u32(shade(P.fill,-.6)),rl=u32(shade(P.fill,-.4));for(let i=0;i<M.ww/12;i++){const rx=hs(i,211)*M.ww;if(inWater(rx))continue;const L=6+hs(i,212)*18,y0=G(rx)+3;
-    for(let t=0;t<L;t+=.5){const px=rx+Math.sin(t*.35+i)*1.6;dot(B,px,y0+t,rc);if(t<L*.6&&hs(i,(t*2)|0)>.86)for(let b=1;b<4;b++)dot(B,px+b*.5*(i%2?1:-1),y0+t+b*.5,rl)}}}
-  // floating islands: grass or sand on top, a tapering wedge of earth, a dark rim underneath, roots hanging
-  M.plats.forEach((pl,pi)=>{if(pl.wall)return;const cx=pl.x+pl.w/2,hw=pl.w/2+2;
-    for(let X=Math.floor((pl.x-2)*k);X<Math.ceil((pl.x+pl.w+2)*k);X++){if(X<0||X>=w)continue;const u=(X+.5)/k,dep=Math.min(islandDepth(pl,u),G(u)-pl.y-5);if(dep<=0)continue;const q=(u-cx)/hw,
-      capH=grassy?2.4+vn(u*.4,pi+3)*1.6:1.6,drip=grassy&&hs(X>>1,pi+41)>.78?1+hs(X>>1,pi+42)*3:0,bump=grassy?vn(u*.8,pi+5)*1.5:0;
-      for(let Y=Math.floor((pl.y-bump)*k);Y<Math.ceil((pl.y+dep)*k);Y++){if(Y<0||Y>=h)continue;const v=(Y+.5)/k,dd=v-pl.y;let c;
-        if(dd<capH)c=rp(lip,(dd<0?.9:.86-dd/capH*.42)-q*.12,X,Y,2.2);else if(dd<capH+drip+.6)c=rp(lip,.04,X,Y);
-        else{let s=.6-q*.28-(dd/dep)*.38+(fbm(u*.2,v*.2,pi+9)-.5)*.3;const ph=((dd+(vn(u*.08,pi)-.5)*5)%9+9)%9;if(ph<1)s-=.2;if(pl.y+dep-v<1)s=.02;c=rp(soil,s,X,Y,2.2)}
+  for(let i=0;i<M.ww/10;i++){const sx=hs(i,201)*M.ww;if(inWater(sx))continue;const y0=G(sx)+8+hs(i,202)*40,rx=1.4+hs(i,203)*(hs(i,205)>.8?6:3),ry=rx*(.6+hs(i,204)*.3);egg(sx,y0,rx,ry,stone)}
+  // roots: wandering lines from under the moss, lighter than the dark earth, now and then forking
+  const rootLine=(x0,y0,L,dir,seed,thick)=>{let px=x0,py=y0;for(let t=0;t<L;t+=.5){px+=Math.sin(t*.25+seed)*.35*dir;py+=.5;dot(B,px+.5,py,rootC[0]);dot(B,px,py,rootC[1]);if(thick)dot(B,px-.5,py,rootC[2]);
+    if(t>3&&L>4&&hs(seed,(t*2)|0)>.94)rootLine(px,py,(L-t)*.5,-dir,seed+5,false)}};
+  for(let i=0;i<M.ww/7;i++){const rx=hs(i,211)*M.ww;if(inWater(rx))continue;rootLine(rx,G(rx)+3.5,6+hs(i,212)*22,i%2?1:-1,i,hs(i,213)>.55)}
+  // floating islands: an overhanging moss cap, earth with roots in the upper body, packed stones below, lumpy lobes underneath,
+  // moss and roots hanging into the air
+  M.plats.forEach((pl,pi)=>{if(pl.wall)return;const cx=pl.x+pl.w/2,hc=pl.w/2+3,s=pi*31+7;
+    for(let X=Math.floor((cx-hc)*k);X<Math.ceil((cx+hc)*k);X++){if(X<0||X>=w)continue;const u=(X+.5)/k,q=(u-cx)/hc,aq=Math.abs(q),room=G(u)-pl.y-5;if(aq>=1||room<=0)continue;
+      const dep=Math.min(islandDepth(pl,u),room-4),end=aq>.86?(aq-.86)*22:0,blade=hs(X,s)>.72?hs(X,s+1)*1.6:0,top=pl.y+end-(end?0:vn(u*.7,s)*1.1+blade);
+      const capH=Math.max(1.5,2.8+vn(u*.4,s+2)*1.6-end*.5),body=dep>capH,dr=Math.max(0,Math.min(room-capH,body?drip(u,s+5):drip(u,s+5)*1.6+1.5));
+      for(let Y=Math.max(0,Math.floor(top*k));Y<Math.ceil((pl.y+Math.max(dep,capH+dr))*k);Y++){if(Y>=h)break;const v=(Y+.5)/k,dd=v-pl.y;let c;
+        if(dd<capH)c=rp(moss,(v<pl.y?.95:.88-dd/capH*.5)+(fbm(u*.8,v*.8,s)-.5)*.42-q*.12,X,Y,2.4);
+        else if(dd<capH+dr){const t=(dd-capH)/dr;c=rp(moss,t>.85?.6:.4-t*.25,X,Y,2)}
+        else if(dd<dep){const f=(dd-capH)/Math.max(1,dep-capH),rim=pl.y+dep-v<1.2,rocky=f>.3+vn(u*.3,s+4)*.3;
+          let sh=rocky?rock(u,v,.2*f,s)-q*.18:.6-f*.3-q*.2+(fbm(u*.2,v*.2,s+9)-.5)*.3;if(dd-capH<2)sh-=.25*(1-(dd-capH)/2);if(rim)sh=Math.min(sh,.05);
+          c=rp(rocky?stone:soil,sh,X,Y,2.2)}
+        else continue;
         d[Y*w+X]=c}}
-    for(let j=0;j<4;j++){const sx=pl.x+4+hs(pi,j+80)*(pl.w-8);egg(sx,pl.y+5+hs(pi,j+84)*Math.max(1,islandDepth(pl,sx)-8),1.2+hs(pi,j+88)*1.8,1+hs(pi,j+92),stone)}
-    if(!grassy){const rc=u32(shade(P.fill,-.55));for(let j=0;j<5;j++){const rx=pl.x+3+hs(pi,j+100)*(pl.w-6),y0=pl.y+islandDepth(pl,rx)-1,L=2+hs(pi,j+104)*6;for(let t=0;t<L;t+=.5)dot(B,rx+Math.sin(t*.6+j)*.6,y0+t,rc)}}});
+    for(let j=0;j<3+pl.w/9;j++){const rx=pl.x+2+hs(pi,j+120)*(pl.w-4),bot=pl.y+Math.min(islandDepth(pl,rx),G(rx)-pl.y-5)-.5,room=G(rx)-bot-3;if(room<2)continue;
+      const L=Math.min(room,3+hs(pi,j+130)*12);if(hs(pi,j+140)>.45)rootLine(rx,bot,L,j%2?1:-1,pi*9+j,hs(pi,j+150)>.6);
+      else for(let t=0;t<L;t+=.5){const px=rx+Math.sin(t*.3+j)*.6;dot(B,px,bot+t,moss[t>L-1?5:2]);if(((t*2)|0)%5===0)dot(B,px+.5,bot+t,moss[4])}}});
+  // a dark outline around every shape, like the sprites have
+  {const OL=u32('#140c10'),src=d.slice();for(let Y=1;Y<h-1;Y++)for(let X=1;X<w-1;X++){const i=Y*w+X;if(!src[i]&&(src[i-1]||src[i+1]||src[i-w]||src[i+w]))d[i]=OL}}
   // waterfalls: off an island's edge, or out of the rock of Horeb on Sinai (Exodus 17:6)
   const fallPx=(fx,fw,y0,y1)=>{for(let X=Math.floor(fx*k);X<Math.ceil((fx+fw)*k);X++)for(let Y=Math.floor(y0*k);Y<Math.ceil(y1*k);Y++){if(X<0||X>=w||Y<0||Y>=h)continue;
       const u=(X+.5)/k,v=(Y+.5)/k,e=Math.min(u-fx,fx+fw-u);let s=.55+(vn(u*1.3,v*.05,7)-.5)*.7;if(e<.7)s-=.4;if(v<y0+1.5)s+=.35;d[Y*w+X]=ink(B,'water',s,X,Y,v)}
@@ -75,14 +103,16 @@ function drawGround(){
 
 // ---------- decoration baked into the ground: what grows and lies around differs from world to world
 const DECOR={
-  eden:['bush','fern','flowers','flowers','mushroom','mossrock','grass','bush'],getsemani:['mossrock','fern','grass','bush','mossrock','grass'],
-  tumulo:['flowers','flowers','bush','lily','grass','flowers'],ressurreicao:['flowers','flowers','bush','lily','grass','flowers'],sinai:['boulder','shrub','boulder','grass','shrub','skullrock'],
-  mar:['shell','reeds','boulder','shrub','reeds','driftwood'],jerico:['palmlet','jar','shrub','boulder','grass','palmlet'],babel:['bricks','jar','shrub','boulder','bricks','palmlet'],abismo:['shell','reeds','boulder','driftwood']};
-function decorate(near){const M=MAP,P=M.pal,kinds=DECOR[MAPID]||DECOR.eden,G=gy,leaf=[shade(P.top2,-.45),P.top2,P.top1];
+  eden:['bush','fern','flowers','flowers','mushroom','mossrock','grass','sapling','fern','flowers'],getsemani:['mossrock','fern','grass','bush','mossrock','sapling','fern'],
+  tumulo:['flowers','flowers','bush','lily','grass','sapling','fern'],ressurreicao:['flowers','flowers','bush','lily','grass','sapling','fern','mushroom'],
+  sinai:['cactus','fern','boulder','flowers','mossrock','shrub','grass','bush','cactus'],mar:['reeds','fern','shell','flowers','mossrock','bush','reeds','grass','driftwood'],
+  jerico:['palmlet','fern','jar','flowers','mossrock','bush','grass','cactus','sapling'],babel:['palmlet','fern','bricks','flowers','mossrock','bush','grass','jar','sapling'],
+  abismo:['reeds','fern','mossrock','shell','bush']};
+function decorate(near){const M=MAP,P=M.pal,kinds=DECOR[MAPID]||DECOR.eden,G=gy,[m2,m1]=MOSS[MAPID]||[P.top2,P.top1],leaf=[shade(m2,-.45),m2,m1];
   const bad=x0=>x0<46||x0>M.ww-6||near(x0)||inWater(x0)||(M.sea&&x0>M.sea[0]-6&&x0<M.sea[1]+6)||Math.abs(G(x0+3)-G(x0-3))>3||
     M.plats.some(pl=>pl.wall&&x0>pl.x-4&&x0<pl.x+pl.w+4)||(MAPID==='eden'&&Math.abs(x0-530)<16)||(MAPID==='sinai'&&Math.abs(x0-470)<16);
-  const V=(M.variant||0)*977;for(let x0=50,i=0;x0<M.ww-8;x0+=7+hs(i+V,301)*13,i++){if(bad(x0)||hs(i+V,302)<.25)continue;decor(kinds[(hs(i+V,303)*kinds.length)|0],x0,G(x0),i+V,leaf)}
-  M.plats.forEach((pl,pi)=>{if(pl.wall)return;for(const ex of[pl.x+3,pl.x+pl.w-4]){if(M.slots.some(s=>Math.abs(s.x-ex)<10&&Math.abs(s.y-pl.y)<1))continue;decor(kinds[(hs(pi,ex|0)*kinds.length)|0],ex,pl.y,pi+50,leaf)}})}
+  const V=(M.variant||0)*977;for(let x0=50,i=0;x0<M.ww-8;x0+=5+hs(i+V,301)*10,i++){if(bad(x0)||hs(i+V,302)<.15)continue;decor(kinds[(hs(i+V,303)*kinds.length)|0],x0,G(x0),i+V,leaf)}
+  M.plats.forEach((pl,pi)=>{if(pl.wall)return;for(let ex=pl.x+3,j=0;ex<pl.x+pl.w-3;ex+=8+hs(pi,j+400)*7,j++){if(M.slots.some(s=>Math.abs(s.x-ex)<10&&Math.abs(s.y-pl.y)<1))continue;decor(kinds[(hs(pi,ex|0)*kinds.length)|0],ex,pl.y,pi*31+j+50,leaf)}})}
 function decor(t,X,Y,s,leaf){const R=(dx,dy,w,h,c)=>r(X+dx,Y+dy,w,h,c);
   if(t==='bush'){const z=3+hs(s,1)*3;blob(X,Y-z*.7,z+1|0,z*.8|0,leaf[0],leaf[1],leaf[2],s);if(hs(s,2)>.5)for(let i=0;i<3;i++)R(-z+hs(s,i+3)*z*2,-z*1.1+hs(s,i+6)*z,1,1,['#ff4f7b','#ffe36a','#c58cff'][(s+i)%3])}
   else if(t==='fern'){for(let b=0;b<7;b++){const a=Math.PI*(.18+b*.11),dir=b<3.5?-1:1;for(let j=0;j<7;j+=.5)R(Math.cos(a)*j*dir*(b<3.5?1:-1)*.9,-Math.sin(a)*j+j*j*.05,.5,.5,j>5?leaf[2]:leaf[1])}}
@@ -90,6 +120,10 @@ function decor(t,X,Y,s,leaf){const R=(dx,dy,w,h,c)=>r(X+dx,Y+dy,w,h,c);
   else if(t==='lily'){for(let i=0;i<3;i++){const fx=-2+i*2;R(fx,-5,.5,5,leaf[1]);R(fx-1,-7,2.5,2,'#ffffff');R(fx-.5,-6,1.5,1,'#f0e8d0');R(fx,-7,.5,.5,'#ffe36a')}}
   else if(t==='mushroom'){for(const[ox,sz]of[[0,1],[3,.7]]){R(ox,-2*sz,1,2*sz,'#f0e8d8');R(ox-1.5*sz,-3.5*sz,3*sz+1,1.5*sz,'#e0283a');R(ox-1*sz,-3.5*sz,1,.5,'#ffffff');R(ox+1*sz,-3*sz,.5,.5,'#ffffff')}}
   else if(t==='mossrock'||t==='boulder'||t==='skullrock'){const z=2.5+hs(s,1)*3;blob(X,Y-z*.6,z+1|0,z*.75|0,'#4a4a56','#7a7a88','#a8a8b8',s+7);if(t==='mossrock')R(-z*.6,-z*1.25,z*1.2,1,leaf[1]);if(t==='skullrock'){R(-1,-z,1,1,'#2a2a30');R(1,-z,1,1,'#2a2a30')}}
+  else if(t==='cactus'){const hh=6+hs(s,1)*5;R(-1,-hh,2.5,hh,'#3e7a34');R(-1,-hh,1,hh,'#6aaa4a');R(-1,-hh-.5,2.5,.5,'#8ac860');
+    R(-3.5,-hh*.6,2.5,1,'#3e7a34');R(-3.5,-hh*.6-3,1,3,'#3e7a34');R(-3.5,-hh*.6-3,.5,3,'#6aaa4a');if(hs(s,2)>.4){R(1.5,-hh*.45,2,1,'#3e7a34');R(2.5,-hh*.45-2.5,1,2.5,'#3e7a34')}if(hs(s,3)>.5)R(0,-hh-1.5,1,1,'#ff6a8a')}
+  else if(t==='sapling'){const hh=7+hs(s,1)*5,lean=(hs(s,2)-.5)*4;for(let j=0;j<hh;j+=.5)R(lean*j/hh,-j,1,.5,j<hh*.5?'#5a3a24':'#6a4a2e');R(lean*.5,-hh*.6,(lean>0?-3:3),.5,'#5a3a24');
+    blob(X+lean,Y-hh-1,4,3,leaf[0],leaf[1],leaf[2],s);blob(X+lean*.5+(lean>0?-3:3),Y-hh*.6-1.5,3,2,leaf[0],leaf[1],leaf[2],s+3)}
   else if(t==='grass'){for(let i=0;i<6;i++)R(-3+i,-(1.5+hs(s,i)*3),.5,1.5+hs(s,i)*3,i%2?leaf[1]:leaf[2])}
   else if(t==='shrub'){for(let i=0;i<9;i++){const a=Math.PI*(.15+i*.085),L=3+hs(s,i)*2;for(let j=0;j<L;j+=.5)R(Math.cos(a)*j,-Math.sin(a)*j,.5,.5,j>L-1?'#a8a050':'#6a6a30')}}
   else if(t==='palmlet'){for(let b=0;b<5;b++){const a=Math.PI*(.1+b*.2);for(let j=0;j<6;j+=.5)R(Math.cos(a)*j,-3-Math.sin(a)*j+j*j*.08,.5,.5,j>4?'#8ad050':'#3a8a3a')}R(0,-3,.5,3,'#6a4a2a')}
@@ -123,9 +157,18 @@ function varyTerrain(v){const M=MAP;
 function varyIslands(v){const M=MAP;
   if(v){const P=M.plats;P.forEach((pl,i)=>{if(pl.wall)return;const h1=hs(v*31+i,7),h2=hs(v*17+i,9);let nx=clamp(pl.x+Math.round((h1-.5)*22),24,M.ww-pl.w-8);
       for(const q of P)if(q!==pl&&nx<q.x+q.w+12&&nx+pl.w>q.x-12)nx=pl.x;pl.x=nx;
-      let low=1e9;for(let x0=pl.x;x0<=pl.x+pl.w;x0+=2)low=Math.min(low,gy(x0));pl.y=Math.round(clamp(pl.y+[0,-6,6,-4,4][(h2*5)|0],low-46,low-28))});
-    if(M.pal.grass){let n=0;P.forEach((pl,i)=>{delete pl.fall;const h=hs(v*5+i,11);if(!pl.wall&&h>.62&&n<2){pl.fall=h>.81?'L':'R';n++}})}}
-  M.slots.forEach(s=>{if(s.pl!=null){const pl=M.plats[s.pl];s.x=pl.x+s.dx;s.y=pl.y}})}
+      let low=1e9;for(let x0=pl.x;x0<=pl.x+pl.w;x0+=2)low=Math.min(low,gy(x0));pl.y=Math.round(clamp(pl.y+[0,-6,6,-4,4][(h2*5)|0],low-46,low-28))})}
+  // islands of many sizes: some stay small, others stretch wide. An island only grows over open ground (no bed under its
+  // new part), keeps 12 units from its neighbours, floats 24 units over the ground under all of it, and its trees stay put
+  const P=M.plats,ground=M.slots.filter(s=>s.pl==null).map(s=>s.x),order=P.map((p,i)=>i).sort((a,b)=>P[a].x-P[b].x);
+  order.forEach((i,j)=>{const pl=P[i];pl.xs=pl.x;if(pl.wall)return;const prev=j?P[order[j-1]]:null,next=j<order.length-1?P[order[j+1]]:null;
+    let lo=prev?prev.x+prev.w+12:24,hi=next?next.x-12:M.ww-8;for(const gx of ground){if(gx<pl.x-6)lo=Math.max(lo,gx+10);else if(gx>pl.x+pl.w+6)hi=Math.min(hi,gx-10)}
+    const nw=pl.w*[.9,1,1.5,1.9,2.4][(hs(i*7+v*3,23)*5)|0],cx=pl.x+pl.w/2;let a=Math.max(lo,Math.min(pl.x,cx-nw/2)),b=Math.min(hi,Math.max(pl.x+pl.w,cx+nw/2));
+    let low=1e9;for(let x0=a;x0<=b;x0+=2)low=Math.min(low,gy(x0));if(pl.y>low-24){a=pl.x;b=pl.x+pl.w}
+    pl.x=Math.round(a);pl.w=Math.round(b-a)});
+  // one or two islands spill a waterfall, in every world
+  if(v||!M.plats.some(p=>p.fall)){let n=0;M.plats.forEach((pl,i)=>{delete pl.fall;const h=hs(v*5+i,11);if(!pl.wall&&h>.55&&n<2){pl.fall=h>.78?'L':'R';n++}})}
+  M.slots.forEach(s=>{if(s.pl!=null){const pl=M.plats[s.pl];s.x=pl.xs+s.dx;s.y=pl.y}})}
 // ---------- weather by level: [first, second, third, fourth]
 const WEATHER={eden:[null,null,'petals','rain'],jerico:['wind',null,'sand',null],mar:['wind','mist','mist',null],sinai:[null,'rain','sand','rain'],
   babel:['sand',null,'wind','sand'],getsemani:['mist','rain','mist','mist'],tumulo:['petals'],ressurreicao:['petals',null,'petals','mist']};

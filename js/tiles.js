@@ -44,7 +44,7 @@ function buildProps(){
     else spots.slice(1,4).forEach(([a,b,y],k)=>{if(hs(k,17)>.4)L.push({t:'lizard',x:(a+b)/2,y,a:a+6,b:b-6,s:k})})}
   if(MAP.water)L.push({t:'bridge',a:MAP.water[0]-6,b:MAP.water[1]+5,y:gy(MAP.water[0])});
   if(MAPID==='jerico')MAP.plats.forEach((pl,k)=>{if(pl.wall&&pl.w<30)L.push({t:'banner',x:pl.x+pl.w-4,y:pl.y})});
-  if(['eden','tumulo','jerico','ressurreicao'].includes(MAPID))for(let k=0;k<5;k++)L.push({t:'fly',x:90+k*(MAP.ww-120)/5,y:gy(90+k*(MAP.ww-120)/5),s:k});
+  if(MAP.day&&!['getsemani','abismo'].includes(MAPID))for(let k=0;k<6;k++)L.push({t:'fly',x:90+k*(MAP.ww-120)/5,y:gy(90+k*(MAP.ww-120)/5),s:k});
   MAP.props=L;
 }
 function flame(X,Y,k){const f=(S.t*12+k)|0,h=3+(f%3),sw=Math.round(Math.sin(S.t*9+k));
@@ -62,7 +62,7 @@ function drawProps(){
       for(let i=0;i<=sp;i++){const u=i/sp,yy=y-10+Math.sin(u*Math.PI)*4+Math.sin(S.t*2+u*6)*.6;r(p.a+i,yy,1,1,'#c9a070')}
       for(let i=p.a+2;i<p.b-2;i+=4){const u=(i-p.a)/sp,b=Math.round(Math.sin(S.t*2.4+u*6)*.6);r(i,y-2+b,3,2,'#8a5a34');r(i,y-2+b,3,1,'#b07a48')}
       for(let k=1;k<3;k++){const u=k/3,lx=Math.round(p.a+sp*u),ly=Math.round(y-10+Math.sin(u*Math.PI)*4);r(lx,ly+1,1,2,'#3a2010');r(lx-1,ly+3,3,3,'#e8902a');r(lx,ly+4,1,1,'#fff0b0')}}
-    else if(p.t==='banner'){r(p.x,p.y-18,1,18,'#4a2a18');r(p.x-1,p.y-19,3,1,'#c9a24a');
+    else if(p.t==='banner'){if(MAP._fallen)continue;r(p.x,p.y-18,1,18,'#4a2a18');r(p.x-1,p.y-19,3,1,'#c9a24a');
       for(let c=0;c<7;c++){const off=Math.round(Math.sin(S.t*5-c*.8)*(c*.25));r(p.x+1+c,p.y-17+off,1,9-(c>4?c-4:0),c%2?'#c0283f':'#e0284a');r(p.x+1+c,p.y-14+off,1,1,'#f7c948')}}
     else if(p.t==='bird'){const near=S.state!=='title'&&Math.abs(S.p.x-p.hx)<26&&Math.abs(S.p.y-p.hy)<22;
       if(p.ft<0&&near){p.ft=S.t;p.dir=S.p.x<p.hx?1:-1;sfx&&0}
@@ -84,7 +84,7 @@ function propLights(L){for(const p of MAP.props){
 
 // sky life: painted clouds drift, birds cross, smoke rises from Sinai
 function drawSkyLife(){
-  if(MAP.clouds)for(let i=0;i<4;i++){const span=W+220,cx=((i*157-S.cam*.06+S.t*(1.2+i*.5))%span+span)%span-110,cy=18+i*13+hs(i,3)*10|0;dl(x,MAP.clouds[i%3],Math.round((cx+CAMF)*RS)/RS,cy)}
+  if(MAP.clouds)for(let i=0;i<4;i++){const span=W+220,cx=((i*157-S.cam*.06+S.t*(1.2+i*.5))%span+span)%span-110,cy=18+i*13+hs(i,3)*10|0;dl(x,MAP.clouds[i%3],Math.round((cx-30+CAMF)*RS)/RS,cy-20)}
   for(const s of MAP.smokes||[])if(s.sky)smoke(s.x,s.y,1.4);
   if(!['getsemani','abismo','sinai'].includes(MAPID)){const per=26,ph=(S.t%per)/per;if(ph<.6){const k=ph/.6,bx=W+30-k*(W+90),by=34+Math.sin(S.t*.5)*6;
     for(let j=0;j<5;j++){const px=Math.round(bx+j*7),py=Math.round(by+Math.abs(j-2)*4+Math.sin(S.t*3+j)),w=(S.t*9+j|0)%2;r(px-2,py-w,2,1,'#2a1830');r(px,py,1,1,'#2a1830');r(px+1,py-w,2,1,'#2a1830')}}}

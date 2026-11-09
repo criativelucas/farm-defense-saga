@@ -209,7 +209,7 @@ function paintScene(lw,day){const key=MAPID+(day?':d':':n'),hit=SCN_CACHE.get(ke
   (SCENES[MAPID]||SCENES.eden)(L);
   [L.sky,L.far,L.mid,L.near].forEach(putBuf);
   // drifting clouds over the sky, in the same light
-  MAP.clouds=[0,1,2].map(i=>{const c=mkHD(100,40),B=layerBuf(c,haze,0,1);pCloud(B,50,22,56+i*12,17+i*4,i*7+1,CLOUDS[mood]);putBuf(B);return c});
+  MAP.clouds=[0,1,2].map(i=>{const c=mkHD(160,68),B=layerBuf(c,haze,0,1);pCloud(B,80,42,56+i*12,17+i*4,i*7+1,CLOUDS[mood]);putBuf(B);return c});
   MAP.fgSpr=paintFG(desert);
   GRADE=null;
   if(SCN_CACHE.size>=3)SCN_CACHE.delete(SCN_CACHE.keys().next().value);
