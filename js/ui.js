@@ -481,8 +481,11 @@ function showWin(){
 // ---------- codex and achievements
 // first time a work of the flesh shows up, the battle pauses and introduces it
 function foeIntro(k){const d=EN[k],el=$('foeintro');S.intro=k;sfx('horn');
-  el.innerHTML=`<div class="fi"><small>${d.boss?'Chefe':'Nova obra da carne'}</small><canvas width="48" height="48"></canvas><h3>${d.name}</h3><p>${d.desc}</p>${d.weak?`<p class="weak">Fraca contra <b>${CARDS[d.weak].name}</b>: dano 2,5 vezes maior.</p>`:''}<i>${d.ref||VICE_REF}</i><button class="btn" id="fiok">Entendi <small>Enter</small></button></div>`;
-  el.hidden=false;enemyIconTo(el.querySelector('canvas'),k);$('fiok').onclick=closeFoeIntro}
+  const pace=d.spd>=30?'Rápida':d.spd<=14?'Lenta':'Passo médio',chips=[`❤ ${d.hp+(d.armor||0)} de vida`,pace,d.fly?'Voa':'',`Tira ${d.dmg} do Éden`].filter(Boolean);
+  el.innerHTML=`<div class="fi"><small>${d.boss?'Chefe':'Nova obra da carne'}</small><canvas width="48" height="48"></canvas><h3>${d.name}</h3><div class="fichips">${chips.map(c=>`<span>${c}</span>`).join('')}</div><p>${d.desc}</p>${d.weak?`<p class="weak">Fraca contra <b>${CARDS[d.weak].name}</b>: dano 2,5 vezes maior.</p>`:''}<i>${d.ref||VICE_REF}</i><button class="btn" id="fiok">Entendi <small>Enter</small></button></div>`;
+  el.hidden=false;const cv=el.querySelector('canvas');let t=1,last=0;
+  // the pest walks in place while the card is open
+  const step=now=>{if(!cv.isConnected||el.hidden||S.intro!==k)return;t+=Math.min(.05,(now-(last||now))/1000);last=now;enemyIconTo(cv,k,t);requestAnimationFrame(step)};enemyIconTo(cv,k,t);requestAnimationFrame(step);$('fiok').onclick=closeFoeIntro}
 function closeFoeIntro(){$('foeintro').hidden=true;S.intro=null;if(S.introQ&&S.introQ.length)foeIntro(S.introQ.shift())}
 const cardKnown=k=>META.unlocked.includes(k)||!!META.seen.c[k]||!!(CARDS[k].own&&META.chars[CARDS[k].own]);
 // codex cards: a header bar, an art window tinted by the subject's color, a body and the verse
@@ -554,7 +557,7 @@ function frameBody(now){
 }
 $('timer').addEventListener('click',()=>callWave());
 // the loop starts once every script has loaded (scripts after this one define parts of a frame) and the pixel font is ready
-addEventListener('load',()=>(document.fonts?document.fonts.load('8px "Pixelify Sans"'):Promise.resolve()).catch(()=>{}).finally(()=>requestAnimationFrame(frame)));
+addEventListener('load',()=>(document.fonts?document.fonts.load('8px "Pixelify Sans"'):Promise.resolve()).catch(()=>{}).finally(()=>{const b=$('boot');if(b){b.classList.add('out');setTimeout(()=>b.remove(),500)}requestAnimationFrame(frame)}));
 
 function startEpilogue(){hideMenu();MUS.scene=null;blankBattle('tumulo');S.state='epilogue';MUS.mode='calm';banner('A manhã do primeiro dia','João 20:1');showStory()}
 

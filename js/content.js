@@ -43,10 +43,10 @@ const EN={
   heresia:{name:'Heresias',hp:14,spd:13,rew:8,dmg:1,fly:0,w:9,h:15,c:'#6a4a8a',glow:'#b08aff',weak:'mostarda',ai:'heal',desc:'Cura as pragas ao redor. Derrube primeiro.'},
   bezerro:{name:'Bezerro de Ouro',hp:220,spd:7,rew:40,dmg:8,fly:0,w:34,h:26,c:'#f7c948',glow:'#fff08a',weak:null,elite:1,ref:'Êxodo 32:4',desc:'Elite. O ídolo de ouro.'},
   golias:{name:'Golias',hp:420,spd:8,rew:60,dmg:12,fly:0,w:22,h:36,c:'#a08a5a',glow:'#ffd34a',weak:null,boss:1,ref:'1 Samuel 17:4',desc:'Chefe. Atira pedras que atordoam você. Com metade da vida, se enfurece.'},
-  farao:{name:'Faraó',hp:520,spd:7,rew:60,dmg:12,fly:0,w:40,h:30,c:'#f7c948',glow:'#5a8aff',weak:null,boss:1,ref:'Êxodo 14:9',desc:'Chefe. Chama pragas de reforço. Furioso, chama ainda mais.'},
-  leviata:{name:'Leviatã',hp:700,spd:7,rew:80,dmg:15,fly:0,w:44,h:24,c:'#2a6a7a',glow:'#5af0c0',weak:null,boss:1,ref:'Isaías 27:1',desc:'Chefe. Mergulha, fica intocável e surge atordoando as árvores.'}
+  farao:{name:'Faraó',hp:460,spd:7,rew:60,dmg:10,fly:0,w:40,h:30,c:'#f7c948',glow:'#5a8aff',weak:null,boss:1,ref:'Êxodo 14:9',desc:'Chefe. Chama pragas de reforço. Furioso, chama ainda mais.'},
+  leviata:{name:'Leviatã',hp:620,spd:7,rew:80,dmg:12,fly:0,w:44,h:24,c:'#2a6a7a',glow:'#5af0c0',weak:null,boss:1,ref:'Isaías 27:1',desc:'Chefe. Mergulha, fica intocável e surge atordoando as árvores.'}
 };
-EN.sombra={name:'A Sombra da Morte',hp:820,spd:6,rew:90,dmg:15,fly:0,w:34,h:44,c:'#4a3a6a',glow:'#3a2a5a',weak:null,boss:1,ref:'Salmos 23:4',desc:'Chefe final. Faz adormecer as árvores perto dela; um pisão acorda. Furiosa, chama pragas.'};
+EN.sombra={name:'A Sombra da Morte',hp:720,spd:6,rew:90,dmg:12,fly:0,w:34,h:44,c:'#4a3a6a',glow:'#3a2a5a',weak:null,boss:1,ref:'Salmos 23:4',desc:'Chefe final. Faz adormecer as árvores perto dela; um pisão acorda. Furiosa, chama pragas.'};
 // more works of the flesh, each with its own trick (like the zombies of a tower defense, but from the Bible's lists of sins)
 Object.assign(EN,{
   soberba:{name:'Soberba',hp:9,armor:14,spd:18,rew:7,dmg:1,fly:0,w:10,h:13,c:'#c89a28',glow:'#ffd34a',weak:'lirio',ai:'armor',ref:'Provérbios 16:18',desc:'Usa uma coroa que aguenta os primeiros golpes. Sem ela, cai e anda devagar.'},

@@ -407,6 +407,8 @@ body.lite #glow{display:none}
 #foeintro small{letter-spacing:.2em;text-transform:uppercase;color:#9a3a10;font-weight:700}
 #foeintro canvas{width:6em;height:6em;image-rendering:pixelated;background:radial-gradient(#fff6d8,#e8c995 70%);border-radius:50%}
 #foeintro h3{margin:0;font-size:1.8em;color:#6a1a10}#foeintro p{margin:0;line-height:1.35}#foeintro .weak{color:#2a6a2a}#foeintro i{font-size:.8em;color:#7a5434}
+#foeintro .fichips{display:flex;flex-wrap:wrap;justify-content:center;gap:.3em}#foeintro .fichips span{padding:.05em .55em;border-radius:999px;background:#6a1a1018;box-shadow:inset 0 0 0 1px #6a1a1040;font-size:.8em;font-weight:700;color:#5a2a10}
+#foeintro canvas{animation:fibob 1.2s ease-in-out infinite}@keyframes fibob{50%{transform:translateY(-3px)}}
 #foeintro .btn small{color:#6a4a10;letter-spacing:0;font-weight:400;text-transform:none;font-size:.7em}
 .mbox .cx>i{color:#7a5434}
 /* character sheet, after the reference's stat panel and equipment slots */
@@ -635,6 +637,27 @@ body.big #menu{font-size:max(12px,1.85cqw)}body.big .hud{font-size:max(12px,2.3c
 #touch button:active{border-image:var(--f-btn) 4 fill / 10px repeat;color:#2a1408}
 @media (pointer:coarse){#hand{font-size:max(11px,1.6cqw)}.hc2{width:6.6em}}
 @media (pointer:coarse){#touch{display:flex}}
+#hud[hidden]~#touch{display:none!important}
+/* touch screens: arrows over the item bar on the left, four round action buttons in the bottom-right corner
+   (the jump under the thumb), news toasts move to the top so they never cover the buttons */
+@media (pointer:coarse){
+  #wrap{padding:max(4px,env(safe-area-inset-top,0px)) max(4px,env(safe-area-inset-right,0px)) max(4px,env(safe-area-inset-bottom,0px)) max(4px,env(safe-area-inset-left,0px))}
+  #stage{width:min(100%, calc((100dvh - 8px) * 16 / 9))}
+  #touch{inset:auto 1.2% 2% 1.2%;align-items:flex-end;padding:0}
+  #touch>div:first-child{margin-bottom:9cqw}
+  #touch>div:last-child{display:grid;grid-template-columns:repeat(2,auto);gap:.8cqw}
+  #touch button{min-width:0;min-height:0;width:max(44px,6.6cqw);height:max(44px,6.6cqw);border:0;border-radius:50%;padding:0;font-size:max(10px,1.35cqw);
+    background:radial-gradient(circle at 50% 35%,#6a4a32ee,#3a2414ee);box-shadow:inset 0 0 0 2px #1a0c06,inset 0 0 0 4px #c9921a88,0 3px 0 #0008;opacity:.9}
+  #touch>div:first-child button{font-size:max(16px,2.6cqw)}
+  #touch button[data-k=ArrowUp]{background:radial-gradient(circle at 50% 35%,#4a8a3aee,#24501aee)}
+  #touch button:active{border-image:none;background:radial-gradient(circle at 50% 35%,#ffd23a,#c9921a);color:#2a1408;transform:scale(.92)}
+  #toast{bottom:auto;top:30%}
+}
+/* phone held upright: the game needs the screen lying down */
+@media (pointer:coarse) and (orientation:portrait){
+  body::after{content:'📱\A Vire o aparelho\A para jogar';white-space:pre;position:fixed;inset:0;z-index:99;display:grid;place-items:center;align-content:center;text-align:center;
+    background:#170d1cf2;color:#ffe9a0;font:400 30px/1.4 var(--title);letter-spacing:.04em;text-shadow:0 3px 0 #000}
+}
 @media (prefers-reduced-motion:reduce){#banner.show,#toast.show{animation-duration:.01s;opacity:1}.hc.enter,.hc.ready{animation:none}}
 
 /* ---- cleaner battle HUD: fruits as a row of dots, quieter extras ---- */
@@ -1068,3 +1091,20 @@ body.cb #hpfill{background:linear-gradient(#9ad8ff,#3a8ad8)!important}
 .lprize.got{color:#4cc46e;font-weight:700}
 .lgo{font-size:.85em;padding:.15em .6em;border-radius:999px;background:#ffd23a;color:#2a1408;animation:pkpulse 1s ease-in-out infinite}
 .lendless{justify-self:stretch;font-size:.85em}
+
+/* ---- loading screen: the logo and a bar that fills as each script arrives; it fades out on the first frame ---- */
+#boot{position:absolute;inset:0;z-index:50;display:grid;place-items:center;align-content:center;gap:2cqw;background:radial-gradient(ellipse at 50% 40%,#2a3a5a,#0c0814);transition:opacity .4s}
+#boot img{width:34cqw;image-rendering:pixelated;filter:drop-shadow(0 .6cqw 0 #0008)}
+#boot i{width:30cqw;height:1.2cqw;min-height:6px;border-radius:999px;background:#0a0e18;box-shadow:inset 0 0 0 1px #ffffff2a;overflow:hidden}
+#boot em{display:block;height:100%;width:0;background:linear-gradient(90deg,#4cc46e,#ffd23a);transition:width .2s}
+#boot small{font:600 max(11px,1.4cqw) var(--font);color:#c8d0e0;letter-spacing:.05em}
+#boot.out{opacity:0;pointer-events:none}
+
+/* ---- difficulty switch in the Adventure panel ---- */
+.diffsel{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;padding:2px;border-radius:999px;background:#0a0e18;box-shadow:inset 0 0 0 1px #ffffff1a}
+.diffsel button{font:inherit;font-size:.72em;font-weight:700;padding:.25em 0;border:0;border-radius:999px;background:none;color:#a8b8d0;cursor:pointer}
+.diffsel button.on{background:linear-gradient(#ffe36a,#e8a020);color:#2a1408;box-shadow:0 2px 0 #0006}
+.diffsel button[data-diff=facil].on{background:linear-gradient(#9af0a8,#3aa05a)}.diffsel button[data-diff=dificil].on{background:linear-gradient(#ff8a7a,#c8303a);color:#fff}
+.diffdesc{color:#a8b8d0!important;letter-spacing:0!important;text-transform:none!important;font-size:.62em!important}
+.lcrown{font-size:.9em;margin-right:.2em;filter:drop-shadow(0 1px 0 #000)}
+.dailyb{display:grid;justify-items:start;gap:.1em;text-align:left;font-size:.85em;background:linear-gradient(100deg,#e8a020,#c8603a)}.dailyb small{font-size:.75em;font-weight:400;opacity:.9}

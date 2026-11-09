@@ -31,7 +31,8 @@ cv.parentElement.addEventListener('pointerdown',e=>{if(!live()||S.sel>=0||e.targ
 
 // ---------- tree sheet: what it does, how grown it is, evolve at level 3, or pull it up
 const BRANCH={videira:['Vinho novo','Ramos que se estendem'],roma:['Romã madura','Romã que alcança'],oliveira:['Azeite puro','Oliveira frondosa'],sarca:['Fogo que não consome','Sarça alastrada'],
-  figueira:['Figo temporão','Figueira de sombra'],tamareira:['Tâmara doce','Palmeira alta'],amendoeira:['Flor de Arão','Amendoeira vigilante'],lirio:['Lírio de Sarom','Lírio do campo'],mostarda:['Grão que move montes','Árvore das aves']};
+  figueira:['Figo temporão','Figueira de sombra'],tamareira:['Tâmara doce','Palmeira alta'],amendoeira:['Flor de Arão','Amendoeira vigilante'],lirio:['Lírio de Sarom','Lírio do campo'],mostarda:['Grão que move montes','Árvore das aves'],
+  hissopo:['Hissopo que purifica','Ramo aspergido'],cedro:['Cedro do Líbano','Cedro altaneiro']};
 const BRANCH_COST=4;
 function openTree(si){const t=S.tw[si],s=MAP.slots[si];if(!t)return closeTree();S.infoSlot=si;const el=$('treeinfo'),k=t.kinds[0],I=CARDS[k]||{},st=STATS[k]||{};
   const refund=Math.floor((CARDS[k]?CARDS[k].cost:2)*.5),lv=(t.lvl||0)+1,wat=Math.min(3,t.water||0);

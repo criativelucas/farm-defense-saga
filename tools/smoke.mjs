@@ -131,8 +131,20 @@ async function audio(label){const before=errors.length;
     return [AUD.mode,sfxOk?'sfx':'sem-sfx',title?'titulo':'sem-titulo',world?'mundo':'sem-mundo',drums?'tambores':'sem-tambores'].join(',')})()`);
   check(label+': áudio '+r,errors.length===before&&r==='files,sfx,titulo,mundo,tambores',errors.slice(before).join(' | ').slice(0,200))}
 
+// difficulty scales the pests and the stars, the day's challenge pays once a day, a grown tree evolves, the loading screen goes away
+async function polish(label){const before=errors.length;
+  const r=await js(`(()=>{const out=[];const hp=d=>{META.diff=d;startLevel(4);startLevelBattle();S.dialog=null;S.intro=null;tutStep=-1;const e=spawn('odio');return e.max};
+    const f=hp('facil'),n=hp('normal'),h=hp('dificil');out.push(f<n&&n<h?'hp':'hp-ruim');
+    META.diff='facil';startLevel(4);startLevelBattle();S.dialog=null;S.intro=null;tutStep=-1;RUN.hp=20;delete META.stars['2-1'];levelWon();out.push(META.stars['2-1']===2?'estrelas':'estrelas-'+META.stars['2-1']);
+    META.diff='normal';const d=dailyAdv();if(!d)return 'sem-desafio';startLevel(d.n);RUN.dmods=d.mods;startLevelBattle();S.dialog=null;S.intro=null;tutStep=-1;
+    const g0=META.gifts||0;delete (META.dailyAdv||{})[todayKey()];levelWon();const g1=META.gifts;startLevel(d.n);RUN.dmods=d.mods;startLevelBattle();S.dialog=null;S.intro=null;levelWon();
+    out.push(g1===g0+1&&META.gifts===g1?'desafio':'desafio-ruim');
+    startLevel(4);startLevelBattle();S.dialog=null;S.intro=null;tutStep=-1;S.mana=MAXM;plantAt(0,['videira'],false,0);Object.assign(S.tw[0],{grow:1,lvl:3});openTree(0);document.querySelector('[data-br=a]').click();
+    out.push(S.tw[0].branch==='a'?'evolui':'nao-evolui');for(let i=0;i<5;i++)update(1/30);draw();closeTree();
+    out.push(document.getElementById('boot')?'carregando-preso':'sem-carregando');return out.join(',')})()`);
+  check(label+': dificuldade, desafio do dia, evolução '+r,errors.length===before&&r==='hp,estrelas,desafio,evolui,sem-carregando',errors.slice(before).join(' | ').slice(0,200))}
 console.log('— new player');await load(true,false);await loopAndScene('new');
-console.log('— player with progress');await js(`Object.assign(META,{intro:1,tut:1,coins:5000});['1-1','1-2','1-3','1-4','2-1','2-4'].forEach(i=>META.done[i]=1);saveMeta();1`);await everyScreen('progress');await farmers('progress');await packs('progress');await pests('progress');await newCards('progress');await battles('progress');await goals('progress');await minis('progress');await audio('progress');
+console.log('— player with progress');await js(`Object.assign(META,{intro:1,tut:1,coins:5000});['1-1','1-2','1-3','1-4','2-1','2-4'].forEach(i=>META.done[i]=1);saveMeta();1`);await everyScreen('progress');await farmers('progress');await packs('progress');await pests('progress');await newCards('progress');await battles('progress');await goals('progress');await minis('progress');await audio('progress');await polish('progress');
 console.log('— embed with gamepad blocked');await load(false,true);await loopAndScene('blocked-pad');
 const fails=checks.filter(c=>!c[1]);console.log(`\n${checks.length-fails.length}/${checks.length} checks passed`+(errors.length?`; ${errors.length} error(s) logged:`:''));
 errors.forEach(e=>console.log('  · '+String(e).split('\n').slice(0,3).join(' / ')));

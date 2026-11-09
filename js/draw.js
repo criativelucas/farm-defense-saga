@@ -222,7 +222,7 @@ function drawFG(){const F=MAP.fgSpr;if(!F)return;
 function drawTree(t,s,i){
   if(t.grow<.35){const h=1+t.grow*12|0;r(s.x,s.y-2-h,1,h,'#5fe08a');r(s.x-1,s.y-3-h,1,1,'#9ff7b8');r(s.x+1,s.y-2-h,1,1,'#5fe08a');return}
   if(t.joio){drawJoio(s.x,s.y,S.t);return}
-  const e=easeBack(Math.min(1,(t.grow-.35)/.65)),lv=1;t.szv=(t.szv??.55)+((.55+.45*Math.min(3,t.water||0)/3)-(t.szv??.55))*.05;
+  const e=easeBack(Math.min(1,(t.grow-.35)/.65)),lv=t.branch?1.12:1;t.szv=(t.szv??.55)+((.55+.45*Math.min(3,t.water||0)/3)-(t.szv??.55))*.05;
   x.save();x.translate(s.x,s.y);const sway=Math.sin(S.t*1.6+i*1.3)*.035+t.pulse*.1*Math.sin(S.t*30)+t.pulse*.14;x.transform(1,0,-sway,1,0,0);
   x.scale((.55+.45*e)*(1-t.pulse*.05)*lv,(.35+.65*e)*(1+t.pulse*.1)*lv);x.translate(-s.x,-s.y);
   const z=k=>TREE[k].b*t.szv,body=()=>{
@@ -236,6 +236,8 @@ function drawTree(t,s,i){
   if(t.sleep)for(let i=0;i<3;i++){const zx=s.x+6+i*3,zy=s.y-30-i*5-((S.t*6)%4);r(zx,zy,3,1,'#c0d0ff');r(zx+1,zy+1,1,1,'#c0d0ff');r(zx,zy+2,3,1,'#c0d0ff')}
   if(t.branch){const bx=s.x+7,by=s.y+3;if(t.branch==='a'){r(bx,by-1,1,3,'#f7c948');r(bx-1,by,3,1,'#f7c948');r(bx,by,1,1,'#fff6c0')}else{r(bx-1,by,3,1,'#5ab0ff');r(bx,by-1,2,1,'#9ad8ff')}}
   if(t.ark>0){x.globalAlpha=.4+Math.sin(S.t*5)*.2;ring(s.x,s.y-14,16,'#f7c948');x.globalAlpha=1}
+  // grown and not yet evolved: a bobbing gold arrow says "touch me"
+  if((t.lvl||0)>=3&&!t.branch&&t.grow>=1){const ay=s.y-46+Math.round(Math.sin(S.t*5)*2),c=S.mana>=BRANCH_COST?'#ffd23a':'#8a8a9a';r(s.x-1,ay,3,4,c);r(s.x-3,ay,7,1,c);r(s.x-2,ay-1,5,1,c);r(s.x-1,ay-2,3,1,c);r(s.x,ay-3,1,1,c)}
 }
 // enemies leave a quick squash-and-fade instead of vanishing
 function drawCorpses(){for(const f of S.fx){if(f.k!=='corpse')continue;const k=f.t/f.max,e=f.e;x.globalAlpha=1-k;x.save();x.translate(e.x,e.y);x.scale(1+k*.8,Math.max(.05,1-k*.9));x.translate(-e.x,-e.y);

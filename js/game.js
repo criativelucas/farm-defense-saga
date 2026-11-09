@@ -84,7 +84,7 @@ function endWave(){
 function spawn(k,xo){
   const d=EN[k],a=RUN?RUN.act:0;
   let sc=d.boss?1+a*.1:d.elite?1+a*.3:1+a*.45+S.wi*.08;
-  if(ascN()>=1)sc*=1.15;if(d.boss&&ascN()>=4)sc*=1.3;
+  if(ascN()>=1)sc*=1.15;if(d.boss&&ascN()>=4)sc*=1.3;sc*=diffNow().hp;
   const x0=xo??MAP.ww+12;
   const spawnInit=e=>{if(d.armor)e.armor=e.armorMax=d.armor*sc;if(d.ai==='mirror')e.mirror=3;if(d.ai==='burrow'||d.ai==='disguise')e.dive=1e9;return e};
   if(d.boss){META.seen.e[k]=1;saveMeta();bossIntro(k)}
@@ -398,7 +398,7 @@ function throwStone(e,j){const P=S.p,T=1,g=300,tx=P.x+(j-1)*18,ty=P.y-6,sx=e.x-8
   S.eproj.push({x:sx,y:sy,vx:(tx-sx)/T,vy:(ty-sy)/T-.5*g*T,g,life:3});sfx('stone')}
 function bossAI(e,dt){
   if(e.k==='golias'){e.st-=dt;if(e.st<=0){const n=e.ph2?3:1;for(let j=0;j<n;j++)throwStone(e,n===1?1:j);e.st=e.ph2?2.4:3.6}}
-  if(e.k==='farao'){e.st-=dt;if(e.st<=0){const n=e.ph2?4:3;for(let j=0;j<n;j++){spawn(pick(e.ph2?['odio','inveja','gula','discordia']:['odio','inveja','discordia']),e.x+10+j*7);S.total++}
+  if(e.k==='farao'){e.st-=dt;if(e.st<=0){const n=e.ph2?3:2;for(let j=0;j<n;j++){spawn(pick(e.ph2?['odio','inveja','gula','discordia']:['odio','inveja','discordia']),e.x+10+j*7);S.total++}
     e.st=e.ph2?4:6.5;pop(e.x,e.y-40,'pragas!','#5a8aff',9);shake(3)}}
   // the shadow puts nearby trees to sleep (a stomp wakes them); furious, it also calls pests
   if(e.k==='sombra'){e.st-=dt;if(e.st<=0){const rad=e.ph2?150:100;e.st=e.ph2?4.5:6.5;S.fx.push({k:'ring',x:e.x,y:e.y-20,r:4,max:rad,t:0,c:'#a080ff'});sfx('wind');
@@ -480,7 +480,7 @@ function update(dt){
   for(let i=0;i<4;i++)if(pr('Digit'+(i+1),'Numpad'+(i+1)))playCard(S.babelOn>0&&S.perm[i]!=null?S.perm[i]:i);
   computeLinks(dt);updStory(dt);
   if(pr('KeyX','KeyJ'))playerAttack();if(pr('KeyQ'))placeItem('cerca');if(pr('KeyE'))placeItem('espantalho');if(pr('KeyR'))placeItem('lama');updHazards(dt);
-  const regen=.75*(relic('jarro')?1.2:1)*(ascN()>=2?.85:1)*(S.goal==='seca'?.5:1)*(S.mini==='ultima'?0:1);goalUpdate(dt);miniUpdate(dt);
+  const regen=.75*(relic('jarro')?1.2:1)*(ascN()>=2?.85:1)*(S.goal==='seca'?.5:1)*(S.mini==='ultima'?0:1)*diffNow().mana;goalUpdate(dt);miniUpdate(dt);
   S.leaven=Math.max(0,(S.leaven||0)-dt);if(S.mana<MAXM)S.mana=Math.min(MAXM,S.mana+regen*(S.leaven>0?2:1)*dt);
   S.rain=Math.max(0,S.rain-dt);
   S.wet+=((S.rain>0?1:0)-S.wet)*Math.min(1,dt*(S.rain>0?1.5:.12));
@@ -499,12 +499,14 @@ function update(dt){
     if(S.talents>0&&S.mana>=MAXM){S.fullT+=dt;if(S.fullT>5){pop(S.p.x,S.p.y-26,'talento enterrado!','#ff4f7b');sfx('no');S.talents=0;S.fullT=0}}else S.fullT=0;
   }
   for(const e of S.en)e.shield=S.en.some(o=>o!==e&&o.k==='faccoes'&&Math.abs(o.x-e.x)<18&&Math.abs(o.y-e.y)<14);
+  if(!META.evoTip&&S.tw.some(t=>t&&(t.lvl||0)>=3&&!t.branch)){META.evoTip=1;saveMeta();toast('Árvore adulta!','Toque nela para escolher uma evolução ('+BRANCH_COST+' maná)')}
+  const dspd=diffNow().spd||1;
   for(const e of S.en){
     const d=EN[e.k];e.t+=dt;e.flash-=dt;e.slow-=dt;e.frz-=dt;
     let m=e.frz>0?0:e.slow>0?.45:1;
     if(!d.fly&&!d.boss&&(inSea(e.x)||inWater(e.x))){const cj=relic('cajado')||isChar('moises');m*=inSea(e.x)?(cj?.2:.35):(cj?.5:1)}
     if(d.boss&&e.ph2&&e.k==='golias')m*=1.6;
-    let sp=d.spd*1.2*m;
+    let sp=d.spd*1.2*m*dspd;
     if(d.ai==='zigzag')sp*=.7+Math.sin(e.t*2.3)*1.1;
     if(d.ai==='rage'){if(!e.rage&&e.hp<e.max*.6){e.rage=1;pop(e.x,e.y-16,'fúria!','#ff6a1a',9);vfx('puff',e.x,e.y-6,{n:5,c:'#5a4a4a'})}if(e.rage)sp*=2}if(e.ph2)sp*=1.25;
     if(d.ai==='blink'){e.bt=(e.bt??rnd(2,3.5))-dt;if(e.bt<=0){e.bt=rnd(2.5,4);vfx('blink',e.x,e.y);e.x-=26;vfx('blink',e.x,e.y)}}
@@ -535,7 +537,7 @@ function update(dt){
       t.joio=true;e.corrupted=1;pop(s.x,s.y-30,'virou joio! dê um pisão','#d8d860',9);burst(s.x,s.y-10,12,['#6a6a2a','#d8d860'],40,100,.6)});
     if(!d.fly&&(inWater(e.x)||inSea(e.x))&&Math.random()<dt*8)S.parts.push({x:e.x+rnd(-3,3),y:(inSea(e.x)?MAP.sea[2]:e.y)-1,vx:rnd(-15,15),vy:rnd(-45,-20),g:220,life:.4,max:.4,c:'#9ad0ff',s:1});
     if(e.slow>0&&Math.random()<dt*6)S.parts.push({x:e.x,y:ecy(e)+2,vx:0,vy:10,g:200,life:.4,max:.4,c:'#d9c24a',s:1});
-    if(e.x<LIFE_X&&e.hp>0){e.hp=0;S.done++;RUN.hp-=d.dmg;S.leaks=S.leaks||{};S.leaks[e.k]=(S.leaks[e.k]||0)+d.dmg;S.lifeHit=.4;shake(7);sfx('hurt');flash(.25,'255,40,80');pop(LIFE_X+8,130,'-'+d.dmg,'#ff4f7b',11);burst(LIFE_X,150,14,['#ff4f7b','#ffe36a'],80,200,.6)}
+    if(e.x<LIFE_X&&e.hp>0){e.hp=0;S.done++;const ed=Math.ceil(d.dmg*diffNow().eden);RUN.hp-=ed;S.leaks=S.leaks||{};S.leaks[e.k]=(S.leaks[e.k]||0)+ed;S.lifeHit=.4;shake(7);sfx('hurt');flash(.25,'255,40,80');pop(LIFE_X+8,130,'-'+ed,'#ff4f7b',11);burst(LIFE_X,150,14,['#ff4f7b','#ffe36a'],80,200,.6)}
   }
   S.en=S.en.filter(e=>e.hp>0);
   if(RUN.hp<=0){RUN.hp=0;showOver();return}

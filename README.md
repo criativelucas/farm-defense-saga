@@ -46,3 +46,9 @@ node tools/perf.mjs
 ```
 
 Mede o desempenho com o processador 6 vezes mais lento, como num celular fraco: quadros por segundo e trabalho por quadro em duas batalhas, tempo para desenhar as cartas e para abrir um pacote.
+
+```bash
+node tools/balance.mjs 3 normal
+```
+
+Robô de equilíbrio: joga cada fase da Aventura 3 vezes com as cartas que o jogador teria naquele ponto e mostra vitórias, vida média do Éden e quais pragas mais passaram. Troque `normal` por `facil` ou `dificil`. Com `BOT=fraco` na frente, ele joga como iniciante (reage devagar, sem bênçãos e sem enxada). Compare as fases entre si; o robô não faz os objetivos especiais (colheita, vigília).

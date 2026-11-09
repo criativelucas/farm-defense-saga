@@ -120,6 +120,8 @@ async function loadAudio(){if(AUD.meta)return;AUD.meta={};
   try{AUD.meta=await (await fetch('assets/audio/music.json')).json();AUD.mode='files'}catch(e){AUD.mode='synth';return}
   AUD_SFX.forEach(n=>get('sfx-'+n+'.wav').then(b=>AUD.sfx[n]=b).catch(()=>{}))}
 function trackBuf(k){if(AUD.buf[k])return AUD.buf[k];if(!AUD.loading[k]){AUD.loading[k]=1;fetch('assets/audio/'+k+'.mp3').then(r=>{if(!r.ok)throw 0;return r.arrayBuffer()}).then(a=>AC.decodeAudioData(a)).then(b=>AUD.buf[k]=b).catch(()=>{if(!/perc|vitoria|derrota/.test(k))AUD.mode='synth'})}return null}
+// the music of the world open on the map starts downloading before the battle, so the battle does not begin silent
+function prefetchTrack(k){if(!AC||AUD.mode!=='files'||!AUD.meta.loops||!AUD.meta.loops[k])return;trackBuf(k);if((AUD.meta.perc||[]).includes(k))trackBuf(k+'-perc')}
 function wantedTrack(){if(MUS.mode==='boss'){const wv=S&&S.waves&&S.waves[S.wi];return wv&&wv.list.some(([k])=>k==='sombra')&&AUD.meta.loops&&AUD.meta.loops.sombra?'sombra':'chefe'}if(MUS.scene)return MUS.scene;const w=MUS.world==='abismo'?'mar':MUS.world;return AUD.meta.loops&&AUD.meta.loops[w]?w:'titulo'}
 function loopSource(buf,L,dest,when){const s=AC.createBufferSource();s.buffer=buf;s.loop=true;let lead=0;const d=buf.getChannelData(0);while(lead<4000&&Math.abs(d[lead])<1e-3)lead++;
   s.loopStart=lead/buf.sampleRate;s.loopEnd=Math.min(buf.duration,s.loopStart+L);s.connect(dest);s.start(when,s.loopStart);return s}
@@ -148,7 +150,7 @@ const isFull=()=>!!(document.fullscreenElement||document.webkitFullscreenElement
 function toggleFull(){const d=document,el=d.documentElement,no=()=>toast('Tela cheia não disponível aqui','Tente F11 no navegador');
   try{if(isFull())return Promise.resolve((d.exitFullscreen||d.webkitExitFullscreen).call(d)).catch(()=>{});const fn=el.requestFullscreen||el.webkitRequestFullscreen;if(!fn){no();return Promise.resolve()}
     // some embedded browsers never answer the request: give up after 1.5s and say so
-    return Promise.race([Promise.resolve(fn.call(el)),new Promise((_,rej)=>setTimeout(()=>isFull()?_():rej(),1500))]).catch(()=>{if(!isFull())no()})}catch(e){no();return Promise.resolve()}}
+    return Promise.race([Promise.resolve(fn.call(el)).then(()=>{try{screen.orientation.lock('landscape').catch(()=>{})}catch(e){}}),new Promise((_,rej)=>setTimeout(()=>isFull()?_():rej(),1500))]).catch(()=>{if(!isFull())no()})}catch(e){no();return Promise.resolve()}}
 document.addEventListener('fullscreenchange',()=>{const b=document.getElementById('bfull');if(b)b.classList.toggle('on',isFull())});
 document.getElementById('bfull').onclick=e=>{e.currentTarget.blur();toggleFull()};
 document.querySelectorAll('#touch button').forEach(b=>{const k=b.dataset.k;
