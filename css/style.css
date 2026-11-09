@@ -506,23 +506,20 @@ body.lite #glow{display:none}
 #dialog b{color:#8a1e10}#dialog p{margin:.15em 0;min-height:2.6em;line-height:1.3}#dialog small{color:#9a5a20;float:right}
 /* the transition: an iris closes on the middle of the screen with a gold rim, leaves fall over the dark,
    the game's tree emblem pops up at the moment it is closed, then the iris opens again */
-@property --wr{syntax:'<length>';inherits:true;initial-value:0px}
-#wipe{position:absolute;inset:0;z-index:20;pointer-events:none;visibility:hidden;--wr:150vmax;--wd:#170d1c;--wl:#2a1a30;--wg:#ffd23a}
-#wipe.go{visibility:visible;animation:wipeiris 1s cubic-bezier(.6,0,.4,1) forwards}
-/* the radius is a length (Safari does not accept a percentage for a circle), and the curtain hides itself at the end */
-@keyframes wipeiris{0%{--wr:150vmax;visibility:visible}44%,56%{--wr:0px;visibility:visible}99%{--wr:150vmax;visibility:visible}100%{--wr:150vmax;visibility:hidden}}
-#wipe .wiris{position:absolute;inset:0;background:
-  radial-gradient(circle at 50% 50%,transparent calc(var(--wr) - 1px),var(--wg) var(--wr),var(--wg) calc(var(--wr) + 1.2cqw),#7a4a10 calc(var(--wr) + 1.4cqw),var(--wd) calc(var(--wr) + 1.6cqw)),
-  repeating-conic-gradient(from 0deg at 50% 50%,var(--wl) 0 8deg,var(--wd) 8deg 22deg)}
+/* the iris is a real circle with a huge shadow around it, so every browser draws it the same way */
+#wipe{position:absolute;inset:0;z-index:20;pointer-events:none;overflow:hidden;--wd:#170d1c;--wg:#ffd23a}
+#wipe .wiris{position:absolute;left:50%;top:50%;width:0;aspect-ratio:1;translate:-50% -50%;border-radius:50%;border:1.2cqw solid var(--wg);box-sizing:content-box;
+  box-shadow:0 0 0 .3cqw #7a4a10,0 0 0 300vmax var(--wd);animation:wipeiris 1s cubic-bezier(.6,0,.4,1) forwards}
+@keyframes wipeiris{0%{width:250vmax}44%,56%{width:0}100%{width:250vmax}}
 #wipe .wleaves i{position:absolute;left:var(--x);top:-6%;width:1.2cqw;height:.8cqw;border-radius:0 80% 0 80%;background:linear-gradient(135deg,#9ad860,#3a8a3a);opacity:0;transform:scale(var(--s))}
-#wipe.go .wleaves i{animation:wleaf 1s ease-in var(--d) forwards}
+#wipe .wleaves i{animation:wleaf 1s ease-in var(--d) forwards}
 @keyframes wleaf{0%{opacity:0;translate:0 0;rotate:0deg}20%{opacity:1}80%{opacity:1}100%{opacity:0;translate:4cqw 60cqw;rotate:420deg}}
 #wipe .wemb{position:absolute;left:50%;top:50%;width:11cqw;aspect-ratio:1;translate:-50% -50%;opacity:0;scale:.2}
-#wipe.go .wemb{animation:wemb 1s cubic-bezier(.2,1.6,.4,1) forwards}
+#wipe .wemb{animation:wemb 1s cubic-bezier(.2,1.6,.4,1) forwards}
 @keyframes wemb{0%,30%{opacity:0;scale:.2;rotate:-20deg}46%{opacity:1;scale:1.15;rotate:0deg}56%{opacity:1;scale:1}70%,100%{opacity:0;scale:.6}}
 #wipe .wemb canvas{width:100%;height:100%;image-rendering:pixelated;filter:drop-shadow(0 0 1.5cqw #ffd23a99) drop-shadow(0 .4cqw 0 #0008)}
-#wipe.white{--wd:#fffbe8;--wl:#fff0c8;--wg:#ffd23a}
-@media (prefers-reduced-motion:reduce){#wipe.go{animation:wipeiris .01s forwards}#bossintro.show .bi{animation-duration:.01s}}
+#wipe.white{--wd:#fffbe8;--wg:#ffd23a}
+@media (prefers-reduced-motion:reduce){#wipe .wiris{animation-duration:.01s}#bossintro.show .bi{animation-duration:.01s}}
 body.big #menu{font-size:max(12px,1.85cqw)}body.big .hud{font-size:max(12px,2.3cqw)}body.big #hand{font-size:max(11px,1.55cqw)}body.big #treeinfo,body.big #dialog{font-size:max(11px,1.75cqw)}
 .garden .gbar{gap:.35em}.gtool.shopb{min-width:5em;align-content:center}.gtool.shopb b{font-size:.95em}
 .gbar.seeds{min-height:3em;background:#2a1a10}.gbar.seeds small{color:#c9a99a;align-self:center}

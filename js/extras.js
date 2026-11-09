@@ -96,9 +96,8 @@ function dialogNext(){const d=S.dialog;if(!d)return;const txt=d.lines[d.i][1],p=
 // ---------- a quick leafy wipe between screens
 function wipe(){const el=$('wipe');if(!el.dataset.ok){el.dataset.ok=1;const g=hdCtx($('wipec'),48,48,2),keep=C;C=g;disc(24,24,22,'#1a0c06');disc(24,24,21,'#ffd23a');disc(24,24,19,'#8a5a1a');disc(24,24,17,'#2a1a3a');
   r(22,22,4,14,'#7a4a2e');r(18,34,12,2,'#7a4a2e');blob(24,18,13,9,'#2a7a3a','#5fc060','#b0f090',7);[[16,14],[30,12],[22,9],[32,20],[14,21]].forEach(([a,b],i)=>r(a,b,2,2,['#ff4f7b','#c58cff','#f7c948','#5af0ff','#ffa64a'][i]));C=keep}
-  el.classList.remove('go');void el.offsetWidth;el.classList.add('go');
-  // the curtain always goes away, even if the animation does not run or end (old browsers, a hidden tab)
-  clearTimeout(wipe.t);wipe.t=setTimeout(()=>el.classList.remove('go'),1100)}
+  // shown only while it plays: display restarts every animation inside, and after 1.1s it is taken off the screen whatever happens
+  el.style.display='none';void el.offsetWidth;el.style.display='block';clearTimeout(wipe.t);wipe.t=setTimeout(()=>{el.style.display='none'},1100)}
 
 // ---------- talents bought with stars, and card levels bought with coins
 const TALENTS={hearts:['Coração forte','+1 coração na batalha'],mana:['Bolsa de maná','+1 de maná no começo'],cd:['Fôlego','Habilidade recarrega 15% mais rápido'],dmg:['Mãos de lavrador','+8% de dano das árvores']};
