@@ -69,13 +69,22 @@ const ACTS=[
   {name:'Ato II',title:'O Êxodo',pool:['mar','sinai'],boss:'farao',arena:'mar'},
   {name:'Ato III',title:'A Vigília',pool:['babel','getsemani'],boss:'leviata',arena:'abismo'}
 ];
-const WAVE_POOL=[['odio','inveja','discordia','gula','embriaguez','ira','soberba','preguica','mentira'],
-  ['odio','inveja','discordia','gula','embriaguez','feitico','contenda','faccoes','ambicao','ira','ciume','murmuracao','rebeldia','calunia','avareza'],
-  ['odio','inveja','discordia','gula','embriaguez','feitico','contenda','faccoes','ambicao','impureza','ciume','heresia','vaidade','amargura','medo','calunia']];
+const WAVE_POOL=[['odio','inveja','discordia','embriaguez','ira','ciume','gula'],
+  ['inveja','discordia','gula','embriaguez','ira','ciume','contenda','feitico','rebeldia','soberba','faccoes','avareza','murmuracao'],
+  ['gula','feitico','contenda','faccoes','soberba','avareza','preguica','impureza','calunia','heresia','mentira','vaidade','ambicao','medo','amargura']];
 // adventure levels meet the works of the flesh one at a time, in this order; each level mixes the six newest it knows
-const PEST_ORDER=['odio','discordia','inveja','embriaguez','ira','soberba','gula','preguica','feitico','mentira','contenda','ciume','murmuracao','faccoes','rebeldia','impureza','calunia','avareza','heresia','vaidade','ambicao','amargura','medo'];
-// a new work of the flesh about every level; each level mixes the seven newest it knows
-const levelPool=n=>{const k=Math.min(PEST_ORDER.length,2+Math.floor(n*.8));return PEST_ORDER.slice(Math.max(0,k-7),k)};
+// which work of the flesh first appears on which adventure level (0 = 1-1 ... 27 = 7-4): simple ones in Eden,
+// the tricky ones (invisible, reflecting, stunning, underground) only in the last worlds; boss levels bring nothing new
+const PEST_INTRO={0:['odio','discordia'],1:['inveja'],2:['embriaguez'],
+  4:['ira'],5:['ciume'],6:['gula'],
+  8:['contenda'],9:['feitico'],10:['rebeldia'],
+  12:['soberba'],13:['faccoes'],14:['avareza'],
+  16:['preguica'],17:['murmuracao'],18:['impureza'],19:['calunia'],
+  20:['heresia'],21:['mentira'],22:['vaidade'],
+  24:['ambicao'],25:['medo'],26:['amargura']};
+const PEST_ORDER=Object.keys(PEST_INTRO).sort((a,b)=>a-b).flatMap(n=>PEST_INTRO[n]);
+// each level mixes the seven newest it knows, so old easy pests give way to harder ones
+const levelPool=n=>{const known=Object.keys(PEST_INTRO).filter(i=>+i<=n).sort((a,b)=>a-b).flatMap(i=>PEST_INTRO[i]);return known.slice(-7)};
 const COST={odio:2,inveja:2,discordia:1,gula:6,embriaguez:3,feitico:3,contenda:4,faccoes:3,ambicao:8,impureza:5,ira:3,ciume:3,heresia:4,
   soberba:4,preguica:5,mentira:3,avareza:3,murmuracao:4,calunia:4,rebeldia:3,vaidade:4,amargura:4,medo:3};
 function genWave(act,i,kind,ascN,only){
