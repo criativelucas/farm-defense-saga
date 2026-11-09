@@ -9,12 +9,17 @@ const WORLDS=[
   {id:'ressurreicao',name:'Jardim da Ressurreição',map:'ressurreicao',act:2,boss:'sombra',sky:'day',x:420,y:66,w:104,top:['#3a8a4a','#6ac060','#c8f0a0']}
 ];
 // the seventh world gives the four pack cards, one per level (index = level number)
-const UNLOCK_ORDER=['roma','oliveira','chuva','sarca','figueira','jerico','lirio','talentos','tamareira','semeador','amendoeira','mostarda','profecia','regar','videira','oliveira','roma','sarca','lirio','figueira','tamareira','amendoeira','mostarda'];
-UNLOCK_ORDER.push(null,'vento','uncao','nuvem','estrela');
+// the card each level gives on its first win (index = level number): the newer cards arrive just before the pests they answer
+// (the Stone before the crowned Pride, the Hyssop and the Light before the Lie, the Bitterness and the Vanity)
+const UNLOCK_ORDER=['roma','oliveira','chuva','sarca','figueira','jerico','lirio','talentos','tamareira','semeador','amendoeira','mostarda','profecia',
+  'pedra','paz','fermento','cedro','hissopo','luz','fogo','ovelha',null,null,null,'vento','uncao','nuvem','estrela'];
 const RULES={poucas:{name:'Mão curta',desc:'Só 3 cartas na mão'},sempisao:{name:'Sem pisão',desc:'O pisão não funciona'},trevas:{name:'Noite total',desc:'Escuridão quase completa'}};
 const RULE_AT={5:'poucas',9:'sempisao',13:'trevas',17:'poucas',21:'sempisao'};
 // a world with a fixed sky (Getsêmani at night, the resurrection garden at dawn) keeps it on all four levels
 const LEVELS=[];WORLDS.forEach((w,wi)=>{for(let l=0;l<4;l++){const n=wi*4+l;LEVELS.push({id:(wi+1)+'-'+(l+1),wi,l,n,night:w.sky?w.sky==='night':l%2===1||RULE_AT[n]==='trevas',boss:l===3?w.boss:null,rule:RULE_AT[n]||null})}});
+// players who won a level before its card reward existed get the card now
+{const late=LEVELS.map(l=>UNLOCK_ORDER[l.n]).filter((k,i)=>k&&META.done[LEVELS[i].id]&&!META.unlocked.includes(k));
+  if(late.length){late.forEach(k=>{META.unlocked.push(k);META.seen.c[k]=1});saveMeta();setTimeout(()=>toast('Cartas novas da Aventura',late.slice(0,4).map(k=>CARDS[k].name).join(', ')+(late.length>4?' e outras '+(late.length-4):'')),1500)}}
 const starsOf=id=>(META.stars||{})[id]||0;
 const starStr=n=>'★'.repeat(n)+'☆'.repeat(3-n);
 const levelOpen=n=>n===0||!!META.done[LEVELS[n-1].id];
