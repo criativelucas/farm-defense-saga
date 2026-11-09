@@ -47,6 +47,20 @@ const EN={
   leviata:{name:'Leviatã',hp:700,spd:7,rew:80,dmg:15,fly:0,w:44,h:24,c:'#2a6a7a',glow:'#5af0c0',weak:null,boss:1,ref:'Isaías 27:1',desc:'Chefe. Mergulha, fica intocável e surge atordoando as árvores.'}
 };
 EN.sombra={name:'A Sombra da Morte',hp:820,spd:6,rew:90,dmg:15,fly:0,w:34,h:44,c:'#4a3a6a',glow:'#3a2a5a',weak:null,boss:1,ref:'Salmos 23:4',desc:'Chefe final. Faz adormecer as árvores perto dela; um pisão acorda. Furiosa, chama pragas.'};
+// more works of the flesh, each with its own trick (like the zombies of a tower defense, but from the Bible's lists of sins)
+Object.assign(EN,{
+  soberba:{name:'Soberba',hp:9,armor:14,spd:18,rew:7,dmg:1,fly:0,w:10,h:13,c:'#c89a28',glow:'#ffd34a',weak:'lirio',ai:'armor',ref:'Provérbios 16:18',desc:'Usa uma coroa que aguenta os primeiros golpes. Sem ela, cai e anda devagar.'},
+  preguica:{name:'Preguiça',hp:22,spd:9,rew:8,dmg:2,fly:0,w:14,h:10,c:'#8a9aa8',glow:'#c8d8e8',weak:'videira',ai:'nap',ref:'Provérbios 6:9',desc:'Lenta e cheia de vida. Às vezes cochila: dormindo, leva o dobro de dano.'},
+  mentira:{name:'Mentira',hp:7,spd:26,rew:6,dmg:1,fly:0,w:8,h:11,c:'#c8c8e0',glow:'#e8e8ff',weak:'roma',ai:'disguise',ref:'João 8:44',desc:'Anda disfarçada e as árvores não a veem. Chegue perto ou deixe-a avançar para revelá-la.'},
+  avareza:{name:'Avareza',hp:12,spd:20,rew:6,dmg:1,fly:0,w:10,h:12,c:'#3a9a4a',glow:'#9ff7b8',weak:'amendoeira',ai:'greed',ref:'Lucas 12:15',desc:'Junta o maná e as moedas do chão e fica mais forte. Derrotada, devolve tudo em dobro.'},
+  murmuracao:{name:'Murmuração',hp:10,spd:16,rew:7,dmg:1,fly:0,w:10,h:12,c:'#9a7a5a',glow:'#d8b890',weak:'oliveira',ai:'summon',ref:'Números 14:2',desc:'Reclama sem parar, e cada reclamação vira um murmurinho que corre na frente.'},
+  murmurinho:{name:'Murmurinho',hp:2,spd:34,rew:1,dmg:1,fly:0,w:4,h:5,c:'#b89870',glow:'#e8c8a0',weak:'oliveira',hide:1,desc:'Uma reclamação pequena.'},
+  calunia:{name:'Calúnia',hp:8,spd:22,rew:6,dmg:1,fly:0,w:9,h:11,c:'#a04a8a',glow:'#ff8ad8',weak:'tamareira',ai:'spit',ref:'Provérbios 10:18',desc:'Para de longe e atira palavras que atordoam as árvores por 2 segundos.'},
+  rebeldia:{name:'Rebeldia',hp:11,spd:24,rew:6,dmg:1,fly:0,w:9,h:12,c:'#c83030',glow:'#ff6a4a',weak:'figueira',ai:'vault',ref:'1 Samuel 15:23',desc:'Pula por cima de cercas, espantalhos e lama, e de vez em quando dá um salto para a frente.'},
+  vaidade:{name:'Vaidade',hp:9,spd:20,rew:6,dmg:1,fly:0,w:9,h:12,c:'#d890d8',glow:'#ffc8ff',weak:'sarca',ai:'mirror',ref:'Eclesiastes 1:2',desc:'Carrega um espelho que reflete os 3 primeiros tiros das árvores. Golpe e pisão quebram o espelho.'},
+  amargura:{name:'Amargura',hp:14,spd:20,rew:7,dmg:2,fly:0,w:10,h:10,c:'#6a4a2a',glow:'#c8a060',weak:'mostarda',ai:'burrow',ref:'Hebreus 12:15',desc:'Uma raiz que avança por baixo da terra, intocável, e brota no meio do caminho. Um pisão em cima a arranca.'},
+  medo:{name:'Medo',hp:6,spd:30,rew:5,dmg:1,fly:1,w:8,h:9,c:'#5a5a8a',glow:'#a8a8ff',weak:'lirio',ai:'fear',ref:'2 Timóteo 1:7',desc:'Grita e as árvores perto dele travam por um instante. Foge quando você chega perto.'}
+});
 const VICE_REF='Gálatas 5:19-21';
 
 // ---------- journey: three acts, each with two scenarios and a boss
@@ -55,13 +69,15 @@ const ACTS=[
   {name:'Ato II',title:'O Êxodo',pool:['mar','sinai'],boss:'farao',arena:'mar'},
   {name:'Ato III',title:'A Vigília',pool:['babel','getsemani'],boss:'leviata',arena:'abismo'}
 ];
-const WAVE_POOL=[['odio','inveja','discordia','gula','embriaguez','ira'],
-  ['odio','inveja','discordia','gula','embriaguez','feitico','contenda','faccoes','ambicao','ira','ciume'],
-  ['odio','inveja','discordia','gula','embriaguez','feitico','contenda','faccoes','ambicao','impureza','ciume','heresia']];
+const WAVE_POOL=[['odio','inveja','discordia','gula','embriaguez','ira','soberba','preguica','mentira'],
+  ['odio','inveja','discordia','gula','embriaguez','feitico','contenda','faccoes','ambicao','ira','ciume','murmuracao','rebeldia','calunia','avareza'],
+  ['odio','inveja','discordia','gula','embriaguez','feitico','contenda','faccoes','ambicao','impureza','ciume','heresia','vaidade','amargura','medo','calunia']];
 // adventure levels meet the works of the flesh one at a time, in this order; each level mixes the six newest it knows
-const PEST_ORDER=['odio','discordia','inveja','embriaguez','ira','gula','feitico','contenda','ciume','faccoes','impureza','heresia','ambicao'];
-const levelPool=n=>{const k=Math.min(PEST_ORDER.length,2+Math.floor(n*.6));return PEST_ORDER.slice(Math.max(0,k-6),k)};
-const COST={odio:2,inveja:2,discordia:1,gula:6,embriaguez:3,feitico:3,contenda:4,faccoes:3,ambicao:8,impureza:5,ira:3,ciume:3,heresia:4};
+const PEST_ORDER=['odio','discordia','inveja','embriaguez','ira','soberba','gula','preguica','feitico','mentira','contenda','ciume','murmuracao','faccoes','rebeldia','impureza','calunia','avareza','heresia','vaidade','ambicao','amargura','medo'];
+// a new work of the flesh about every level; each level mixes the seven newest it knows
+const levelPool=n=>{const k=Math.min(PEST_ORDER.length,2+Math.floor(n*.8));return PEST_ORDER.slice(Math.max(0,k-7),k)};
+const COST={odio:2,inveja:2,discordia:1,gula:6,embriaguez:3,feitico:3,contenda:4,faccoes:3,ambicao:8,impureza:5,ira:3,ciume:3,heresia:4,
+  soberba:4,preguica:5,mentira:3,avareza:3,murmuracao:4,calunia:4,rebeldia:3,vaidade:4,amargura:4,medo:3};
 function genWave(act,i,kind,ascN,only){
   const pool=only||WAVE_POOL[act],L=[],theme=rpick(pool);
   let budget=(16+act*15+i*7+(kind==='elite'?8:0))*(ascN>=5?1.2:1);

@@ -2,6 +2,9 @@
 function drawEnemy(e){
   if(S.mini==='escuro'&&!darkVisible(e))return;
   const d=EN[e.k];
+  // a root moving underground: a mound of earth with cracks; a lie in disguise: only a faint shape
+  if(e.dive>0&&d.ai==='burrow'){const X=Math.round(e.x),Y=Math.round(gy(e.x));r(X-5,Y-2,10,2,'#5a3a20');r(X-3,Y-3,6,1,'#7a5430');for(let i=0;i<3;i++)r(X+4+i*4,Y-1,2,1,'#3a2414');if(Math.random()<.3)S.parts.push({x:e.x+rnd(-4,4),y:Y-2,vx:rnd(-10,10),vy:rnd(-30,-10),g:200,life:.4,max:.4,c:'#7a5430',s:1});return}
+  if(e.dive>0&&d.ai==='disguise'){x.globalAlpha=.22+.08*Math.sin(S.t*5);enemyBody(e);x.globalAlpha=1;return}
   if(e.dive>0){for(let i=0;i<4;i++)r(e.x-16+i*10+Math.sin(S.t*6+i)*2,e.y-3-((S.t*20+i*7)%6),2,1,'#bfe8ff');return}
   if(!d.fly){const sw=Math.min(d.w+2,30);x.fillStyle='rgba(20,8,20,.28)';x.fillRect(Math.round(e.x-sw/2),gy(e.x)-.5,sw,1.5)}
   // a furious boss: a pulsing red outline twice as thick, embers rising from it
@@ -13,6 +16,7 @@ function drawEnemy(e){
   OV=e.flash>0?'#ffffff':e.frz>0?'#a8ecff':null;enemyBody(e);OV=null;x.restore();
   if(e.shield){x.globalAlpha=.35+Math.sin(S.t*6)*.1;ring(e.x,ecy(e),Math.max(d.w,d.h)/2+3,'#9ab0ff');x.globalAlpha=1}
   drawTelegraph(e);
+  if(e.armorMax&&e.armor>0){const w=Math.min(24,d.w+2),top=(d.fly?e.y-d.h/2:e.y-d.h)-9;r(e.x-w/2,top,w,2,'#2a2a2a');r(e.x-w/2,top,w*e.armor/e.armorMax,2,'#d8d8e0')}
   if(e.hp<e.max&&!d.boss){const w=Math.min(24,d.w+2),top=(d.fly?e.y-d.h/2:e.y-d.h)-6;r(e.x-w/2,top,w,2,'#2a0c14');r(e.x-w/2,top,Math.max(0,w*e.hp/e.max),2,d.elite?'#f7c948':'#ff4f7b')}
 }
 // every work of the flesh, the elite and the bosses live in sprites.js (SPR)

@@ -60,6 +60,23 @@ async function packs(label){
   const r=await js(`(()=>{let bad=0;for(let i=0;i<300;i++){const a=rollPack('arca'),b=rollPack('bencao'),s=rollPack('semeador');if(a.length!==5||RAR_ORDER.indexOf(a[4].rk)<2||RAR_ORDER.indexOf(b[4].rk)<1||s.length!==4)bad++}
     const st=[...Array(12)].map(()=>grantCard({k:'figueira',rk:'rara',foil:false}).st);return JSON.stringify({bad,st:[...new Set(st)],lv:cardLv('figueira')})})()`);
   const o=JSON.parse(r||'{}');check(label+': packs',o.bad===0&&o.st&&o.st.every(s=>['nova','copia','nivel','moedas'].includes(s))&&o.lv>=1,r)}
+// each newer work of the flesh does its trick
+async function pests(label){
+  const r=await js(`(()=>{Object.keys(EN).forEach(k=>META.seen.e[k]=1);startLevel(0);startLevelBattle();S.dialog=null;S.intro=null;tutStep=-1;S.state='wave';S.q=[];S.en=[];const o={};
+    const T=(k,x)=>{const e=spawn(k,x??300);return e};
+    let e=T('soberba');damage(e,5,'videira');o.armor=e.armor>0&&e.hp===e.max;damage(e,99,'videira');o.crownOff=!!e.humbled||e.hp<=0;
+    e=T('vaidade');damage(e,5,'videira');damage(e,5,'videira');damage(e,5,'videira');o.mirror=e.hp===e.max&&e.mirror===0;
+    e=T('mentira',500);o.hidden=e.dive>0&&!nearest(500,ecy(e),200);S.p.x=500;update(1/60);o.revealed=!(e.dive>0);S.p.x=60;
+    e=T('amargura',600);o.buried=e.dive>0;e.x=MAP.ww*.4;update(1/60);o.surfaced=!(e.dive>0);
+    e=T('avareza',300);S.drops.push({x:e.x,y:e.y,vx:0,vy:0,v:1,t:1,g:0,coin:1});update(1/60);o.greed=(e.loot||0)>0;
+    e=T('murmuracao',300);e.mt=0;update(1/60);o.summon=S.en.some(x=>x.k==='murmurinho');
+    e=T('preguica',300);e.nt=0;update(1/60);const h=e.hp;damage(e,2,'videira');o.nap=e.napT>0&&h-e.hp>=4*0.99*Math.min(1,1);
+    MAP.slots.forEach((s,i)=>{if(!S.tw[i])plantAt(i,['videira'],false,0);S.tw[i].grow=1});
+    const s=MAP.slots[3];e=T('calunia',s.x+40);e.y=gy(e.x);e.ct=0;update(1/60);o.spit=S.tw[3].stun>0;
+    e=T('medo',s.x+10);e.ft=0;S.tw.forEach(t=>t&&(t.stun=0));update(1/60);o.fear=S.tw[3].stun>0;
+    e=T('rebeldia',300);e.jt=0;update(1/60);o.vault=e.vault>0;
+    for(let i=0;i<120;i++)update(1/60);draw();return JSON.stringify(o)})()`);
+  const o=JSON.parse(r||'{}'),bad=Object.entries(o).filter(([,v])=>!v).map(([k])=>k);check(label+': new pests',Object.keys(o).length===13&&!bad.length,bad.join(', ')||r)}
 // a short battle in every world: plant, call the wave, let it run, draw frames
 async function battles(label){
   for(let w=0;w<7;w++){const before=errors.length;
@@ -102,7 +119,7 @@ async function audio(label){const before=errors.length;
   check(label+': áudio '+r,errors.length===before&&r==='files,sfx,titulo,mundo,tambores',errors.slice(before).join(' | ').slice(0,200))}
 
 console.log('— new player');await load(true,false);await loopAndScene('new');
-console.log('— player with progress');await js(`Object.assign(META,{intro:1,tut:1,coins:5000});['1-1','1-2','1-3','1-4','2-1','2-4'].forEach(i=>META.done[i]=1);saveMeta();1`);await everyScreen('progress');await farmers('progress');await packs('progress');await battles('progress');await goals('progress');await minis('progress');await audio('progress');
+console.log('— player with progress');await js(`Object.assign(META,{intro:1,tut:1,coins:5000});['1-1','1-2','1-3','1-4','2-1','2-4'].forEach(i=>META.done[i]=1);saveMeta();1`);await everyScreen('progress');await farmers('progress');await packs('progress');await pests('progress');await battles('progress');await goals('progress');await minis('progress');await audio('progress');
 console.log('— embed with gamepad blocked');await load(false,true);await loopAndScene('blocked-pad');
 const fails=checks.filter(c=>!c[1]);console.log(`\n${checks.length-fails.length}/${checks.length} checks passed`+(errors.length?`; ${errors.length} error(s) logged:`:''));
 errors.forEach(e=>console.log('  · '+String(e).split('\n').slice(0,3).join(' / ')));

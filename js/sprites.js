@@ -152,6 +152,51 @@ Object.assign(SPR,{
     P(-10,-66,13,12,'#c78b5a');P(-14,-70,21,7,'#f7c948');for(let i=0;i<21;i+=3)P(-14+i,-70,1,7,'#2a5bd7');P(-14,-64,5,14,'#f7c948');P(3,-64,5,14,'#f7c948');P(-14,-60,5,1,'#2a5bd7');P(3,-60,5,1,'#2a5bd7');P(-14,-56,5,1,'#2a5bd7');
     P(-8,-61,4,2,'#ffffff');P(-8,-61,2,2,rage?'#ff2020':'#111');P(-10,-62,6,1,'#111');P(-6,-55,3,6,'#2a5bd7');P(-5,-74,3,4,'#ff4f7b');P(-6,-76,2,2,'#ff4f7b');
     P(-16,-50,4,4,'#c78b5a');for(let i=0;i<10;i++)P(-18-i,-52-i+Math.round(wave*i*.3),1,1,'#7a4b2a');P(-29,-62+Math.round(wave*3),3,3,'#f7c948')},
+  // ----- the newer works of the flesh
+  soberba(e){const t=e.t,hum=e.humbled,P=MP(e,hum?0:(t*6|0)%2),R=['#4a1e6a','#8a40c0','#c890f0'];
+    box(P,-5,-10,10,9,R);P(-4,-2,8,1,R[0]);
+    if(hum){eyes(P,-3,-7,4,{lid:R[1]});P(-1,-4,2,1,INK);P(4,-11+((t*4|0)%3),1,2,'#9ad0ff')}
+    else{P(-3,-7,2,1,INK);P(1,-7,2,1,INK);P(-3,-8,2,1,'#ffffff');P(1,-8,2,1,'#ffffff');P(-4,-6,2,1,'#f0b0d0');P(-2,-4,4,1,INK);P(1,-5,1,1,INK)}
+    if(!hum&&(e.armor==null||e.armor>0)){const cr=e.armorMax&&e.armor<e.armorMax*.5,G=['#8a5a08','#e8b020','#fff0a0'];box(P,-5,-14,10,4,G);for(const cx of[-5,-1,3])P(cx,-16,2,2,G[1]);P(-1,-13,2,2,'#e0284a');P(3,-13,1,1,'#5ab0ff');P(-4,-13,1,1,'#5ab0ff');if(cr){P(0,-14,1,4,'#4a2a04');P(1,-12,1,1,'#4a2a04')}}
+    feet(P,t,-4,2,'#2a0e3a',hum?5:10)},
+  preguica(e){const t=e.t,nap=e.napT>0,P=MP(e,nap?0:Math.round(Math.sin(t*2))),R=['#4a5a68','#8a9aa8','#c8d8e0'];
+    box(P,-7,-9,14,8,R);P(-6,-3,12,1,R[0]);P(-5,-9,3,1,R[2]);
+    if(nap){P(-5,-6,3,1,INK);P(1,-6,3,1,INK);P(-1,-4,2,1,'#7a5a5a')}else{eyes(P,-5,-7,5,{lid:R[1],h:2});P(-1,-4,3,1,INK)}
+    P(-8,-5+(nap?2:0),2,4,R[1]);P(6,-5+(nap?2:0),2,4,R[1]);P(-8,-2+(nap?2:0),2,1,'#e8e0c0');P(6,-2+(nap?2:0),2,1,'#e8e0c0');
+    feet(P,t,-5,3,'#2a3440',nap?0:4)},
+  mentira(e){const t=e.t,P=MP(e,(t*8|0)%2),R=['#2a1e3a','#5a4a7a','#8a7ab0'];
+    box(P,-4,-10,8,9,R);P(-1,-8,2,2,'#ff3a5a');P(2,-8,1,2,'#ff3a5a');
+    box(P,-7,-11,6,7,['#a8a0b8','#f4f0f8','#ffffff']);P(-6,-9,1,1,INK);P(-4,-9,1,1,INK);P(-6,-7,3,1,INK);P(-6,-8,1,1,INK);P(-3,-8,1,1,INK);P(-4,-11,1,1,'#ffd34a');
+    P(-2,-4,1,3,'#8a7ab0');feet(P,t,-3,1,'#1a1028')},
+  avareza(e){const t=e.t,P=MP(e,(t*7|0)%2),R=['#1a5a28','#3a9a4a','#8ae08a'],bag=Math.min(4,((e.loot||0)/3)|0);
+    box(P,-4,-11,8,10,R);eyes(P,-3,-8,4,{brow:1});P(-3,-7,1,1,'#ffd34a');P(1,-7,1,1,'#ffd34a');P(-2,-4,4,1,INK);P(-1,-4,1,1,'#ffd34a');
+    const bw=6+bag,bh=6+bag;box(P,-5-bw+3,-bh-1,bw,bh,['#6a3a14','#b0743a','#e0b070']);P(-4-bw+3+(bw>>1),-bh-2,2,2,'#6a3a14');P(-3-bw+3+(bw>>1),(-bh/2-2)|0,2,2,'#ffd34a');P(-3-bw+3+(bw>>1),(-bh/2-2)|0,1,1,'#fff6c0');
+    feet(P,t,-3,1,'#0e3a18')},
+  murmuracao(e){const t=e.t,talk=(t*8|0)%2,P=MP(e,(t*6|0)%2),R=['#5a3a20','#9a7a5a','#d8b890'];
+    box(P,-5,-11,10,10,R);eyes(P,-4,-8,5,{brow:1});P(-3,-5,5,talk?3:1,INK);if(talk)P(-2,-4,3,1,'#c04a4a');
+    P(-6,-6,12,2,R[0]);P(-6,-6,12,1,R[1]);
+    for(let i=0;i<3;i++)if((t*3+i)%3<1.6)P(-9-i*2,-12+i*2,1,1,'#fff3d0');feet(P,t,-4,2,'#3a2410')},
+  murmurinho(e){chunkSpark(e,['#7a5a3a','#b89870','#e8c8a0'],1)},
+  calunia(e){const t=e.t,P=MP(e,(t*6|0)%2),R=['#5a1a4a','#a04a8a','#e08ac8'],fl=(t*10|0)%3;
+    box(P,-4,-11,8,10,R);eyes(P,-3,-8,4,{brow:1,h:1});P(-5,-5,7,2,INK);P(-4,-5,5,1,'#ff9ab0');
+    if(fl){P(-7,-4,3,1,'#e0284a');P(-8,-5,1,1,'#e0284a');P(-8,-3,1,1,'#e0284a')}feet(P,t,-3,1,'#3a0e2e')},
+  rebeldia(e){const t=e.t,air=e.vault>0,P=MP(e,air?Math.round(Math.sin((1-e.vault/.55)*Math.PI)*12):(t*9|0)%2),R=['#7a1414','#c83030','#ff7a5a'];
+    P(-4,-14,1,3,'#2a0a0a');P(-5,-15,1,2,'#2a0a0a');P(3,-14,1,3,'#2a0a0a');P(4,-15,1,2,'#2a0a0a');
+    box(P,-4,-11,8,10,R);eyes(P,-3,-8,4,{brow:1});P(-2,-4,4,1,INK);P(4,-10,3,2,'#ffd34a');P(6,-11,2,2,'#ffd34a');
+    P(-6,-7,2,2,R[2]);if(air){P(-3,-1,2,1,'#3a0808');P(1,-1,2,1,'#3a0808')}else feet(P,t,-3,1,'#3a0808',14)},
+  vaidade(e){const t=e.t,P=MP(e,(t*5|0)%2),R=['#8a3a8a','#d890d8','#ffd0ff'];
+    box(P,-3,-11,8,10,R);P(-2,-8,2,2,'#ffffff');P(-2,-7,1,1,INK);P(2,-8,2,2,'#ffffff');P(2,-7,1,1,INK);P(-2,-9,1,1,INK);P(2,-9,1,1,INK);P(0,-5,2,1,'#e0284a');
+    for(let i=0;i<3;i++)P(-3+i*3,-12,2,1,'#ffd34a');
+    const mi=e.mirror??3;if(mi>0){P(-8,-11,5,8,'#c89a28');P(-7,-10,3,6,'#c8f0ff');P(-7,-10,1,3,'#ffffff');if(mi<3)P(-6,-8,1,3,'#5a7a9a');if(mi<2)P(-7,-7,3,1,'#5a7a9a');P(-6,-3,1,2,'#8a5a08')}
+    feet(P,t,-2,2,'#4a1a4a')},
+  amargura(e){const t=e.t,P=MP(e,(t*5|0)%2),R=['#3a2414','#6a4a2a','#9a7448'];
+    box(P,-5,-9,10,8,R);P(-3,-8,2,1,R[2]);P(-4,-6,2,2,'#c8d860');P(1,-6,2,2,'#c8d860');P(-4,-5,1,1,INK);P(1,-5,1,1,INK);P(-2,-3,4,1,INK);P(-3,-2,1,1,INK);P(2,-2,1,1,INK);
+    P(-2,-11,1,2,'#4a8a3a');P(1,-12,1,3,'#4a8a3a');P(2,-13,2,1,'#6ab04a');
+    const f=(t*8|0)%2;for(const[a,b]of[[-5,f],[-1,1-f],[3,f]])P(a,-1,2,1+b,R[0])},
+  medo(e){const t=e.t,j=Math.round(Math.sin(t*40)),X=MP({x:e.x+j*.5,y:e.y},Math.round(Math.sin(t*6))),R=['#2a2a5a','#6a6aa8','#b8b8f0'];
+    box(X,-4,-8,8,8,R);X(-4,0,2,2,R[1]);X(-1,0,2,1,R[1]);X(2,0,2,2,R[1]);
+    X(-3,-6,3,3,'#ffffff');X(1,-6,3,3,'#ffffff');X(-2,-5,1,1,INK);X(2,-5,1,1,INK);X(-1,-2,2,2,INK);
+    if((t*4|0)%2)X(5,-9,1,2,'#9ad0ff')},
   // the shadow of death (Sl 23:4): a tall tattered cloak that floats a little, an empty hood with two eyes, wisps around it
   sombra(e){const t=e.t,rage=e.ph2,P=H2(e),fl=Math.round(Math.sin(t*2)*3);
     for(let j=0;j<80;j++){const y=-88+j+fl,w=j<20?14+j*1.1:36+(j-20)*.42,c=j<6?'#6a5a8a':j<26?'#4a3a6a':j<56?'#3a2c56':'#2a2040';P(-w,y,w*2,2,c);if(j>20&&j%3===0)P(-w,y,3,2,'#5a4a7a')}
