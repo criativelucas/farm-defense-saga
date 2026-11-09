@@ -184,21 +184,31 @@ function drawWorldMap(){
 function showWorld(sel){
   if(sel!=null)selWorld=sel;else if(selWorld==null){selWorld=0;for(let i=WORLDS.length-1;i>=0;i--)if(levelOpen(i*4)){selWorld=i;break}}
   const plate=(w,i)=>{const n=LEVELS.filter(l=>l.wi===i&&META.done[l.id]).length,open=levelOpen(i*4);
-    return `<button type="button" class="isle ${selWorld===i?'on':''} ${open?'':'locked'}" style="left:${w.x/480*100}%;top:${(w.y+18)/300*100}%" data-w="${i}" ${open?'':'disabled'}><b>${w.name}</b><small>${open?n+'/4 fases':'bloqueada'}</small></button>`};
-  const w=WORLDS[selWorld];
-  const lv=LEVELS.filter(l=>l.wi===selWorld);
-  menu(`<div class="mbox wide"><div class="topbar"><button class="btn ghost" data-go="hub">‹ Menu</button><h2>Aventura</h2>${coinsTag()}</div>
-    <div class="wmap"><canvas id="wmapc" width="480" height="300"></canvas>${WORLDS.map(plate).join('')}
-</div>
-    <div class="lvpanel"><h3>${w.name}</h3><div class="lvrow">${lv.map(l=>{const open=levelOpen(l.n),done=META.done[l.id],unl=UNLOCK_ORDER[l.n];
-      return `<button type="button" class="lvl ${l.night?'night':'day'} ${done?'done':''}" data-l="${l.n}" ${open?'':'disabled'}><canvas width="16" height="16" data-sky="${l.night?1:0}"></canvas>
-        <b>${l.id}</b><small>${l.night?'Noite':'Dia'}${l.boss?' · '+EN[l.boss].name:''}${l.rule?' · '+RULES[l.rule].name:''}${l.goal?' · '+GOALS[l.goal].name:''}</small><span class="stars">${done?starStr(starsOf(l.id)):''}</span><small class="rw">${done?'vencida':open?(unl&&!META.unlocked.includes(unl)?'Nova carta: '+CARDS[unl].name:'Moedas'):'bloqueada'}</small></button>`}).join('')}</div></div></div>`);
+    return `<button type="button" class="isle ${selWorld===i?'on':''} ${open?'':'locked'}" style="left:${w.x/480*100}%;top:${(w.y+18)/300*100}%;${w.x>400?'translate:-36% 0':w.x<80?'translate:36% 0':''}" data-w="${i}" ${open?'':'disabled'}><b>${w.name}</b><small>${open?n+'/4 fases':'bloqueada'}</small></button>`};
+  const w=WORLDS[selWorld],lv=LEVELS.filter(l=>l.wi===selWorld),st=STORY[w.map]||STORY[w.arena]||['',''],wstars=lv.reduce((a,l)=>a+starsOf(l.id),0);
+  const next=LEVELS.find(l=>levelOpen(l.n)&&!META.done[l.id]);
+  // one card per level: number, sky, what is special about it, who is new, the stars won and the prize of the first win
+  const card=l=>{const open=levelOpen(l.n),done=META.done[l.id],unl=UNLOCK_ORDER[l.n],nu=(PEST_INTRO[l.n]||[]),isNext=next&&next.n===l.n;
+    const chips=[l.boss?`<span class="lc boss"><canvas width="48" height="48" data-enemy="${l.boss}"></canvas>${EN[l.boss].name}</span>`:'',
+      l.rule?`<span class="lc rule">${RULES[l.rule].name}</span>`:'',l.goal?`<span class="lc goal">${GOALS[l.goal].name}</span>`:'',
+      ...nu.map(k=>`<span class="lc new"><canvas width="48" height="48" data-enemy="${k}"></canvas>Nova: ${EN[k].name}</span>`)].join('');
+    const prize=done?`<span class="lprize got">✓</span>`:unl&&!META.unlocked.includes(unl)?`<span class="lprize card" title="Carta: ${CARDS[unl].name}"><canvas width="${MINI_W*CK}" height="${MINI_H*CK}" data-mini-unl="${unl}"></canvas></span>`:`<span class="lprize coin"><canvas width="12" height="12" class="coin"></canvas></span>`;
+    return`<button type="button" class="lvcard ${l.night?'night':'day'} ${done?'done':''} ${isNext?'next':''} ${open?'':'locked'}" data-l="${l.n}" ${open?'':'disabled'}>
+      <span class="lnum"><canvas width="16" height="16" data-sky="${l.night?1:0}"></canvas><b>${l.id}</b></span>
+      <span class="linfo"><i>${l.night?'Noite':'Dia'}${l.boss?' · Chefe':''}</i><span class="lchips">${chips||'<span class="lc">Fase comum</span>'}</span></span>
+      <span class="lend"><span class="stars">${done?starStr(starsOf(l.id)):open?'':'🔒'}</span>${isNext?'<b class="lgo">Jogar ›</b>':prize}</span></button>`};
+  menu(`<div class="mbox wide modern adv"><div class="topbar"><button class="btn ghost" data-go="hub">‹ Menu</button><h2>Aventura</h2>${coinsTag()}</div>
+    <div class="wmap"><canvas id="wmapc" width="480" height="300"></canvas>${WORLDS.map(plate).join('')}</div>
+    <div class="lvpanel"><div class="whead"><small>Capítulo ${selWorld+1} de ${WORLDS.length}</small><h3>${w.name}</h3>
+      <div class="wstars"><i style="width:${wstars/12*100}%"></i><span>★ ${wstars}/12</span></div><p>${st[1]} <em>${st[0]}</em></p></div>
+      <div class="lvrow">${lv.map(card).join('')}</div></div></div>`);
   paintCoins();
   $('menu').querySelectorAll('canvas[data-sky]').forEach(c=>{const g=c.getContext('2d');C=g;if(c.dataset.sky==='1'){disc(8,8,6,'#f8f0d8');disc(10,6,5,'#2a3060')}else{disc(8,8,5,'#ffd34a');for(let i=0;i<8;i++){const a=i/8*Math.PI*2;r(8+Math.cos(a)*7,8+Math.sin(a)*7,1,1,'#ffd34a')}}C=x});
   $('menu').querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>{sfx('card');showWorld(+b.dataset.w)});
   $('menu').querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{initAudio();startLevel(+b.dataset.l)});
   const bossDone=META.done[LEVELS[selWorld*4+3].id],best=(META.endless||{})[selWorld]||0;
-  $('menu').querySelector('.lvpanel').insertAdjacentHTML('beforeend',`<div class="row" style="justify-content:flex-start"><button class="btn ${bossDone?'':'ghost'}" id="endless" ${bossDone?'':'disabled'}>Modo infinito${bossDone?' · recorde '+best+' ondas':' · vença o chefe deste mundo'}</button></div>`);
+  $('menu').querySelector('.lvpanel').insertAdjacentHTML('beforeend',`<button class="btn ${bossDone?'':'ghost'} lendless" id="endless" ${bossDone?'':'disabled'}>∞ Modo infinito${bossDone?' · recorde '+best+' ondas':' · vença a última fase'}</button>`);
+  $('menu').querySelectorAll('canvas[data-mini-unl]').forEach(c=>c.getContext('2d').drawImage(cardCanvas(mk(c.dataset.miniUnl),true),0,0));
   $('endless').onclick=()=>{initAudio();startEndless(selWorld)};
   clearInterval(wmapTimer);drawWorldMap();wmapTimer=setInterval(drawWorldMap,60);
 }

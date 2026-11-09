@@ -504,10 +504,24 @@ body.lite #glow{display:none}
 #dialog .dp{width:4.4em;aspect-ratio:1;background:linear-gradient(#86c4f2,#bfe4ff);box-shadow:0 0 0 2px #1a0c06,0 0 0 4px #d0782e;overflow:hidden;display:grid;place-items:end center}
 #dialog .dp canvas{width:100%;image-rendering:pixelated;transform:scale(1.8);transform-origin:50% 62%}
 #dialog b{color:#8a1e10}#dialog p{margin:.15em 0;min-height:2.6em;line-height:1.3}#dialog small{color:#9a5a20;float:right}
-#wipe{position:absolute;inset:0;z-index:20;pointer-events:none;transform:translateX(-101%);background:
-  radial-gradient(circle at 20% 30%,#5fae4a 0 8%,transparent 9%),radial-gradient(circle at 70% 60%,#4a9a3a 0 10%,transparent 11%),radial-gradient(circle at 40% 80%,#7ac050 0 7%,transparent 8%),#2f6a2a}
-#wipe.go{animation:wipe .7s ease-in-out}@keyframes wipe{0%{transform:translateX(-101%)}45%,55%{transform:none}100%{transform:translateX(101%)}}
-@media (prefers-reduced-motion:reduce){#wipe.go{animation:none}#bossintro.show .bi{animation-duration:.01s}}
+/* the transition: an iris closes on the middle of the screen with a gold rim, leaves fall over the dark,
+   the game's tree emblem pops up at the moment it is closed, then the iris opens again */
+@property --wr{syntax:'<length-percentage>';inherits:true;initial-value:150%}
+#wipe{position:absolute;inset:0;z-index:20;pointer-events:none;visibility:hidden;--wr:150%;--wd:#170d1c;--wl:#2a1a30;--wg:#ffd23a}
+#wipe.go{visibility:visible;animation:wipeiris 1s cubic-bezier(.6,0,.4,1) forwards}
+@keyframes wipeiris{0%{--wr:150%}44%,56%{--wr:0%}100%{--wr:150%}}
+#wipe .wiris{position:absolute;inset:0;background:
+  radial-gradient(circle at 50% 50%,transparent calc(var(--wr) - 1px),var(--wg) var(--wr),var(--wg) calc(var(--wr) + 1.2cqw),#7a4a10 calc(var(--wr) + 1.4cqw),var(--wd) calc(var(--wr) + 1.6cqw)),
+  repeating-conic-gradient(from 0deg at 50% 50%,var(--wl) 0 8deg,var(--wd) 8deg 22deg)}
+#wipe .wleaves i{position:absolute;left:var(--x);top:-6%;width:1.2cqw;height:.8cqw;border-radius:0 80% 0 80%;background:linear-gradient(135deg,#9ad860,#3a8a3a);opacity:0;transform:scale(var(--s))}
+#wipe.go .wleaves i{animation:wleaf 1s ease-in var(--d) forwards}
+@keyframes wleaf{0%{opacity:0;translate:0 0;rotate:0deg}20%{opacity:1}80%{opacity:1}100%{opacity:0;translate:4cqw 60cqw;rotate:420deg}}
+#wipe .wemb{position:absolute;left:50%;top:50%;width:11cqw;aspect-ratio:1;translate:-50% -50%;opacity:0;scale:.2}
+#wipe.go .wemb{animation:wemb 1s cubic-bezier(.2,1.6,.4,1) forwards}
+@keyframes wemb{0%,30%{opacity:0;scale:.2;rotate:-20deg}46%{opacity:1;scale:1.15;rotate:0deg}56%{opacity:1;scale:1}70%,100%{opacity:0;scale:.6}}
+#wipe .wemb canvas{width:100%;height:100%;image-rendering:pixelated;filter:drop-shadow(0 0 1.5cqw #ffd23a99) drop-shadow(0 .4cqw 0 #0008)}
+#wipe.white{--wd:#fffbe8;--wl:#fff0c8;--wg:#ffd23a}
+@media (prefers-reduced-motion:reduce){#wipe.go{animation:wipeiris .01s forwards}#bossintro.show .bi{animation-duration:.01s}}
 body.big #menu{font-size:max(12px,1.85cqw)}body.big .hud{font-size:max(12px,2.3cqw)}body.big #hand{font-size:max(11px,1.55cqw)}body.big #treeinfo,body.big #dialog{font-size:max(11px,1.75cqw)}
 .garden .gbar{gap:.35em}.gtool.shopb{min-width:5em;align-content:center}.gtool.shopb b{font-size:.95em}
 .gbar.seeds{min-height:3em;background:#2a1a10}.gbar.seeds small{color:#c9a99a;align-self:center}
@@ -1007,3 +1021,52 @@ body.cb #hpfill{background:linear-gradient(#9ad8ff,#3a8ad8)!important}
 @keyframes tutbob{to{translate:-50% -145%}}
 .hc2.tutglow{filter:drop-shadow(0 0 6px #ffd23a) drop-shadow(0 0 2px #fff) drop-shadow(0 4px 0 #000b)!important;transform:rotate(0) translateY(-10px)!important;z-index:3}
 #timer.tutglow{box-shadow:0 0 0 2px #ffd23a,0 0 12px #ffd23a}
+
+/* the white wipe into the finale */
+/* ---- finale ---- */
+#menu.scene:has(.finale){padding:0;display:block;background:radial-gradient(ellipse at 50% 40%,#2a1a3a55,#0c0814cc 80%)}
+.finale{position:absolute;inset:0;display:grid;align-content:center;justify-items:center;gap:1.1cqw;font-size:max(10px,1.35cqw);text-align:center;color:#fff3d0;padding:0 6%}
+.finale .fbar{position:absolute;left:0;right:0;height:7%;background:#000;animation:csbar .8s ease-out both}.finale .fbar.top{top:0}.finale .fbar.bot{bottom:0}
+.fl{opacity:0;animation:flin 1s cubic-bezier(.2,1,.4,1) var(--d) forwards}@keyframes flin{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.finale small{letter-spacing:.25em;text-transform:uppercase;color:#d8c8a8}
+.finale h1{margin:.1em 0;font-family:var(--title);font-weight:400;font-size:3.2em;color:#ffe9a0;letter-spacing:.03em;text-shadow:0 4px 0 #3a1a08,0 0 30px #ffd23a88}
+.finale p{margin:0;max-width:52em;line-height:1.35;text-shadow:0 2px 0 #000}
+.fparade{display:flex;gap:.6em;align-items:flex-end}.fparade span{display:grid;justify-items:center;gap:.1em;animation:herobob 1.6s ease-in-out infinite;animation-delay:calc(var(--i) * .15s)}
+.fparade canvas{width:3.6em;height:auto;image-rendering:pixelated;filter:drop-shadow(0 4px 0 #0008)}.fparade b{font-size:.75em}
+.fparade .me canvas{width:5em;filter:drop-shadow(0 0 10px #ffe9a0) drop-shadow(0 4px 0 #0008)}.fparade .me b{color:#ffd23a}
+.fstory{font-size:1.05em;color:#fbe9d0}
+.fworlds{display:flex;flex-wrap:wrap;justify-content:center;gap:.4em}.fworlds span{display:grid;padding:.25em .7em;border-radius:6px;background:#0007;box-shadow:inset 0 0 0 1px #ffffff26}
+.fworlds b{font-size:.8em}.fworlds i{font-style:normal;color:#ffd23a;letter-spacing:.1em}
+.fstats{display:flex;gap:1.6em}.fstats span{display:grid;font-size:.85em;color:#d8c8a8}.fstats b{font-size:1.8em;color:#ffe9a0;font-family:var(--title);font-weight:400}
+.fverse{font-style:italic;color:#e8f4d8;font-size:1em}
+.frow{display:flex;gap:.8em;margin-top:.4em}
+
+/* ---- adventure: the world on the left, the chapter and its four levels on the right ---- */
+.adv .wmap{box-shadow:0 0 0 3px #3a4a6a,0 0 0 6px #0a0e18,0 8px 0 4px #0006;border-radius:8px}
+.adv .lvpanel{display:grid;gap:.45em;align-content:start;text-align:left;background:none;border:0;box-shadow:none;padding:0}
+.whead{display:grid;gap:.2em;padding:.5em .7em;border-radius:8px;background:linear-gradient(135deg,#ffffff14,#ffffff05);box-shadow:inset 0 0 0 1px #ffffff1f}
+.whead small{letter-spacing:.2em;text-transform:uppercase;color:#8aa0c0;font-size:.65em}
+.whead h3{margin:0;font-family:var(--title);font-weight:400;font-size:1.6em;color:#ffe9a0;letter-spacing:.03em;text-shadow:0 2px 0 #000}
+.whead p{margin:0;font-size:.72em;line-height:1.3;color:#c8d0e0}.whead em{color:#c8a870;font-style:normal;white-space:nowrap}
+.wstars{position:relative;height:1em;border-radius:999px;background:#0a0e18;box-shadow:inset 0 0 0 1px #ffffff1a;overflow:hidden}
+.wstars i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#e8a020,#ffd23a)}.wstars span{position:absolute;inset:0;display:grid;place-items:center;font-size:.7em;font-weight:700;text-shadow:0 1px 0 #000}
+.adv .lvrow{display:grid;grid-template-columns:1fr;gap:.35em}
+.lvcard{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:.6em;padding:.35em .55em;font:inherit;color:#eef2f8;text-align:left;cursor:pointer;border:0;border-radius:8px;
+  box-shadow:inset 0 0 0 1px #ffffff22,0 3px 0 #0007;transition:transform .15s cubic-bezier(.2,1.6,.4,1),box-shadow .15s;animation:cardin .4s cubic-bezier(.2,1.3,.5,1) backwards}
+.lvcard:nth-child(2){animation-delay:.05s}.lvcard:nth-child(3){animation-delay:.1s}.lvcard:nth-child(4){animation-delay:.15s}
+.lvcard.day{background:linear-gradient(100deg,#2a5a8acc,#1e2a44ee 65%)}.lvcard.night{background:linear-gradient(100deg,#2a2a6acc,#14142aee 65%)}
+.lvcard:hover:not(:disabled){transform:translateX(4px);box-shadow:inset 0 0 0 1px #ffffff44,0 0 14px #5ab8ff44,0 3px 0 #0007}
+.lvcard.done{box-shadow:inset 3px 0 0 #4cc46e,inset 0 0 0 1px #ffffff22,0 3px 0 #0007}
+.lvcard.next{box-shadow:inset 0 0 0 2px #ffd23a,0 0 16px #ffd23a55,0 3px 0 #0007}
+.lvcard.locked{opacity:.45;cursor:not-allowed;filter:grayscale(.6)}
+.lnum{display:grid;justify-items:center;gap:.05em;min-width:2.6em}.lnum canvas{width:1.5em;height:1.5em;image-rendering:pixelated}.lnum b{font-family:var(--title);font-weight:400;font-size:1.25em;color:#fff;text-shadow:0 2px 0 #000}
+.linfo{display:grid;gap:.2em;min-width:0}.linfo>i{font-style:normal;font-size:.68em;color:#a8b8d0}
+.lchips{display:flex;flex-wrap:wrap;gap:.25em}
+.lc{display:inline-flex;align-items:center;gap:.25em;padding:.05em .45em;border-radius:999px;font-size:.66em;font-weight:700;background:#ffffff1a;white-space:nowrap}
+.lc canvas{width:1.5em;height:1.5em;image-rendering:pixelated;margin:-.2em 0}
+.lc.boss{background:#c8303a;color:#fff}.lc.rule{background:#7a3aa8;color:#fff}.lc.goal{background:#2a8a7a;color:#fff}.lc.new{background:#e8a020;color:#2a1408}
+.lend{display:grid;justify-items:end;gap:.1em}.lend .stars{font-size:.8em;color:#ffd23a;letter-spacing:.05em;text-shadow:0 1px 0 #000}
+.lprize canvas{display:block;image-rendering:pixelated}.lprize.card canvas{width:1.9em;height:auto;filter:drop-shadow(0 2px 0 #0008)}.lprize.coin canvas{width:1.1em}
+.lprize.got{color:#4cc46e;font-weight:700}
+.lgo{font-size:.85em;padding:.15em .6em;border-radius:999px;background:#ffd23a;color:#2a1408;animation:pkpulse 1s ease-in-out infinite}
+.lendless{justify-self:stretch;font-size:.85em}

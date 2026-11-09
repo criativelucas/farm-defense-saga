@@ -364,7 +364,39 @@ function showAltar(){
 }
 
 // ---------- after a battle
+// the last enemy falls: slow motion with the camera closing in on the farmer, the trees cheer, fruit-colored
+// fireworks, the coins on the ground come home; then a wipe into the results. A defeat gets a short, quiet version.
+function celebrate(done,win){if(S.celebrating)return;S.celebrating=1;S.state='victory';S.vicWin=win;S.vicT=win?3.2:2;S.vicDone=done;S.vicFw=0;
+  S.slow=win?1.6:1.2;S.zoomTo={x:S.p.x,y:S.p.y-12};MUS.mode='calm';['tut','tutarrow'].forEach(id=>$(id).hidden=true);
+  if(win){let c=0;S.drops.forEach(d=>{if(d.coin&&!d.got){c+=d.v;d.got=1}});S.drops=S.drops.filter(d=>!d.got);if(c){S.coins+=c;pop(S.p.x,S.p.y-30,'+'+c+' moedas','#f7c948',9)}
+    banner('Vitória!','O jardim está a salvo');sfx('ach');flash(.4,'255,240,180');S.en.forEach(e=>{e.hp=0;deathFx(e)});S.en=[]}
+  else{banner('O jardim secou','Respire e tente de novo');sfx('hurt');flash(.3,'60,20,40')}}
+function updVictory(rdt,dt){S.vicT-=rdt;const P=S.p;
+  if(S.vicWin){S.vicFw-=rdt;if(S.vicFw<=0){S.vicFw=.22;const fx=S.cam+rnd(30,W-30),fy=rnd(20,90),cols=[pick(Object.values(FRUIT_COL)),'#ffffff','#fff6c0'];
+      for(let i=0;i<22;i++){const a=i/22*Math.PI*2,v=rnd(40,80);S.parts.push({x:fx,y:fy,vx:Math.cos(a)*v,vy:Math.sin(a)*v,g:40,life:.9,max:.9,c:cols[i%3],s:1})}sfx('pop')}
+    S.tw.forEach((t,i)=>{if(!t)return;t.pulse=Math.max(t.pulse,.6);if(Math.random()<rdt*3)leaf(MAP.slots[i],t.kinds[0])});
+    if(P.on&&Math.random()<rdt*1.5){P.vy=-160;P.on=false;P.sq=.7}}
+  else if(Math.random()<rdt*6)S.parts.push({x:S.cam+rnd(0,W),y:-4,vx:rnd(-10,10),vy:rnd(20,40),g:0,life:3,max:3,c:pick(['#8a7a50','#6a5a3a','#a89a70']),s:1,sway:1});
+  if(P.vy!==0||!P.on){P.vy=Math.min(P.vy+560*dt,400);P.y+=P.vy*dt;const f=gy(P.x);if(P.y>=f){P.y=f;P.vy=0;P.on=true}}
+  P.sq+=(1-P.sq)*Math.min(1,dt*12);
+  if(S.vicT<.8&&!S.vicWiped){S.vicWiped=1;wipe()}
+  if(S.vicT<=.3){S.state='menu';const f=S.vicDone;S.vicDone=null;f()}}
+// the end of the adventure: the whole company of farmers on stage, the seven gardens with their stars, what the journey
+// gathered, the closing verses; it fades in line by line over the dawn garden, and the buttons come last
+function showFinale(){const done=LEVELS.filter(l=>META.done[l.id]).length,stars=Object.values(META.stars||{}).reduce((a,b)=>a+b,0),ch=CHARS[RUN?RUN.char:META.char];
+  const own=Object.keys(CARDS).filter(k=>cardKnown(k)).length;
+  menu(`<div class="finale"><i class="fbar top"></i><i class="fbar bot"></i>
+    <div class="fl" style="--d:.3s"><small>Fim da Aventura</small><h1>Combati o bom combate</h1><p>“Completei a carreira, guardei a fé.” (2 Timóteo 4:7)</p></div>
+    <div class="fl fparade" style="--d:1.4s">${Object.keys(CHARS).map((k,i)=>`<span class="${k===(RUN?RUN.char:META.char)?'me':''}" style="--i:${i}"><canvas width="32" height="40" data-char="${k}"></canvas><b>${CHARS[k].name}</b></span>`).join('')}</div>
+    <div class="fl" style="--d:2.6s"><p class="fstory">Começou num jardim, passou por um jardim e terminou num jardim. ${ch.epi}</p></div>
+    <div class="fl fworlds" style="--d:3.6s">${WORLDS.map((w,i)=>{const s=LEVELS.filter(l=>l.wi===i).reduce((a,l)=>a+starsOf(l.id),0);return`<span><b>${w.name}</b><i>${'★'.repeat(Math.round(s/4))}${'☆'.repeat(3-Math.round(s/4))}</i></span>`}).join('')}</div>
+    <div class="fl fstats" style="--d:4.6s"><span><b>${done}/${LEVELS.length}</b>fases</span><span><b>${stars}</b>estrelas</span><span><b>${META.stats.kills}</b>obras da carne vencidas</span><span><b>${own}/${Object.keys(CARDS).length}</b>cartas</span></div>
+    <div class="fl" style="--d:5.6s"><p class="fverse">“No meio da praça, de um e de outro lado do rio, estava a árvore da vida, e as folhas da árvore são para a cura das nações.” (Apocalipse 22:2)</p><small>Obrigado por jogar Farm Defense Saga</small></div>
+    <div class="fl frow" style="--d:6.6s"><button class="btn ghost" data-go="hub">Voltar ao menu</button><button class="btn" id="fmap">Continuar no mapa</button></div></div>`);
+  $('menu').classList.add('scene');$('menu').querySelectorAll('canvas[data-char]').forEach(c=>charIconTo(c,c.dataset.char));
+  $('fmap').onclick=()=>showWorld(WORLDS.length-1);playJingle('vitoria');sfx('ach')}
 function battleWon(){
+  if(!S.celebrating)return celebrate(battleWon,true);
   if(RUN.mode==='level'){levelWon();return}
   const n=S.node,a=RUN.act;
   let gain=n.type==='chefe'?70:n.type==='elite'?45+a*10:25+a*10;RUN.siclos+=gain;
@@ -432,12 +464,13 @@ function resultBox(sc,won){return `<p class="score">${sc} pontos</p><div class="
 function wireShare(sc,won){const t=shareText(sc,won);$('share').onclick=()=>{const m=$('sharemsg');
   navigator.clipboard?.writeText(t).then(()=>m.textContent='Copiado: '+t,()=>m.textContent=t).catch(()=>m.textContent=t)||(m.textContent=t)}}
 function showOver(){
+  if(!S.celebrating)return celebrate(showOver,false);
   S.state='menu';if(RUN.mode==='level'){levelLost();return}const sc=endRun(false);
   menu(`<div class="mbox"><small class="eyebrow">${MAP.name}</small><h2>O jardim secou</h2>
     <p>“Todo ramo que dá fruto, ele o poda para que dê mais fruto.” (João 15:2). As cartas do celeiro continuam guardadas.</p>${resultBox(sc,false)}</div>`);wireShare(sc,false);
 }
 function showWin(){
-  if(RUN&&RUN.mode==='level'){const ch=CHARS[RUN.char];META.done.fim=1;saveMeta();menu(`<div class="mbox"><small class="eyebrow">O terceiro jardim</small><h1>Combati o bom combate</h1><p>Começou num jardim, passou por um jardim e terminou num jardim. “Ela, supondo ser ele o jardineiro...” (João 20:15)</p><p class="epi">${ch.epi}<br><i>${ch.epiRef}</i></p><p class="help">“E as folhas da árvore são para a cura das nações.” (Apocalipse 22:2)</p><button class="btn" data-go="hub">Voltar ao menu</button></div>`);return}
+  if(RUN&&RUN.mode==='level'){META.done.fim=1;saveMeta();return showFinale()}
   const sc=endRun(true);
   const ch=CHARS[RUN.char];
   menu(`<div class="mbox"><small class="eyebrow">O terceiro jardim</small><h1>Combati o bom combate</h1>
@@ -512,7 +545,10 @@ function frameBody(now){
     S.zoom+=((S.slow>0?1.7:1)-S.zoom)*Math.min(1,rdt*4);
     if(pr('KeyM'))setMuted(!muted);
     if(S.state==='prep'||S.state==='wave'){if(S.dialog){if(pr('Enter','Space','KeyX'))dialogNext()}else if(S.intro){if(pr('Enter','Space','KeyX'))closeFoeIntro()}else if(S.stop>0)S.stop-=rdt;else update(dt)}
-    else if(S.state==='epilogue'){updPlayer(dt);if(Math.random()<dt*4)S.parts.push({x:S.cam+rnd(0,W+60),y:rnd(-10,60),vx:rnd(-22,-8),vy:rnd(8,16),g:0,life:9,max:9,c:pick(['#ffb0c8','#ffffff','#ffe36a']),s:1,sway:1});if(S.p.x>MAP.ww-70){S.state='menu';showWin()}}
+    else if(S.state==='epilogue'){updPlayer(dt);if(Math.random()<dt*4)S.parts.push({x:S.cam+rnd(0,W+60),y:rnd(-10,60),vx:rnd(-22,-8),vy:rnd(8,16),g:0,life:9,max:9,c:pick(['#ffb0c8','#ffffff','#ffe36a']),s:1,sway:1});if(S.p.x>MAP.ww-70){S.state='finale';S.finT=2.8;S.slow=2.5;S.zoomTo={x:518,y:110};sfx('super');banner('A Árvore da Vida','Apocalipse 22:2')}}
+    else if(S.state==='victory')updVictory(rdt,dt);
+    else if(S.state==='finale'){S.finT-=rdt;for(let i=0;i<3;i++)S.parts.push({x:518+rnd(-40,40),y:rnd(60,150),vx:rnd(-20,20),vy:rnd(-40,-10),g:-5,life:1.2,max:1.2,c:pick(['#fff6c0','#ffe36a','#ffffff','#b0f090']),s:1});
+      if(S.finT<1&&!S.finWipe){S.finWipe=1;$('wipe').classList.add('white');wipe()}if(S.finT<=.5){S.state='menu';showWin();setTimeout(()=>$('wipe').classList.remove('white'),700)}}
     updFx(dt);draw();updHUD();
   }
 }
