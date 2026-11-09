@@ -53,11 +53,11 @@ function showHub(){
       ${plank('jardim','Estufa',gardenOpen()?'plante e colha':'vença Éden 1-4',!gardenOpen())}
       ${plank('minijogos','Minijogos',miniOpen('raposas')?trophies()+'/6 troféus':'vença 2 fases',!miniOpen('raposas'))}
       ${treeOwned()?plank('arvore','Árvore da Vida','nível '+META.garden.tree.lvl+'/10'):''}</div></div>
-    <div class="props">${prop('codex','Códex','#c8403a')}${prop('loja','Quitanda','#e8902a')}${shopOpen('cartas')?prop('pacotes','Pacotes','#9b5ae0',packGifts()||''):''}${prop('personagem','Lavrador','#e8b830')}${prop('missoes','Missões','#4faa4a',mr||'')}${prop('conquistas','Conquistas','#2aa8a0')}${prop('intro','Ajuda','#3a7ad8')}${prop('config','Ajustes','#7a8094')}</div>
+    <div class="props">${prop('codex','Códex','#c8403a')}${prop('loja','Quitanda','#e8902a')}${shopOpen('cartas')?prop('pacotes','Pacotes','#9b5ae0',packGifts()||''):''}${prop('personagem','Lavrador','#e8b830')}${prop('missoes','Missões','#4faa4a',mr||'')}${prop('conquistas','Conquistas','#2aa8a0')}${prop('intro','Ajuda','#3a7ad8')}${prop('config','Ajustes','#7a8094')}${prop('tela',isFull()?'Sair':'Tela cheia','#2a9a8a')}</div>
   </div>`);
   $('menu').classList.add('scene');paintCoins();barnArt();
   $('menu').querySelectorAll('canvas[data-prop]').forEach(c=>propIconTo(c,c.dataset.prop));
-  $('menu').querySelectorAll('[data-hub]').forEach(b=>{b.onmouseenter=()=>sfx('hit');b.onclick=()=>{initAudio();sfx('card');({aventura:showWorld,jardim:showGarden,arvore:showTree,intro:()=>showIntro(0),config:showConfig,loja:()=>showShop2('ferramentas'),pacotes:showPacks,personagem:showLavrador,jornada:showJornada,minijogos:showMinis,missoes:showMissions,codex:()=>showCodex('cartas'),conquistas:showAchs})[b.dataset.hub]()}});
+  $('menu').querySelectorAll('[data-hub]').forEach(b=>{b.onmouseenter=()=>sfx('hit');b.onclick=()=>{initAudio();sfx('card');({aventura:showWorld,jardim:showGarden,arvore:showTree,intro:()=>showIntro(0),config:showConfig,loja:()=>showShop2('ferramentas'),pacotes:showPacks,tela:()=>toggleFull().then(()=>setTimeout(showHub,200)),personagem:showLavrador,jornada:showJornada,minijogos:showMinis,missoes:showMissions,codex:()=>showCodex('cartas'),conquistas:showAchs})[b.dataset.hub]()}});
 }
 // a two-storey red barn seen from the front: the red wall rises into the gambrel gable, a band of slate shingles
 // caps it with a white fascia, hayloft door and pulley up top, braced doors below; dark outline all around
@@ -109,6 +109,7 @@ function propIconTo(cvs,k){const g=hdCtx(cvs,48,48,3);C=g;
     [[0,1,1,1,0],[1,0,0,0,1],[0,0,0,1,0],[0,0,1,0,0],[0,0,0,0,0],[0,0,1,0,0]].forEach((row,j)=>row.forEach((v,i)=>v&&r(19+i*2,10+j*2,2,2,'#1e4aa8')));r(15,43,18,2,'#4faa4a');r(17,41,2,2,'#4faa4a');r(29,41,2,2,'#4faa4a');return C=x}
   if(k==='config'){const cog=(cx,cy,R,n,c1,c2,c3)=>{for(let i=0;i<n;i++){const a=i/n*Math.PI*2;r(cx+Math.cos(a)*R-2,cy+Math.sin(a)*R-2,4,4,c1)}disc(cx,cy,R-1,c1);disc(cx,cy,R-2,c2);disc(cx-1,cy-1,R-4,c3);disc(cx,cy,R/3,'#2a1a1a')};
     cog(20,21,13,10,'#3a4050','#8a94a8','#c8d0e0');cog(34,34,8,8,'#6a3a08','#c88a1a','#f7c948');return C=x}
+  if(k==='tela'){const c='#ffffff',d='#1a3a3a';for(const[x0,y0,sx,sy]of[[8,8,1,1],[40,8,-1,1],[8,40,1,-1],[40,40,-1,-1]]){r(Math.min(x0,x0+sx*12),y0-(sy<0?3:0),12,3,d);r(x0-(sx<0?3:0),Math.min(y0,y0+sy*12),3,12,d);r(Math.min(x0,x0+sx*11),y0-(sy<0?2:0)+ (sy<0?0:0),11,2,c);r(x0-(sx<0?2:0),Math.min(y0,y0+sy*11),2,11,c)}r(18,18,12,12,'#9ff7e8');r(18,18,12,2,'#ffffff');return C=x}
   if(k==='pacotes'){C.save();C.translate(9,0);C.scale(.75,.75);packDraw('bencao',false);C.restore();return C=x}
   C=x}
 GO.title=showHub;GO.hub=showHub;
@@ -299,25 +300,28 @@ function attrVal(k,s){const d=atr(s,k),u=META.upg,pc=x=>Math.round(x*100)+'%';
   return ABIL[k][0]+' · '+Math.round(abilCD(k))+'s'}
 // the farmer screen: the chosen farmer on a lit pedestal with power and card, attributes and gear beside,
 // then round tokens to switch farmer and tool
-function showLavrador(){
+function showLavrador(){let ltab='perso';
   const render=()=>{const k0=META.char,ch=CHARS[k0],A=ABIL[k0]||ABIL.lavrador,w=WEAPONS[META.weapon],doneN=Object.keys(META.done).length,stars=Object.values(META.stars||{}).reduce((a,b)=>a+b,0);
     const slot=(cv,name,sub,empty)=>`<div class="slotbox ${empty?'empty':''}">${cv}<b>${name}</b><small>${sub}</small></div>`;
+    const tabs={perso:'Personagem',ferr:'Ferramentas e itens',tal:'Talentos'};
     menu(`<div class="mbox wide modern hero"><div class="topbar"><button class="btn ghost" data-go="hub">‹ Menu</button><h2>O lavrador</h2>${coinsTag()}</div>
-    <div class="herogrid">
+    <div class="mtabs">${Object.entries(tabs).map(([k,t])=>`<button type="button" class="${ltab===k?'on':''}" data-ltab="${k}">${t}</button>`).join('')}</div>
+    ${ltab==='perso'?`<div class="herogrid">
       <div class="heroshow"><div class="hstage"><canvas width="32" height="40" data-char="${k0}"></canvas></div>
         <div class="hname"><h3>${ch.name}</h3><i>${ch.ref}</i></div><p>${ch.desc}</p>
         <div class="hchips"><span class="hc-abil"><b>Poder · C</b>${A[0]}: ${A[1]}</span>${ch.card?`<span class="hc-card"><b>Carta</b>${CARDS[ch.card].name}</span>`:''}</div></div>
       <div class="herostats"><h4>Atributos</h4>${attrRows(k0,1)}
-        <div class="hprog"><span>Fases <b>${doneN}/${LEVELS.length}</b></span><span>Estrelas <b>${stars}/${LEVELS.length*3}</b></span></div>
-        <h4>Equipamento</h4><div class="slots">${slot(`<canvas width="32" height="32" data-tool="${META.weapon}"></canvas>`,w.name,'Golpe X · dano '+w.dmg)}
-        ${Object.entries(ITEMS).map(([k,it])=>slot(`<canvas width="32" height="32" data-bar="${k}"></canvas>`,it.name,'×'+(META.items[k]||0)+' · tecla '+it.key,!META.items[k])).join('')}</div></div>
+        <div class="hprog"><span>Fases <b>${doneN}/${LEVELS.length}</b></span><span>Estrelas <b>${stars}/${LEVELS.length*3}</b></span></div></div>
     </div>
-    <div class="sec"><h3>Personagem</h3><div class="htokens">${Object.entries(CHARS).map(([k,c],i)=>{const ok=META.chars[k];return`<button type="button" class="htok ${k0===k?'on':''} ${ok?'':'locked'}" data-ch="${k}" ${ok?'':'disabled'} style="--n:${i}" title="${ok?c.desc:'Como liberar: '+c.hint}">
-      <canvas width="32" height="40" data-char="${k}"></canvas><b>${c.name}</b><small>${ok?(ABIL[k]||ABIL.lavrador)[0]:'bloqueado'}</small></button>`}).join('')}</div></div>
-    <div class="sec"><h3>Ferramenta · X</h3><div class="htokens tools">${Object.entries(WEAPONS).map(([k,t],i)=>{const own=META.weapons[k];return`<button type="button" class="htok ${META.weapon===k?'on':''} ${own?'':'locked'}" data-wp="${k}" ${own?'':'disabled'} style="--n:${i}" title="${t.desc}">
+    <div class="sec"><h3>Escolha o personagem</h3><div class="htokens">${Object.entries(CHARS).map(([k,c],i)=>{const ok=META.chars[k];return`<button type="button" class="htok ${k0===k?'on':''} ${ok?'':'locked'}" data-ch="${k}" ${ok?'':'disabled'} style="--n:${i}" title="${ok?c.desc:'Como liberar: '+c.hint}">
+      <canvas width="32" height="40" data-char="${k}"></canvas><b>${c.name}</b><small>${ok?(ABIL[k]||ABIL.lavrador)[0]:'bloqueado'}</small></button>`}).join('')}</div></div>`:''}
+    ${ltab==='ferr'?`<div class="sec"><h3>Ferramenta · X</h3><div class="htokens tools">${Object.entries(WEAPONS).map(([k,t],i)=>{const own=META.weapons[k];return`<button type="button" class="htok ${META.weapon===k?'on':''} ${own?'':'locked'}" data-wp="${k}" ${own?'':'disabled'} style="--n:${i}" title="${t.desc}">
       <canvas width="32" height="32" data-tool="${k}"></canvas><b>${t.name}</b><small>${own?'dano '+t.dmg+' · alcance '+t.rng:'na Quitanda'}</small></button>`}).join('')}</div></div>
-    ${talentsHTML()}
-    <p class="help">Encostar nas pragas tira um coração. Sem corações, você desmaia por 3s e perde maná.</p></div>`);
+    <div class="sec"><h3>Equipamento</h3><div class="slots slots4">${slot(`<canvas width="32" height="32" data-tool="${META.weapon}"></canvas>`,w.name,'Golpe X · dano '+w.dmg)}
+      ${Object.entries(ITEMS).map(([k,it])=>slot(`<canvas width="32" height="32" data-bar="${k}"></canvas>`,it.name,'×'+(META.items[k]||0)+' · tecla '+it.key,!META.items[k])).join('')}</div></div>
+    <p class="help">Encostar nas pragas tira um coração. Sem corações, você desmaia por 3s e perde maná.</p>`:''}
+    ${ltab==='tal'?talentsHTML():''}</div>`);
+    $('menu').querySelectorAll('[data-ltab]').forEach(b=>b.onclick=()=>{ltab=b.dataset.ltab;sfx('card');render()});
     paintCoins();
     $('menu').querySelectorAll('canvas[data-char]').forEach(c=>charIconTo(c,c.dataset.char));
     $('menu').querySelectorAll('canvas[data-tool]').forEach(c=>toolIconTo(c,c.dataset.tool));
@@ -421,31 +425,37 @@ function potAdvance(p){const P=GPLANTS[p.k],now=Date.now();while(p.watered&&p.st
 // actions the player can give another key, and how a key code reads on screen
 const KEYACT=[['ArrowLeft','Andar à esquerda'],['ArrowRight','Andar à direita'],['ArrowUp','Pular'],['ArrowDown','Pisão'],['KeyX','Golpe'],['KeyC','Poder'],['Enter','Chamar a onda'],['KeyQ','Cerca'],['KeyE','Espantalho'],['KeyR','Lama']];
 const keyName=c=>({ArrowLeft:'←',ArrowRight:'→',ArrowUp:'↑',ArrowDown:'↓',Space:'Espaço',Enter:'Enter',Escape:'Esc',ShiftLeft:'Shift',ShiftRight:'Shift'})[c]||c.replace(/^Key|^Digit|^Numpad/,'');
-function showConfig(){let armed=false;
-  const render=()=>{menu(`<div class="mbox cabin"><div class="topbar"><button class="btn ghost" data-go="hub">‹ Menu</button><h2>Configurações</h2><span></span></div>
-    <div class="cfg"><label>Música <input type="range" id="cmus" min="0" max="1" step="0.05" value="${CFG.mus}" style="--v:${CFG.mus}"></label>
-    <label>Efeitos <input type="range" id="csfx" min="0" max="1" step="0.05" value="${CFG.sfx}" style="--v:${CFG.sfx}"></label>
-    <label class="chk"><input type="checkbox" id="clite" ${CFG.lite?'checked':''}> Modo leve <small>sem brilho, neblina e distorção; para aparelhos mais fracos</small></label>
-    <label class="chk"><input type="checkbox" id="cmute" ${muted?'checked':''}> Silenciar tudo (M)</label>
-    <label class="chk"><input type="checkbox" id="cbig" ${CFG.big?'checked':''}> Texto maior <small>aumenta letras dos menus e do painel</small></label>
-    <label class="chk"><input type="checkbox" id="cshake" ${CFG.noShake?'':'checked'}> Tremor de tela <small>desligue se a tela tremendo incomoda</small></label>
-    <label class="chk"><input type="checkbox" id="ccb" ${CFG.cb?"checked":""}> Modo para daltônicos <small>barra de vida em azul e iniciais nos frutos; a raridade das cartas já tem formas diferentes</small></label>
-    <div class="czoom"><b>Zoom da câmera</b><span>${[1,1.25,1.5].map(z=>`<button type="button" class="${(CFG.zoom||1)===z?"on":""}" data-zoom="${z}">${z*100}%</button>`).join("")}</span></div></div>
-    <div class="sec"><h3>Teclas</h3><p class="help">Clique numa ação e aperte a tecla nova. As teclas de sempre continuam valendo.</p><div class="keys">${KEYACT.map(([c,l])=>`<button type="button" data-key="${c}"><b>${l}</b><span>${keyName((CFG.keys||{})[c]||c)}</span></button>`).join("")}</div><button class="btn ghost" id="keyreset">Voltar às teclas de sempre</button></div>
-    <div class="sec"><h3>Registro de partidas</h3>${logHTML()}${(META.log||[]).length?'<div class="row" style="justify-content:flex-start"><button class="btn ghost" id="logcopy">Copiar registro</button><button class="btn ghost" id="logclear">Apagar registro</button></div>':''}</div>
-    <div class="sec"><h3>Sprites do Aseprite</h3><p class="help">${Object.keys(ASE).length?"Carregados: "+Object.keys(ASE).join(", "):"Nenhum carregado. Exporte pelo Aseprite para assets/sprites/ (veja LEIA-ME.md na pasta)."}</p></div>
-    <div class="sec"><h3>Guardar progresso</h3><p class="help">Salve um arquivo com seu progresso para levar a outro aparelho ou navegador.</p>
-    <div class="row" style="justify-content:flex-start"><button class="btn ghost" id="cexp">Salvar arquivo</button><label class="btn ghost">Carregar arquivo<input type="file" id="cimp" accept="application/json,.json" hidden></label></div></div>
-    <div class="sec"><h3>Progresso</h3><p class="help">Apaga fases, moedas, jardim, árvore, cartas e conquistas deste navegador.</p>
-    <button class="btn ${armed?'act':'ghost'}" id="creset">${armed?'Tem certeza? Clique de novo para apagar tudo':'Reiniciar progresso'}</button></div></div>`);
-    if($('logcopy')){$('logcopy').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(JSON.stringify(META.log)).then(()=>toast('Registro copiado','Cole numa mensagem para ajustar o equilíbrio'),()=>{});sfx('card')};$('logclear').onclick=()=>{META.log=[];saveMeta();sfx('card');render()}}
-    $('cmus').oninput=e=>{CFG.mus=+e.target.value;e.target.style.setProperty('--v',e.target.value);saveCfg()};$('csfx').oninput=e=>{CFG.sfx=+e.target.value;e.target.style.setProperty('--v',e.target.value);saveCfg();sfx('coin')};
-    $('ccb').onchange=e=>{CFG.cb=e.target.checked;saveCfg()};$('menu').querySelectorAll('[data-zoom]').forEach(b=>b.onclick=()=>{CFG.zoom=+b.dataset.zoom;saveCfg();sfx('card');render()});
+function showConfig(){let armed=false,tab='geral';const $$=id=>document.getElementById(id);
+  const render=()=>{const tabs={geral:'Geral',teclas:'Teclas',dados:'Dados'};let body='';
+    if(tab==='geral')body=`<div class="cfg cfg2"><div class="cfgcol"><label>Música <input type="range" id="cmus" min="0" max="1" step="0.05" value="${CFG.mus}" style="--v:${CFG.mus}"></label>
+      <label>Efeitos <input type="range" id="csfx" min="0" max="1" step="0.05" value="${CFG.sfx}" style="--v:${CFG.sfx}"></label>
+      <div class="czoom"><b>Zoom da câmera</b><span>${[1,1.25,1.5].map(z=>`<button type="button" class="${(CFG.zoom||1)===z?'on':''}" data-zoom="${z}">${z*100}%</button>`).join('')}</span></div>
+      <button type="button" class="btn" id="cfull">${isFull()?'Sair da tela cheia':'⛶ Tela cheia'}</button></div>
+      <div class="cfgcol"><label class="chk"><input type="checkbox" id="clite" ${CFG.lite?'checked':''}> Modo leve <small>sem brilho, neblina e distorção; para aparelhos mais fracos</small></label>
+      <label class="chk"><input type="checkbox" id="cmute" ${muted?'checked':''}> Silenciar tudo (M)</label>
+      <label class="chk"><input type="checkbox" id="cbig" ${CFG.big?'checked':''}> Texto maior <small>aumenta letras dos menus e do painel</small></label>
+      <label class="chk"><input type="checkbox" id="cshake" ${CFG.noShake?'':'checked'}> Tremor de tela <small>desligue se a tela tremendo incomoda</small></label>
+      <label class="chk"><input type="checkbox" id="ccb" ${CFG.cb?'checked':''}> Modo para daltônicos <small>barra de vida em azul e iniciais nos frutos; a raridade das cartas já tem formas diferentes</small></label></div></div>`;
+    if(tab==='teclas')body=`<p class="help">Clique numa ação e aperte a tecla nova. As teclas de sempre continuam valendo. Esc cancela.</p><div class="keys">${KEYACT.map(([c,l])=>`<button type="button" data-key="${c}"><b>${l}</b><span>${keyName((CFG.keys||{})[c]||c)}</span></button>`).join('')}</div><button class="btn ghost" id="keyreset">Voltar às teclas de sempre</button>`;
+    if(tab==='dados')body=`<div class="cfg2"><div class="cfgcol"><div class="sec"><h3>Registro de partidas</h3>${logHTML()}${(META.log||[]).length?'<div class="row" style="justify-content:flex-start"><button class="btn ghost" id="logcopy">Copiar registro</button><button class="btn ghost" id="logclear">Apagar registro</button></div>':''}</div></div>
+      <div class="cfgcol"><div class="sec"><h3>Guardar progresso</h3><p class="help">Salve um arquivo com seu progresso para levar a outro aparelho ou navegador.</p>
+      <div class="row" style="justify-content:flex-start"><button class="btn ghost" id="cexp">Salvar arquivo</button><label class="btn ghost">Carregar arquivo<input type="file" id="cimp" accept="application/json,.json" hidden></label></div></div>
+      <div class="sec"><h3>Sprites do Aseprite</h3><p class="help">${Object.keys(ASE).length?'Carregados: '+Object.keys(ASE).join(', '):'Nenhum carregado. Exporte pelo Aseprite para assets/sprites/ (veja LEIA-ME.md na pasta).'}</p></div>
+      <div class="sec"><h3>Progresso</h3><p class="help">Apaga fases, moedas, jardim, árvore, cartas e conquistas deste navegador.</p>
+      <button class="btn ${armed?'act':'ghost'}" id="creset">${armed?'Tem certeza? Clique de novo para apagar tudo':'Reiniciar progresso'}</button></div></div></div>`;
+    menu(`<div class="mbox wide modern settings"><div class="topbar"><button class="btn ghost" data-go="hub">‹ Menu</button><h2>Configurações</h2><span></span></div>
+      <div class="mtabs">${Object.entries(tabs).map(([k,t])=>`<button type="button" class="${tab===k?'on':''}" data-ctab="${k}">${t}</button>`).join('')}</div>${body}</div>`);
+    $('menu').querySelectorAll('[data-ctab]').forEach(b=>b.onclick=()=>{tab=b.dataset.ctab;sfx('card');render()});
+    if($$('cmus')){$$('cmus').oninput=e=>{CFG.mus=+e.target.value;e.target.style.setProperty('--v',e.target.value);saveCfg()};$$('csfx').oninput=e=>{CFG.sfx=+e.target.value;e.target.style.setProperty('--v',e.target.value);saveCfg();sfx('coin')};
+      $$('ccb').onchange=e=>{CFG.cb=e.target.checked;saveCfg()};$('menu').querySelectorAll('[data-zoom]').forEach(b=>b.onclick=()=>{CFG.zoom=+b.dataset.zoom;saveCfg();sfx('card');render()});
+      $$('clite').onchange=e=>{CFG.lite=e.target.checked;saveCfg()};$$('cshake').onchange=e=>{CFG.noShake=!e.target.checked;saveCfg()};$$('cbig').onchange=e=>{CFG.big=e.target.checked;saveCfg()};
+      $$('cmute').onchange=e=>{initAudio();setMuted(e.target.checked)};$$('cfull').onclick=()=>toggleFull().then(()=>setTimeout(render,150))}
     $('menu').querySelectorAll('[data-key]').forEach(b=>b.onclick=()=>{const c=b.dataset.key;b.querySelector('span').textContent='aperte…';b.classList.add('wait');
       addEventListener('keydown',e=>{e.preventDefault();e.stopImmediatePropagation();if(e.code!=='Escape'){CFG.keys=CFG.keys||{};CFG.keys[c]=e.code;saveCfg();buildKeymap();sfx('coin')}render()},{capture:true,once:true})});
-    $('keyreset').onclick=()=>{CFG.keys={};saveCfg();buildKeymap();sfx('card');render()};
-    $('clite').onchange=e=>{CFG.lite=e.target.checked;saveCfg()};$('cshake').onchange=e=>{CFG.noShake=!e.target.checked;saveCfg()};$('cbig').onchange=e=>{CFG.big=e.target.checked;saveCfg()};$('cexp').onclick=exportSave;$('cimp').onchange=e=>{if(e.target.files[0])importSave(e.target.files[0])};$('cmute').onchange=e=>{initAudio();setMuted(e.target.checked)};
-    $('creset').onclick=()=>{if(!armed){armed=true;return render()}['fds-meta','fds-run','jardim-do-fruto-celeiro'].forEach(k=>store.del(k));location.reload()}};render()}
+    if($$('keyreset'))$$('keyreset').onclick=()=>{CFG.keys={};saveCfg();buildKeymap();sfx('card');render()};
+    if($$('logcopy')){$$('logcopy').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(JSON.stringify(META.log)).then(()=>toast('Registro copiado','Cole numa mensagem para ajustar o equilíbrio'),()=>{});sfx('card')};$$('logclear').onclick=()=>{META.log=[];saveMeta();sfx('card');render()}}
+    if($$('cexp')){$$('cexp').onclick=exportSave;$$('cimp').onchange=e=>{if(e.target.files[0])importSave(e.target.files[0])};
+      $$('creset').onclick=()=>{if(!armed){armed=true;return render()}['fds-meta','fds-run','jardim-do-fruto-celeiro'].forEach(k=>store.del(k));location.reload()}}};render()}
 // ---------- show which works of the flesh come, on the seed screen
 function wavePreviewHTML(){if(!RUN||RUN.mode!=='level')return'';const node=levelNode(),cnt={};node.waves.forEach(w=>w.list.forEach(([k])=>{if(!EN[k].hide)cnt[k]=(cnt[k]||0)+1}));
   return `<div class="sec"><h3>Vêm nesta fase</h3><div class="foes">${Object.entries(cnt).map(([k,n])=>`<span class="foe" title="${EN[k].desc}${EN[k].weak?' Fraco contra '+CARDS[EN[k].weak].name+'.':''}"><canvas width="48" height="48" data-enemy="${k}"></canvas><b>${EN[k].name}</b><small>×${n}${EN[k].weak?' · '+CARDS[EN[k].weak].name:''}</small></span>`).join('')}</div></div>`}

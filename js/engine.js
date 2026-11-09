@@ -143,6 +143,14 @@ addEventListener('keydown',e=>{const c=keyOf(e);if((GAME.has(c)||KEYMAP[e.code])
 addEventListener('keyup',e=>keys.delete(keyOf(e)));
 addEventListener('blur',()=>keys.clear());
 const dn=(...c)=>c.some(k=>keys.has(k))?1:0, pr=(...c)=>c.some(k=>hit.has(k));
+// fullscreen for the whole page, so the stage grows to fill the screen; some embeds block it, and then we say so
+const isFull=()=>!!(document.fullscreenElement||document.webkitFullscreenElement);
+function toggleFull(){const d=document,el=d.documentElement,no=()=>toast('Tela cheia não disponível aqui','Tente F11 no navegador');
+  try{if(isFull())return Promise.resolve((d.exitFullscreen||d.webkitExitFullscreen).call(d)).catch(()=>{});const fn=el.requestFullscreen||el.webkitRequestFullscreen;if(!fn){no();return Promise.resolve()}
+    // some embedded browsers never answer the request: give up after 1.5s and say so
+    return Promise.race([Promise.resolve(fn.call(el)),new Promise((_,rej)=>setTimeout(()=>isFull()?_():rej(),1500))]).catch(()=>{if(!isFull())no()})}catch(e){no();return Promise.resolve()}}
+document.addEventListener('fullscreenchange',()=>{const b=document.getElementById('bfull');if(b)b.classList.toggle('on',isFull())});
+document.getElementById('bfull').onclick=e=>{e.currentTarget.blur();toggleFull()};
 document.querySelectorAll('#touch button').forEach(b=>{const k=b.dataset.k;
   b.addEventListener('pointerdown',e=>{e.preventDefault();keys.add(k);hit.add(k);initAudio()});
   ['pointerup','pointercancel','pointerleave'].forEach(t=>b.addEventListener(t,()=>keys.delete(k)))});

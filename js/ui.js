@@ -107,7 +107,26 @@ function menu(html,cards=[],onCard=null){
   m.querySelectorAll('canvas[data-enemy]').forEach(c=>enemyIconTo(c,c.dataset.enemy));
   m.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{sfx('card');GO[b.dataset.go]()});
   const go=m.querySelector('.btn:not([disabled])');if(go)go.focus({preventScroll:true});
+  fitPages();requestAnimationFrame(()=>fitPages());
 }
+// long grids are cut into pages that fit the screen, with ‹ 1 / 3 › under them, so menus never need scrolling;
+// it measures the real rows, so it adapts to the window size (and runs again when the window changes)
+const PAGED='.book .grid,.achs .grid,.minis';
+function fitPages(){const m=$('menu');if(m.hidden)return;m.classList.add('measuring');try{fitPagesNow(m)}finally{m.classList.remove('measuring')}}
+function fitPagesNow(m){const box=m.querySelector('.mbox')||m.firstElementChild;if(box)box.style.zoom='';
+  m.querySelectorAll(PAGED).forEach(grid=>{const items=[...grid.children];items.forEach(el=>el.style.display='');const nx=grid.nextElementSibling;if(nx&&nx.classList.contains('pager'))nx.remove();
+    if(m.scrollHeight-m.clientHeight<=1||items.length<2)return;
+    const tops=[...new Set(items.map(el=>el.offsetTop))],cols=items.filter(el=>el.offsetTop===tops[0]).length,rowH=tops.length>1?tops[1]-tops[0]:items[0].offsetHeight;
+    const pager=document.createElement('div');pager.className='pager';pager.innerHTML='<button type="button" class="btn ghost">‹</button><span></span><button type="button" class="btn ghost">›</button>';grid.after(pager);
+    let rows=Math.max(1,tops.length-Math.ceil((m.scrollHeight-m.clientHeight)/rowH)),per,pages,pg=+(grid.dataset.page||0);
+    const show=()=>{per=cols*rows;pages=Math.ceil(items.length/per);pg=Math.min(pg,pages-1);items.forEach((el,i)=>el.style.display=i>=pg*per&&i<(pg+1)*per?'':'none');
+      pager.querySelector('span').textContent=(pg+1)+' / '+pages;grid.dataset.page=pg;const[a,b]=pager.querySelectorAll('button');a.disabled=pg===0;b.disabled=pg>=pages-1};
+    show();while(rows>1&&m.scrollHeight-m.clientHeight>1){rows--;show()}
+    const[a,b]=pager.querySelectorAll('button');a.onclick=()=>{pg--;sfx('card');show()};b.onclick=()=>{pg++;sfx('card');show()}});
+  // what still does not fit (a small screen, a long panel) shrinks a little instead of scrolling, down to 70%
+  if(!box||box.classList.contains('farmhub')||box.classList.contains('cutscene'))return;const over=m.scrollHeight-m.clientHeight;
+  if(over>1){let z=Math.max(.7,(m.clientHeight-2)/m.scrollHeight);box.style.zoom=z.toFixed(3);while(z>.7&&m.scrollHeight-m.clientHeight>1){z-=.02;box.style.zoom=z.toFixed(3)}}}
+let fitT=0;addEventListener('resize',()=>{clearTimeout(fitT);fitT=setTimeout(fitPages,150)});
 function hideMenu(){$('menu').hidden=true;$('menu').innerHTML=''}
 $('menu').addEventListener('click',e=>{const el=e.target.closest('.card,.card2');if(!el||!window.menuClick)return;
   const c=window.menuCards.find(k=>String(k.uid)===el.dataset.uid);if(c){sfx('card');window.menuClick(c)}});
