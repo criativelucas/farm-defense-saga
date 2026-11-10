@@ -541,6 +541,7 @@ function frameBody(now){
   const rdt=Math.min(.033,(now-last)/1000);last=now;
   if(S){
     if(live()&&pr('Escape','KeyP')&&!S.intro&&!S.dialog)togglePause();if(live()&&pr('KeyF'))toggleSpeed();
+    if(S.shop&&live()){if(pr('Enter','Escape'))closeWaveShop();draw();updHUD();return}
     if(S.paused&&live()){draw();updHUD();return}
     const dt=rdt*(S.slow>0?.28:1)*(live()?S.speed||1:1);S.slow=Math.max(0,S.slow-rdt);S.t+=dt;
     if(S.state==='title'){S.cam=(Math.sin(S.t*.035-1.2)*.5+.5)*(MAP.ww-W);for(const t of S.tw)if(t)t.t+=dt}

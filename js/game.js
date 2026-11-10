@@ -43,6 +43,7 @@ function blankBattle(mapId,day=false,variant=0){
 function startBattle(node){
   MUS.scene=null;blankBattle(node.map,node.night===false,lvVariant(node));S.wx=(WEATHER[node.map]||[])[lvVariant(node)]||null;
   S.node=node;S.waves=node.waves;S.state='prep';S.between=12;
+  S.up={dmg:1,rng:1,mana:1,stomp:1,coin:1,str:1};S.upN={};S.rolls=0;S.pPulse=[0,0];S.shop=null;{const ws=$('wshop');if(ws)ws.hidden=true}
   S.mana=6+atr('mana')+(relic('arca')?4:0)+2*((META.upg&&META.upg.mana)||0);S.p.maxhp=S.p.hp=3+atr('vida')+((META.upg&&META.upg.hearts)||0)+((META.upg&&META.upg.treeHearts)||0)+tl('hearts');S.mana+=tl('mana');S.levelNight=node.night??null;
   S.draw=rshuffle(RUN.deck);S.hand=S.draw.splice(0,RUN.handSize);
   RUN.deck.forEach(c=>(c.hyb||[c.k]).forEach(k=>META.seen.c[k]=1));RUN.relics.forEach(k=>META.seen.r[k]=1);saveMeta();
@@ -79,13 +80,13 @@ function endWave(){
   S.talentsDue+=S.talents;S.talents=0;S.fullT=0;S.wi++;
   if(S.wi>=S.waves.length&&!goalKeepsWaves()){MUS.mode='calm';battleWon();return}
   S.state='prep';S.between=10;S.mana=Math.min(MAXM,S.mana+2);S.reveal=relic('pomba')||isChar('jose');
-  banner('Onda vencida','Respire. A próxima vem aí');
+  banner('Onda vencida','Respire. A próxima vem aí');if(shopOk())openWaveShop();
 }
 function spawn(k,xo){
   const d=EN[k],a=RUN?RUN.act:0;
   let sc=d.boss?1+a*.1:d.elite?1+a*.3:1+a*.45+S.wi*.08;
   if(ascN()>=1)sc*=1.15;if(d.boss&&ascN()>=4)sc*=1.3;sc*=diffNow().hp;
-  const x0=xo??MAP.ww+12;
+  const x0=xo??MAP.ww-(d.fly===2?22:14);if(xo==null&&S.pPulse)S.pPulse[d.fly===2?1:0]=1;
   const spawnInit=e=>{if(d.armor)e.armor=e.armorMax=d.armor*sc;if(d.ai==='mirror')e.mirror=3;if(d.ai==='burrow'||d.ai==='disguise')e.dive=1e9;return e};
   if(d.boss){META.seen.e[k]=1;saveMeta();bossIntro(k)}
   else if(!META.seen.e[k]){META.seen.e[k]=1;saveMeta();if(S.intro)(S.introQ||(S.introQ=[])).push(k);else foeIntro(k)}
@@ -105,6 +106,7 @@ function ecy(e){const d=EN[e.k];return d.fly?e.y:e.y-d.h/2}
 
 function damage(e,d,src){
   if(e.hp<=0||e.dive>0)return;
+  if(S.t-(e.spk||0)>.09){e.spk=S.t;for(let i=0;i<3;i++){const a=rnd(0,6.28),v=rnd(30,70);S.parts.push({x:e.x,y:ecy(e),vx:Math.cos(a)*v,vy:Math.sin(a)*v,g:0,life:.16,max:.16,c:i?'#fff3a0':'#ffffff',s:1})}}
   const tree=src&&CARDS[src];
   if(e.mirror>0){if(tree){e.mirror--;e.flash=.07;sfx('beam');pop(e.x,ecy(e)-10,e.mirror?'refletiu!':'o espelho rachou','#ffc8ff',8);vfx('spark',e.x,ecy(e),{n:4});return}
     e.mirror=0;pop(e.x,ecy(e)-12,'espelho quebrado!','#ffffff',9);burst(e.x,ecy(e),14,['#ffffff','#ffc8ff','#c8f0ff'],90,200,.5)}
@@ -128,8 +130,8 @@ function kill(e){
   if(RUN){RUN.stats.kills++;META.stats.kills++}
   const v=isChar('rute')?2:1;
   for(let i=0;i<Math.ceil(d.rew/5);i++)S.drops.push({x:e.x,y:ecy(e),vx:rnd(-50,50),vy:rnd(-120,-60),v,t:0,g:300});
-  if(Math.random()<.4||d.boss||d.elite)S.drops.push({x:e.x,y:ecy(e),vx:rnd(-40,40),vy:rnd(-140,-80),v:d.boss?25:d.elite?12:Math.random()<.2?3:1,t:0,g:300,coin:1});
-  S.combo++;S.maxCombo=Math.max(S.maxCombo||0,S.combo);S.kills=(S.kills||0)+1;S.comboT=1.3;if(S.combo>=3){S.comboShow=1;S.comboN=S.combo}if(S.combo>=25)unlockAch('combo');
+  if(Math.random()<.4||d.boss||d.elite)S.drops.push({x:e.x,y:ecy(e),vx:rnd(-40,40),vy:rnd(-140,-80),v:Math.round((d.boss?25:d.elite?12:Math.random()<.2?3:1)*(S.up?S.up.coin:1)),t:0,g:300,coin:1});
+  S.combo++;if(S.combo>=2)onomaW(e.x,ecy(e)-12,'x'+S.combo,S.combo>=5?'big':'kill');S.maxCombo=Math.max(S.maxCombo||0,S.combo);S.kills=(S.kills||0)+1;S.comboT=1.3;if(S.combo>=3){S.comboShow=1;S.comboN=S.combo}if(S.combo>=25)unlockAch('combo');
   shake(d.boss?12:d.hp>20?4:1.5);sfx('kill');
   if(e.loot){for(let i=0;i<Math.min(12,e.loot);i++)S.drops.push({x:e.x,y:ecy(e),vx:rnd(-70,70),vy:rnd(-160,-80),v:2,t:0,g:300,coin:1});pop(e.x,e.y-20,'devolveu tudo!','#9ff7b8',9)}
   if(d.split){for(let j=0;j<2;j++){const n=spawn('contendinha',e.x+(j?5:-5));n.y=e.y;n.hp=n.max=EN.contendinha.hp*(1+RUN.act*.45)}S.total+=2}
@@ -201,7 +203,7 @@ function doSlam(){mission('slam',1);onoma(S.p.x,S.p.y-10,'slam',.8);
   burst(p.x,p.y,16,['#e8dcc0','#c9a99a','#fff'],90,220,.5);
   S.fx.push({k:'ring',x:p.x,y:p.y-2,r:2,max:rad,t:0,c:harvest?'#ffd34a':'#fff3c0'});S.fx.push({k:'shock',x:p.x,y:p.y-4,r:0,max:(davi?100:70)*(harvest?1.6:1),t:0});
   for(const e of S.en)if(EN[e.k].ai==='burrow'&&e.dive>0&&Math.abs(e.x-p.x)<rad+10){e.dive=0;pop(e.x,e.y-16,'arrancada!','#c8a060',9);burst(e.x,e.y,16,['#6a4a2a','#c8a060'],90,240,.6,2)}
-  for(const e of S.en){if(Math.hypot(e.x-p.x,ecy(e)-p.y)<rad+(EN[e.k].boss?16:0)){let d=3*(davi?2:1)*(harvest?3:1)*(1+.15*atr('for'));if(relic('funda'))d*=EN[e.k].boss?3:2;damage(e,d);if(!EN[e.k].boss)e.x+=Math.sign(e.x-p.x||1)*6}}
+  for(const e of S.en){if(Math.hypot(e.x-p.x,ecy(e)-p.y)<rad+(EN[e.k].boss?16:0)){let d=3*(davi?2:1)*(harvest?3:1)*(1+.15*atr('for'))*(S.up?S.up.str:1);if(relic('funda'))d*=EN[e.k].boss?3:2;damage(e,d);if(!EN[e.k].boss)e.x+=Math.sign(e.x-p.x||1)*6}}
   MAP.slots.forEach((s,i)=>{const t=S.tw[i];if(!t||t.grow<1||Math.abs(s.x-p.x)>=14||Math.abs(s.y-p.y)>=3)return;
     if(t.joio){t.joio=false;S.fx.push({k:'ring',x:s.x,y:s.y-12,r:2,max:24,t:0,c:'#ffffff'});pop(s.x,s.y-36,'joio arrancado','#ffffff');return}
     if(t.seduced){t.seduced=false;S.fx.push({k:'ring',x:s.x,y:s.y-12,r:2,max:24,t:0,c:'#f7c948'});pop(s.x,s.y-36,'livre do ídolo','#f7c948');return}
@@ -217,7 +219,7 @@ function doSlam(){mission('slam',1);onoma(S.p.x,S.p.y-10,'slam',.8);
 const slotAt=()=>MAP.slots.findIndex(s=>Math.abs(s.x-S.p.x)<12&&Math.abs(s.y-S.p.y)<3);
 
 // ---------- trees
-function tmult(t){let m=(t.plus?1.3:1)*(t.mods?t.mods.dmg:1)*S.setMult*(t.soil==='boa'?1.3:t.soil==='espinho'?.6:1)*(t.rare?1.5:1)*(t.kinds.length>1?.8:1)*(1+.2*(t.lvl||0))*(t.branch==='a'?1.7:1)*(1+.15*cardLv(t.kinds[0]))*(1+.08*tl('dmg'));
+function tmult(t){let m=(t.plus?1.3:1)*(t.mods?t.mods.dmg:1)*S.setMult*(t.soil==='boa'?1.3:t.soil==='espinho'?.6:1)*(t.rare?1.5:1)*(t.kinds.length>1?.8:1)*(1+.2*(t.lvl||0))*(t.branch==='a'?1.7:1)*(1+.15*cardLv(t.kinds[0]))*(1+.08*tl('dmg'))*(S.up?S.up.dmg:1);
   if(relic('lampada')&&S.night>.3)m*=1.1;return m}
 function nearest(sx,sy,range){let best=null,bd=range;for(const e of S.en){if(e.dive>0)continue;const d=Math.hypot(e.x-sx,ecy(e)-sy);if(d<bd&&e.hp>0){bd=d;best=e}}return best}
 const SHOTC={seed:['#e8e070','#ffffff'],date:['#d9802a','#ffc080'],almond:['#e8d0b0','#ffd0e8'],fig:['#a04a8a','#7ac050'],oil:['#d9c24a','#fff3a0'],grape:['#9b4be0','#d8a8ff'],mustard:['#e8e070','#fff']};
@@ -236,7 +238,8 @@ function plantAt(si,kinds,rare,delay=.6,plus=false){
 function leaf(s,k){if(Math.random()<.6)S.parts.push({x:s.x+rnd(-8,8),y:s.y-rnd(12,24),vx:rnd(-12,12),vy:rnd(-15,0),g:25,life:1.6,max:1.6,
   c:{oliveira:'#b8cf9a',sarca:'#ffd34a',mostarda:'#e8e070',amendoeira:'#ffd0e8',lirio:'#ffffff',tamareira:'#d9a050'}[k]||'#5fe08a',s:1,sway:1})}
 function superTower(t,s){
-  t.dcd=6;t.pulse=1;sfx('super');S.stop=.08;flash(.3,'255,240,180');pop(s.x,s.y-48,'GLÓRIA!','#ffe36a',9);
+  t.dcd=6;t.pulse=1;sfx('super');S.stop=.08;flash(.3,'255,240,180');{// one big word: the stomp's own word grows into the tree's
+    const w=pick(['GLÓRIA!','KABUM!','BOOM!','CABRUM!']),last=(S.vfx||[]).filter(v=>v.k==='onoma'&&v.t<.1).pop();if(last){last.w=w;last.big=true;last.kind='big';last.x=s.x;last.y=s.y-30}else onomaW(s.x,s.y-30,w,'big')}shake(6);burst(s.x,s.y-20,18,[LC[t.kinds[0]]||'#9ad85a','#ffffff'],120,160,.6,2);
   tutEvent('slam');
   const m=tmult(t);
   for(const k of t.kinds){
@@ -249,6 +252,8 @@ function superTower(t,s){
     if(k==='tamareira'){RUN.hp=Math.min(RUN.maxhp,RUN.hp+3);sfx('heal');heartsHome(s,6);pop(30,120,'+3 Vida','#ffa64a',9)}
     if(k==='amendoeira'){S.tw.forEach(o=>{if(o){o.cd={};o.dcd=Math.min(o.dcd,1)}});S.fx.push({k:'ring',x:s.x,y:s.y-14,r:4,max:120,t:0,c:'#ffd0e8'});pop(s.x,s.y-36,'todas atiram!','#ffd0e8')}
     if(k==='lirio'){wind(s,110,60,2*m)}
+    if(k==='hissopo')purify(s.x,s.y-14,100,6*m,k);
+    if(k==='cedro'){S.fx.push({k:'ring',x:s.x,y:s.y-4,r:4,max:110,t:0,c:'#c8a060'});shake(9);for(const e of S.en)if(!EN[e.k].fly&&Math.abs(e.x-s.x)<110){damage(e,6*m,k);if(!EN[e.k].boss)e.x+=18;e.slow=Math.max(e.slow,2)}}
   }
 }
 function heartsHome(s,n){for(let i=0;i<n;i++)S.fx.push({k:'heart',x:s.x+rnd(-6,6),y:s.y-18,t:-i*.08,max:1.2})}
@@ -271,7 +276,7 @@ function updTowers(dt){
       const rate=(near?.19*(S.bucket>0?2.2:1):0)+(S.rain>0?.08:0);if(near&&S.bucket>0)S.bucket-=dt;if(rate>0)water(t,s,rate*dt*(t.soil==='espinho'?.6:t.soil==='pedra'?1.5:1));
       if(near&&Math.random()<dt*14)S.parts.push({x:P.x+P.face*4,y:P.y-10,vx:(s.x-P.x)*1.5+P.face*20,vy:-30,g:240,life:.45,max:.45,c:Math.random()<.5?'#7ac0ff':'#bfe8ff',s:1});
       if(near&&!S.waterHint){S.waterHint=1;pop(s.x,s.y-46,'regando: fique perto para crescer','#9ad0ff',7)}}
-    t.t+=dt;t.dcd-=dt*(S.rain>0?3:1);t.pulse=Math.max(0,t.pulse-dt*2);t.stun=Math.max(0,t.stun-dt);t.ark=Math.max(0,(t.ark||0)-dt);
+    t.t+=dt;t.dcd-=dt*(S.rain>0?3:1)*(S.up?S.up.stomp:1);t.pulse=Math.max(0,t.pulse-dt*2);t.stun=Math.max(0,t.stun-dt);t.ark=Math.max(0,(t.ark||0)-dt);
     if(t.ark>0){t.stun=0;t.joio=false;t.seduced=false;t.sleep=false}
     if(MAPID==='getsemani'&&t.grow>=1){
       if(Math.hypot(P.x-s.x,P.y-s.y)<34){if(t.sleep)pop(s.x,s.y-30,'acordou','#9ab0ff');t.awake=20;t.sleep=false}
@@ -281,7 +286,7 @@ function updTowers(dt){
     const md=t.mods||{rate:1,fire:1,slowWind:0};
     const m=tmult(t),top=s.y-16;let rate=(S.rain>0?1.6:1)*(t.soil==='pedra'?1.3:1)*md.rate*(S.rally>0?1.5:1);
     if(buffs.some(bx=>bx!==s.x&&Math.abs(bx-s.x)<70))rate*=1.35;
-    const RG=t.branch==='b'?1.3:1;if(t.branch==='b')rate*=1.5;
+    const RG=(t.branch==='b'?1.3:1)*(S.up?S.up.rng:1);if(t.branch==='b')rate*=1.5;
     for(const k of t.kinds){
       if(k==='sarca'&&Math.random()<dt*14)S.parts.push({x:s.x+rnd(-7,7),y:s.y-8,vx:rnd(-6,6),vy:rnd(-40,-20),g:-20,life:.5,max:.5,c:Math.random()<.5?'#ff6a1a':'#ffd34a',s:1});
       if(k==='figueira')t.charge=Math.min(6,t.charge+dt*rate);
@@ -456,7 +461,7 @@ function nearestTreeSlot(){let best=-1,bd=90;MAP.slots.forEach((s,i)=>{if(!S.tw[
 function playerAttack(){if(S.mini==='funda')return slingShot();const p=S.p;if(p.stun>0||p.atkCD>0)return;tutEvent('attack');const w=WEAPONS[META.weapon||'enxada'];p.atkCD=w.cd;p.swing=.22;sfx('hit');
   if(w.dash){p.dash=.22;p.dashHit=new Set();sfx('wind');return}
   for(const e of S.en){if(e.dive>0)continue;const d=EN[e.k],ddx=(e.x-p.x)*p.face,ddy=ecy(e)-(p.y-8);
-    if(ddx>-(w.wide?10:4)&&ddx<w.rng+d.w/2&&Math.abs(ddy)<(w.wide?26:14)+d.h/2){damage(e,w.dmg*(1+.15*atr('for')));onoma(e.x,ecy(e)-6,'hit',.45);if(!d.boss)e.x+=p.face*(w.push||8);burst(e.x,ecy(e),5,['#ffffff','#e8dcc0'],60,200,.3)}}
+    if(ddx>-(w.wide?10:4)&&ddx<w.rng+d.w/2&&Math.abs(ddy)<(w.wide?26:14)+d.h/2){damage(e,w.dmg*(1+.15*atr('for'))*(S.up?S.up.str:1));onoma(e.x,ecy(e)-6,'hit',.45);if(!d.boss)e.x+=p.face*(w.push||8);burst(e.x,ecy(e),5,['#ffffff','#e8dcc0'],60,200,.3)}}
   S.fx.push({k:'swing',x:p.x,y:p.y-8,f:p.face,r:w.rng,t:0,max:.2,wide:w.wide})}
 function hurtPlayer(n,src){const p=S.p;if(p.inv>0||p.faint>0)return;p.hp-=n;p.inv=1.2;p.vx=(src&&src.x>p.x?-1:1)*140;p.vy=-120;p.on=false;
   shake(6);flash(.25,'255,40,40');sfx('hurt');pop(p.x,p.y-26,'-'+n+' coração','#ff4f4f',9);
@@ -480,7 +485,7 @@ function update(dt){
   for(let i=0;i<4;i++)if(pr('Digit'+(i+1),'Numpad'+(i+1)))playCard(S.babelOn>0&&S.perm[i]!=null?S.perm[i]:i);
   computeLinks(dt);updStory(dt);
   if(pr('KeyX','KeyJ'))playerAttack();if(pr('KeyQ'))placeItem('cerca');if(pr('KeyE'))placeItem('espantalho');if(pr('KeyR'))placeItem('lama');updHazards(dt);
-  const regen=.75*(relic('jarro')?1.2:1)*(ascN()>=2?.85:1)*(S.goal==='seca'?.5:1)*(S.mini==='ultima'?0:1)*diffNow().mana;goalUpdate(dt);miniUpdate(dt);
+  const regen=.75*(relic('jarro')?1.2:1)*(ascN()>=2?.85:1)*(S.goal==='seca'?.5:1)*(S.mini==='ultima'?0:1)*diffNow().mana*(S.up?S.up.mana:1);goalUpdate(dt);miniUpdate(dt);
   S.leaven=Math.max(0,(S.leaven||0)-dt);if(S.mana<MAXM)S.mana=Math.min(MAXM,S.mana+regen*(S.leaven>0?2:1)*dt);
   S.rain=Math.max(0,S.rain-dt);
   S.wet+=((S.rain>0?1:0)-S.wet)*Math.min(1,dt*(S.rain>0?1.5:.12));
@@ -563,8 +568,8 @@ function update(dt){
   }
   S.drops=S.drops.filter(d=>!d.got&&d.t<13);
   if(S.comboT>0){S.comboT-=dt;if(S.comboT<=0)S.combo=0}
-  S.lifeHit=Math.max(0,S.lifeHit-dt);
-  let nt=S.trevas?.82:S.levelNight===true?.55+S.wi*.05:S.levelNight===false?S.wi*.04:(MAP.nightBase||0)+S.wi*.13;if(relic('lampada'))nt*=.6;nt=Math.min(.85,nt);
+  S.lifeHit=Math.max(0,S.lifeHit-dt);if(S.pPulse)for(let i=0;i<2;i++)S.pPulse[i]=Math.max(0,S.pPulse[i]-dt*2.5);
+  let nt=S.trevas?.82:S.levelNight===true?.55+S.wi*.05:S.levelNight===false?.13+S.wi*.04:(MAP.nightBase||0)+S.wi*.13;if(relic('lampada'))nt*=.6;nt=Math.min(.85,nt);
   S.night+=(nt-S.night)*Math.min(1,dt*.6);
   tutCheck();
   if(S.state==='wave'&&!S.q.length&&!S.en.length)endWave();

@@ -45,6 +45,8 @@ function drawVfx(){if(!S||!S.vfx)return;
 
 // ---------- comic onomatopoeia: a word that hops into the air when the gardener hits, stomps or knocks a pest out
 const ONOMA={hit:['POW!','PÁ!','TOC!','PLAFT!','VAPT!','PEI!'],slam:['TUM!','BUM!','CATAPLOFT!','PUM!'],kill:['PLOFT!','CRÁS!','ZÁS!','PUF!'],big:['KABUM!','CABRUM!','BOOM!']};
+// a chosen word, no throttle: multipliers and tree powers
+function onomaW(px,py,w,kind){if(!S)return;(S.vfx||(S.vfx=[])).push({k:'onoma',x:px+rnd(-3,3),y:py,t:0,max:.9,w,seed:Math.random()*99|0,kind,big:kind==='big'})}
 function onoma(px,py,kind,chance=1){if(!S||Math.random()>chance)return;if((S.onoT||0)>S.t)return;S.onoT=S.t+.45;
   (S.vfx||(S.vfx=[])).push({k:'onoma',x:px+rnd(-4,4),y:py,t:0,max:.9,w:pick(ONOMA[kind]||ONOMA.hit),seed:Math.random()*99|0,kind,big:kind==='slam'||kind==='big'})}
 // a loose word, no balloon: thick dark outline, warm gradient letters, a hop up and a tilt

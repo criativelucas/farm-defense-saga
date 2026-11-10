@@ -153,14 +153,25 @@ const HOMEY={tree:118,tabernacle:158,pillar:120,rahab:146,altar:150,rock:150,tom
 // the world is drawn VY units higher than the screen, so the hand of cards at the bottom covers dirt, not the ground you play on
 const VY=-26;
 function view(ctx){ctx.translate(S.sx,S.sy+VY);if(S.zoom>1.005){const fx=S.zoomTo.x-S.cam,fy=S.zoomTo.y;ctx.translate(fx,fy);ctx.scale(S.zoom,S.zoom);ctx.translate(-fx,-fy)}}
+// ---------- the pests come out of two small portals at the far end: one on the ground, one up in the air for the high fliers.
+// They swirl, open wide while a wave is on and flare each time something steps out
+const portalSpots=()=>[[MAP.ww-14,gy(MAP.ww-14)-12],[MAP.ww-22,106]];
+function drawPortals(){if(!S.pPulse||!live())return;const open=S.state==='wave'?1:.55;
+  portalSpots().forEach(([px,py],i)=>{if(px<S.cam-30||px>S.cam+W+30)return;const p=S.pPulse[i],rx=(5+p*2.5)*open+1.5,ry=(10+p*4)*open+2.5;
+    const oval=(k,c)=>{const a=rx*k,b=ry*k;for(let dy=-b;dy<=b;dy+=.5){const w=a*Math.sqrt(Math.max(0,1-(dy/b)**2));r(px-w,py+dy,w*2,.5,c)}};
+    oval(1.18,'#1a0412');oval(1,'#e0285a');oval(.82,'#8a1446');oval(.6,'#3a0624');oval(.36,'#12020c');
+    for(let j=0;j<10;j++){const a=S.t*(3+i)+j*.628,q=.55+.4*((j*7)%5)/5;r(px+Math.cos(a)*rx*q,py+Math.sin(a)*ry*q,.5+(j%3===0)*.5,.5+(j%3===0)*.5,j%2?'#ff9ac0':'#ffd0e0')}
+    if(Math.random()<.25*open){const a=rnd(0,6.28),d=rx*2.2;S.parts.push({x:px+Math.cos(a)*d,y:py+Math.sin(a)*d*1.6,vx:-Math.cos(a)*d*2,vy:-Math.sin(a)*d*3,g:0,life:.4,max:.4,c:'#ff6a9a',s:1})}})}
 function buildLights(){
   const L=[],P=S.p;
   MAP.slots.forEach((s,i)=>{const t=S.tw[i];if(!t||t.grow<=.35||t.joio)return;const big=t.kinds[0]==='mostarda'&&t.age>=2,th=Math.max(...t.kinds.map(k=>TREE[k].h*TREE[k].b*(t.szv||.55)));
-    t.kinds.forEach(k=>L.push({x:s.x,y:s.y-(big?40:th*.6),r:(k==='sarca'?42+Math.sin(S.t*23+i)*5+rnd(-2,2):big?64:30)*(1+t.pulse*.6+(t.lvl||0)*.1)*Math.min(1,t.grow)*(relic('lampada')?1.25:1),c:LC[k],a:(k==='sarca'?.65:.5)*(MAP.day?.3+S.night:1)}))});
+    t.kinds.forEach(k=>L.push({x:s.x,y:s.y-(big?40:th*.6),r:(k==='sarca'?42+Math.sin(S.t*23+i)*5+rnd(-2,2):big?64:30)*(1+t.pulse*.6+(t.lvl||0)*.1)*Math.min(1,t.grow)*(relic('lampada')?1.25:1),c:LC[k],a:(k==='sarca'?.65:.5)*(MAP.day?.55+S.night:1)}))});
   for(const f of S.fx){if(f.k==='beam')L.push({x:f.x,y:110,r:120,c:'#ff4f7b',a:.9*(1-f.t/f.max)});if(f.k==='ring')L.push({x:f.x,y:f.y,r:f.r+12,c:f.c,a:.35*(1-f.t/.45)})}
-  for(const e of S.en){const d=EN[e.k];if(d.boss||d.elite)L.push({x:e.x,y:e.y-14,r:56,c:d.glow,a:.5*(MAP.day?.3+S.night:1)});else if(e.k==='feitico')L.push({x:e.x,y:e.y,r:16,c:'#5af0ff',a:.5})}
+  for(const e of S.en){const d=EN[e.k];if(d.boss||d.elite)L.push({x:e.x,y:e.y-14,r:56,c:d.glow,a:.5*(MAP.day?.55+S.night:1)});else if(e.k==='feitico')L.push({x:e.x,y:e.y,r:16,c:'#5af0ff',a:.5})}
   if(S.state!=='title')L.push({x:P.x,y:P.y-8,r:30,c:'#ffd8a0',a:.22});
   propLights(L);
+  if(S.pPulse&&live())portalSpots().forEach(([px,py],i)=>L.push({x:px,y:py,r:30+S.pPulse[i]*26,c:'#ff3a7a',a:.6+S.pPulse[i]*.4}));
+  for(const f of MAP.gfalls||[])L.push({x:f.x+f.w/2,y:f.y1-4,r:22,c:'#7ad8ff',a:.4});
   L.push({x:18,y:HOMEY[MAP.home],r:MAP.home==='pillar'?60:44,c:MAP.home==='pillar'?'#ff8a2a':'#ffe36a',a:.35+Math.sin(S.t*2)*.08});
   if(S.forbid)L.push({x:S.forbid.x,y:S.forbid.y-30,r:S.forbid.on?50:28,c:'#c070ff',a:S.forbid.on?.6:.35});
   if(S.idol&&S.idol.hp>0)L.push({x:S.idol.x,y:S.idol.y-16,r:46,c:'#f7c948',a:.45});
@@ -237,7 +248,7 @@ function drawTree(t,s,i){
   if(t.branch){const bx=s.x+7,by=s.y+3;if(t.branch==='a'){r(bx,by-1,1,3,'#f7c948');r(bx-1,by,3,1,'#f7c948');r(bx,by,1,1,'#fff6c0')}else{r(bx-1,by,3,1,'#5ab0ff');r(bx,by-1,2,1,'#9ad8ff')}}
   if(t.ark>0){x.globalAlpha=.4+Math.sin(S.t*5)*.2;ring(s.x,s.y-14,16,'#f7c948');x.globalAlpha=1}
   // grown and not yet evolved: a bobbing gold arrow says "touch me"
-  if((t.lvl||0)>=3&&!t.branch&&t.grow>=1){const ay=s.y-46+Math.round(Math.sin(S.t*5)*2),c=S.mana>=BRANCH_COST?'#ffd23a':'#8a8a9a';r(s.x-1,ay,3,4,c);r(s.x-3,ay,7,1,c);r(s.x-2,ay-1,5,1,c);r(s.x-1,ay-2,3,1,c);r(s.x,ay-3,1,1,c)}
+  if((t.lvl||0)>=3&&!t.branch&&t.grow>=1){const ax=s.x+11,ay=s.y-22+Math.round(Math.sin(S.t*5)*2),c=S.mana>=BRANCH_COST?'#ffd23a':'#8a8a9a';r(ax-1,ay,3,4,c);r(ax-3,ay,7,1,c);r(ax-2,ay-1,5,1,c);r(ax-1,ay-2,3,1,c);r(ax,ay-3,1,1,c)}
 }
 // enemies leave a quick squash-and-fade instead of vanishing
 function drawCorpses(){for(const f of S.fx){if(f.k!=='corpse')continue;const k=f.t/f.max,e=f.e;x.globalAlpha=1-k;x.save();x.translate(e.x,e.y);x.scale(1+k*.8,Math.max(.05,1-k*.9));x.translate(-e.x,-e.y);
@@ -282,7 +293,7 @@ function draw(){
   CAMF=0;dl(x,FAR,lay(PAR[0]),0);drawFarLife();if(!CFG.lite)fog(128,.16,.3);
   dl(x,MID,lay(PAR[1]),0);drawMidLife();if(!CFG.lite)fog(150,.12,.6);
   dl(x,NEAR,lay(PAR[2]),0);
-  if(!MAP.day)for(let i=0;i<18;i++){const fx=(hs(i,5)*W+S.t*(6+hs(i,6)*8))%W,fy=60+hs(i,7)*90+Math.sin(S.t*1.5+i)*6;if(Math.sin(S.t*3+i*2)>-.2)r(fx,fy,1,1,'#fff4a0')}
+  for(let i=0;i<(MAP.day?10:18);i++){const fx=(hs(i,5)*W+S.t*(6+hs(i,6)*8))%W,fy=60+hs(i,7)*90+Math.sin(S.t*1.5+i)*6;if(Math.sin(S.t*3+i*2)>-.2)r(fx,fy,1,1,'#fff4a0')}
   x.save();x.translate(-cam,0);
   dl(x,GROUND,0,0);r(cam-2,H,W+6,-VY+2,shade(MAP.pal.fill,-.78));drawGFalls();
   const gc=S.wet>.3?'#8affb0':MAP.mossTop||MAP.pal.top1;
@@ -302,10 +313,14 @@ function draw(){
     const top=s.y-(t.kinds[0]==='mostarda'&&t.age>=2?60:Math.max(...t.kinds.map(k=>TREE[k].h*TREE[k].b*(t.szv||.55)))+8|0);
     if((t.water||0)<3&&live&&Math.abs(s.x-P.x)<40){const f=(t.water||0)%1;r(s.x-6,s.y+4,12,2,'#0a1a30');r(s.x-6,s.y+4,Math.round(12*f),2,'#5ab0ff');for(let k=0;k<3;k++)r(s.x-6+k*5,s.y+7,3,1,k<(t.water|0)?'#5ab0ff':'#2a3a50')}
     if(t.joio){if((S.t*3|0)%2)r(s.x-1,top+6,3,3,'#d8d860');return}
-    if(t.dcd<=0){const b=Math.sin(S.t*6)>0?1:0;r(s.x-1,top-b,3,1,'#f7c948');r(s.x,top+1-b,1,2,'#f7c948')}
-    else{r(s.x-6,s.y+2,12,1,'#2a0c14');r(s.x-6,s.y+2,12*(1-t.dcd/6),1,'#f7c948')}
+    // the stomp power: a striped bar under the tree fills up; when full it shines and an arrow over the tree says "stomp here"
+    const ch=Math.max(0,Math.min(1,1-t.dcd/6)),bx=s.x-7,by=s.y+1;r(bx-.5,by-.5,15,3,'#1a0c10');r(bx,by,14,2,'#3a2418');
+    for(let q=0;q<14*ch;q+=.5)r(bx+q,by,.5,2,(((q*2|0)+(S.t*8|0))%4<2)?'#f7c948':'#c8901a');
+    if(t.dcd<=0){const ay=top-3+Math.round(Math.sin(S.t*6)*1.5);x.globalAlpha=.5+.4*Math.sin(S.t*8);r(bx,by,14,2,'#fff3a0');x.globalAlpha=1;
+      r(s.x-3,ay,7,2,'#1a0c10');r(s.x-2,ay+2,5,1,'#1a0c10');r(s.x-1,ay+3,3,1,'#1a0c10');r(s.x-1,ay-4,3,4,'#1a0c10');
+      r(s.x-.5,ay-3.5,2,4,'#f7c948');r(s.x-2.5,ay,6,1,'#f7c948');r(s.x-1.5,ay+1,4,1,'#f7c948');r(s.x-.5,ay+2,2,1,'#f7c948');r(s.x-.5,ay-3.5,1,3,'#fff3a0')}
   });
-  drawRanges();drawCorpses();for(const e of S.en)drawEnemy(e);
+  drawPortals();drawRanges();drawCorpses();for(const e of S.en)drawEnemy(e);
   drawSea();drawDragPreview();
   if(S.state!=='title')drawGardener(P);
   drawTutWorld();
