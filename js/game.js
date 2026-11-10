@@ -184,10 +184,12 @@ function updPlayer(dt){
   else if(p.stun<=0&&pr('ArrowDown','KeyS')&&!p.on&&!p.slam){p.slam=true;p.vy=420;p.vx=0;p.sq=.75}
   p.vy=Math.min(p.vy+560*dt,p.slam?520:400);
   const py=p.y,ox=p.x;p.x=clamp(p.x+p.vx*dt,6,MAP.ww-6);p.y+=p.vy*dt;p.moved+=Math.abs(p.x-ox);
+  if(p.slam&&p.vy>0)MAP.slots.forEach((s,i)=>{const t=S.tw[i];if(!t||t.grow<1||Math.abs(p.x-s.x)>=10)return;const cy=crownY(t,s)+3;
+    if(py<cy&&p.y>=cy&&(t.dcd<=0||t.joio||t.seduced||t.sleep)){slamTree(t,s);p.slam=false;p.y=cy;p.vy=-230;p.on=false;p.sq=1.5;shake(4);sfx('slam');vfx('dust',p.x,cy,{n:6});burst(p.x,cy,14,[LC[t.kinds[0]]||'#9ad85a','#ffffff'],90,200,.5)}});
   let floor=gy(p.x);
   if(p.vy>=0)for(const pl of MAP.plats)if(p.x>pl.x-3&&p.x<pl.x+pl.w+3&&py<=pl.y+.5&&p.y>=pl.y)floor=Math.min(floor,pl.y);
   if(p.y>=floor){
-    if(!p.on){p.sq=p.slam?1.6:1.3;vfx('dust',p.x,floor-1,{n:p.slam?8:2});if(p.slam)doSlam();else burst(p.x,floor,3,['#c9a99a'],25,0,.25)}
+    if(!p.on){p.sq=p.slam?1.6:1.3;vfx('dust',p.x,floor-1,{n:p.slam?8:2});if(p.slam){p.y=floor;doSlam()}else burst(p.x,floor,3,['#c9a99a'],25,0,.25)}
     p.y=floor;p.vy=0;p.on=true;p.slam=false;
   }else p.on=false;
   p.sq+=(1-p.sq)*Math.min(1,dt*12);p.anim+=Math.abs(p.vx)*dt*.25;
@@ -204,11 +206,8 @@ function doSlam(){mission('slam',1);onoma(S.p.x,S.p.y-10,'slam',.8);
   S.fx.push({k:'ring',x:p.x,y:p.y-2,r:2,max:rad,t:0,c:harvest?'#ffd34a':'#fff3c0'});S.fx.push({k:'shock',x:p.x,y:p.y-4,r:0,max:(davi?100:70)*(harvest?1.6:1),t:0});
   for(const e of S.en)if(EN[e.k].ai==='burrow'&&e.dive>0&&Math.abs(e.x-p.x)<rad+10){e.dive=0;pop(e.x,e.y-16,'arrancada!','#c8a060',9);burst(e.x,e.y,16,['#6a4a2a','#c8a060'],90,240,.6,2)}
   for(const e of S.en){if(Math.hypot(e.x-p.x,ecy(e)-p.y)<rad+(EN[e.k].boss?16:0)){let d=3*(davi?2:1)*(harvest?3:1)*(1+.15*atr('for'))*(S.up?S.up.str:1);if(relic('funda'))d*=EN[e.k].boss?3:2;damage(e,d);if(!EN[e.k].boss)e.x+=Math.sign(e.x-p.x||1)*6}}
-  MAP.slots.forEach((s,i)=>{const t=S.tw[i];if(!t||t.grow<1||Math.abs(s.x-p.x)>=14||Math.abs(s.y-p.y)>=3)return;
-    if(t.joio){t.joio=false;S.fx.push({k:'ring',x:s.x,y:s.y-12,r:2,max:24,t:0,c:'#ffffff'});pop(s.x,s.y-36,'joio arrancado','#ffffff');return}
-    if(t.seduced){t.seduced=false;S.fx.push({k:'ring',x:s.x,y:s.y-12,r:2,max:24,t:0,c:'#f7c948'});pop(s.x,s.y-36,'livre do ídolo','#f7c948');return}
-    if(t.sleep){t.sleep=false;t.awake=20;pop(s.x,s.y-36,'acordou','#9ab0ff')}
-    if(t.dcd<=0)superTower(t,s)});
+  // a stomp beside a tree, or on a ledge right above it (Jericho's towers): the ground may slope around the bed, so the check is generous
+  MAP.slots.forEach((s,i)=>{const t=S.tw[i];if(!t||t.grow<1||Math.abs(s.x-p.x)>=16||p.y<s.y-45||p.y>s.y+10)return;slamTree(t,s)});
   if(isChar('debora'))MAP.slots.forEach((s,i)=>{const t=S.tw[i];if(t&&Math.abs(s.x-p.x)<80)t.cd={}});
   if(relic('trombeta')&&!S.trumpet&&S.state==='wave'){S.trumpet=true;blessing('jerico')}
   if(S.forbid&&!S.forbid.on&&Math.abs(p.x-S.forbid.x)<16&&Math.abs(p.y-S.forbid.y)<4){S.forbid.on=true;S.forbid.t=1;banner('Você comeu do fruto','Poder agora, preço depois');sfx('super');flash(.4,'180,60,220')}
@@ -237,6 +236,12 @@ function plantAt(si,kinds,rare,delay=.6,plus=false){
 }
 function leaf(s,k){if(Math.random()<.6)S.parts.push({x:s.x+rnd(-8,8),y:s.y-rnd(12,24),vx:rnd(-12,12),vy:rnd(-15,0),g:25,life:1.6,max:1.6,
   c:{oliveira:'#b8cf9a',sarca:'#ffd34a',mostarda:'#e8e070',amendoeira:'#ffd0e8',lirio:'#ffffff',tamareira:'#d9a050'}[k]||'#5fe08a',s:1,sway:1})}
+function slamTree(t,s){
+  if(t.joio){t.joio=false;S.fx.push({k:'ring',x:s.x,y:s.y-12,r:2,max:24,t:0,c:'#ffffff'});pop(s.x,s.y-36,'joio arrancado','#ffffff');return}
+  if(t.seduced){t.seduced=false;S.fx.push({k:'ring',x:s.x,y:s.y-12,r:2,max:24,t:0,c:'#f7c948'});pop(s.x,s.y-36,'livre do ídolo','#f7c948');return}
+  if(t.sleep){t.sleep=false;t.awake=20;pop(s.x,s.y-36,'acordou','#9ab0ff')}
+  if(t.dcd<=0)superTower(t,s)}
+const crownY=(t,s)=>s.y-(t.kinds[0]==='mostarda'&&t.age>=2?60:Math.max(...t.kinds.map(k=>TREE[k].h*TREE[k].b*(t.szv||.55))));
 function superTower(t,s){
   t.dcd=6;t.pulse=1;sfx('super');S.stop=.08;flash(.3,'255,240,180');{// one big word: the stomp's own word grows into the tree's
     const w=pick(['GLÓRIA!','KABUM!','BOOM!','CABRUM!']),last=(S.vfx||[]).filter(v=>v.k==='onoma'&&v.t<.1).pop();if(last){last.w=w;last.big=true;last.kind='big';last.x=s.x;last.y=s.y-30}else onomaW(s.x,s.y-30,w,'big')}shake(6);burst(s.x,s.y-20,18,[LC[t.kinds[0]]||'#9ad85a','#ffffff'],120,160,.6,2);

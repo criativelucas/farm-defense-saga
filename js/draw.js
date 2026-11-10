@@ -318,7 +318,8 @@ function draw(){
     for(let q=0;q<14*ch;q+=.5)r(bx+q,by,.5,2,(((q*2|0)+(S.t*8|0))%4<2)?'#f7c948':'#c8901a');
     if(t.dcd<=0){const ay=top-3+Math.round(Math.sin(S.t*6)*1.5);x.globalAlpha=.5+.4*Math.sin(S.t*8);r(bx,by,14,2,'#fff3a0');x.globalAlpha=1;
       r(s.x-3,ay,7,2,'#1a0c10');r(s.x-2,ay+2,5,1,'#1a0c10');r(s.x-1,ay+3,3,1,'#1a0c10');r(s.x-1,ay-4,3,4,'#1a0c10');
-      r(s.x-.5,ay-3.5,2,4,'#f7c948');r(s.x-2.5,ay,6,1,'#f7c948');r(s.x-1.5,ay+1,4,1,'#f7c948');r(s.x-.5,ay+2,2,1,'#f7c948');r(s.x-.5,ay-3.5,1,3,'#fff3a0')}
+      r(s.x-.5,ay-3.5,2,4,'#f7c948');r(s.x-2.5,ay,6,1,'#f7c948');r(s.x-1.5,ay+1,4,1,'#f7c948');r(s.x-.5,ay+2,2,1,'#f7c948');r(s.x-.5,ay-3.5,1,3,'#fff3a0');
+      if(live&&Math.abs(s.x-P.x)<34&&P.y>s.y-60&&P.y<s.y+12){x.font='700 6px "Pixelify Sans", monospace';x.textAlign='center';x.lineJoin='round';x.lineWidth=2;x.strokeStyle='#1a0806';x.strokeText('pisão ↓',s.x,ay-6);x.fillStyle='#ffe36a';x.fillText('pisão ↓',s.x,ay-6)}}
   });
   drawPortals();drawRanges();drawCorpses();for(const e of S.en)drawEnemy(e);
   drawSea();drawDragPreview();

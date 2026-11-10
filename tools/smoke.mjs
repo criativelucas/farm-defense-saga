@@ -150,8 +150,10 @@ async function waveShop(label){const before=errors.length;
     S.en=[];S.coins=60;update(1/30);out.push(S.shop&&S.shop.length===3?'loja':'sem-loja');draw();
     const c0=S.coins;document.getElementById('wsroll').click();const c1=S.coins;document.querySelector('#wshop [data-up]:not([disabled])').click();out.push(c1===c0-10&&S.coins<c1&&!S.shop&&document.getElementById('wshop').hidden?'compra':'compra-ruim');
     S.mana=MAXM;plantAt(0,['hissopo'],false,0);plantAt(1,['cedro'],false,0);[0,1].forEach(i=>{Object.assign(S.tw[i],{grow:1});spawn('odio',MAP.slots[i].x+20);superTower(S.tw[i],MAP.slots[i])});
-    for(let i=0;i<10;i++){update(1/30);updFx(1/30)}draw();out.push('poderes');return out.join(',')})()`);
-  check(label+': portais, loja entre ondas, poderes '+r,errors.length===before&&r==='portais,loja,compra,poderes',errors.slice(before).join(' | ').slice(0,200))}
+    for(let i=0;i<10;i++){update(1/30);updFx(1/30)}draw();out.push('poderes');
+    const s4=MAP.slots[4];plantAt(4,['videira'],false,0);Object.assign(S.tw[4],{grow:1,dcd:0});S.p.x=s4.x+10;S.p.y=s4.y-40;S.p.on=false;S.p.slam=true;S.p.vy=420;for(let i=0;i<20;i++)update(1/30);out.push(S.tw[4].dcd>4?'pisao':'pisao-falhou');
+    return out.join(',')})()`);
+  check(label+': portais, loja entre ondas, poderes '+r,errors.length===before&&r==='portais,loja,compra,poderes,pisao',errors.slice(before).join(' | ').slice(0,200))}
 console.log('— new player');await load(true,false);await loopAndScene('new');
 console.log('— player with progress');await js(`Object.assign(META,{intro:1,tut:1,coins:5000});['1-1','1-2','1-3','1-4','2-1','2-4'].forEach(i=>META.done[i]=1);saveMeta();1`);await everyScreen('progress');await farmers('progress');await packs('progress');await pests('progress');await newCards('progress');await battles('progress');await goals('progress');await minis('progress');await audio('progress');await polish('progress');await waveShop('progress');
 console.log('— embed with gamepad blocked');await load(false,true);await loopAndScene('blocked-pad');
