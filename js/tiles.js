@@ -36,6 +36,8 @@ function buildProps(){
   const L=[],kind={eden:'lantern',getsemani:'lantern',tumulo:'lantern',ressurreicao:'lantern'}[MAPID]||'torch';
   const bad=x0=>x0<46||MAP.slots.some(s=>Math.abs(s.x-x0)<14)||inWater(x0)||(MAP.sea&&x0>MAP.sea[0]-8&&x0<MAP.sea[1]+8);
   MAP.flats.forEach(([a,b,y],si)=>{if(b-a<40||hs(si,6)<.3)return;const x0=a+10+(hs(si,5)*(b-a-20)|0);if(!bad(x0))L.push({t:kind,x:x0,y})});
+  // a lamp on the wide islands too, on the left end, away from the beds
+  MAP.plats.forEach((pl,k)=>{if(pl.wall||pl.w<40||hs(k,19)<.4)return;const x0=pl.x+5;if(!MAP.slots.some(s=>Math.abs(s.x-x0)<12&&Math.abs(s.y-pl.y)<2))L.push({t:kind,x:x0,y:pl.y})});
   // little animals: birds that fly off when you come close, rabbits in the grass, lizards on the hot rocks
   if(MAP.day&&MAPID!=='getsemani'){const spots=MAP.flats.filter(([a,b])=>b-a>30&&!bad((a+b)/2));
     spots.forEach(([a,b,y],k)=>{if(hs(k,13)<.45)return;const bx=a+8+hs(k,14)*(b-a-16);if(!bad(bx))L.push({t:'bird',x:bx,y,hx:bx,hy:y,s:k,ft:-1,c:['#c0392b','#2a6ad8','#e8a020','#6a4a3a'][k%4]})});

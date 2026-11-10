@@ -126,7 +126,7 @@ function damage(e,d,src){
   if(e.hp<=0)kill(e);
 }
 function kill(e){
-  const d=EN[e.k];S.done++;deathFx(e);mission('kill',1);
+  const d=EN[e.k];S.done++;if(e.frz>0){burst(e.x,ecy(e),22,['#9fe8ff','#ffffff','#2a7ab0'],120,260,.6,2);onomaW(e.x,ecy(e)-14,'CRACK!','big');sfx('pop')}deathFx(e);mission('kill',1);
   if(RUN){RUN.stats.kills++;META.stats.kills++}
   const v=isChar('rute')?2:1;
   for(let i=0;i<Math.ceil(d.rew/5);i++)S.drops.push({x:e.x,y:ecy(e),vx:rnd(-50,50),vy:rnd(-120,-60),v,t:0,g:300});
@@ -248,7 +248,7 @@ function superTower(t,s){
   tutEvent('slam');
   const m=tmult(t);
   for(const k of t.kinds){
-    if(k==='videira')for(let i=0;i<16;i++)S.proj.push({x:s.x+rnd(-70,70),y:rnd(-40,0),vx:rnd(-10,10),vy:rnd(40,90),g:260,kind:'grape',dmg:3*m,src:k,life:3});
+    if(k==='videira')for(let i=0;i<16;i++)S.proj.push({x:s.x+rnd(-70,70),y:rnd(-40,0),vx:rnd(-10,10),vy:rnd(40,90),g:260,kind:'grape',dmg:3*m,src:k,life:3,big:1});
     if(k==='roma'){beam(s.x,26,16*m);t.cd.roma=0}
     if(k==='oliveira'){S.fx.push({k:'ring',x:s.x,y:s.y-14,r:4,max:80,t:0,c:'#9fe8ff'});for(const e of S.en)if(Math.hypot(e.x-s.x,ecy(e)-s.y)<80){e.frz=3;damage(e,1*m,k)}}
     if(k==='sarca'){S.fx.push({k:'ring',x:s.x,y:s.y-8,r:4,max:80,t:0,c:'#ff9a3c'});burst(s.x,s.y-8,40,['#ff6a1a','#ffd34a','#fff'],150,60,.6,2);for(const e of S.en)if(Math.hypot(e.x-s.x,ecy(e)-s.y)<80)damage(e,9*m,k)}
@@ -496,6 +496,8 @@ function update(dt){
   S.wet+=((S.rain>0?1:0)-S.wet)*Math.min(1,dt*(S.rain>0?1.5:.12));
   if(S.rain>0&&Math.random()<dt*70)S.parts.push({x:S.cam+rnd(0,W+40),y:-4,vx:-30,vy:260,g:0,life:.9,max:.9,c:'#8ac8ff',s:1,a:.7});
   if(MAPID==='eden'&&Math.random()<dt*3)S.parts.push({x:S.cam+rnd(0,W+60),y:rnd(-10,60),vx:rnd(-22,-8),vy:rnd(8,16),g:0,life:9,max:9,c:pick(['#ffb0c8','#ff8ab0','#fff0f4']),s:1,sway:1});
+  if(S.parts.length<200&&Math.random()<dt*(CFG.lite?1.5:5)){const night=S.night>.35,c=night?pick(['#7af0d0','#b0ffe8','#fff4a0']):MAP.pal.grass?pick(['#fff4b0','#d8ffb0','#ffffff']):pick(['#ffe8b0','#fff6d8','#ffd8a0']);
+    S.parts.push({x:S.cam+rnd(-20,W+20),y:rnd(20,190),vx:rnd(-6,6),vy:night?rnd(-6,6):rnd(-14,-5),g:0,life:rnd(4,8),max:8,c,s:1,sway:1,a:night?.9:.6,blink:night?rnd(3,6):0})}
   if(MAPID==='getsemani'&&Math.random()<dt*2)S.parts.push({x:S.cam+rnd(0,W),y:rnd(60,160),vx:rnd(-4,4),vy:rnd(-4,4),g:0,life:3,max:3,c:'#fff4a0',s:1,sway:1});
   if(MAP.storm){
     if(Math.random()<dt*(6+S.sand*90))S.parts.push({x:S.cam+W+rnd(0,30),y:rnd(50,205),vx:-rnd(120,240),vy:rnd(-6,6),g:0,life:2.6,max:2.6,c:pick(['#e8c890','#c9a070']),s:1,a:.55});

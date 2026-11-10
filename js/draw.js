@@ -14,6 +14,8 @@ function drawEnemy(e){
   const age=S.t-(e.born??-9),sp=(age<.3?Math.max(.05,easeBack(age/.3)):1)*(e.ph2?1.06+.02*Math.sin(S.t*8):1),hq=e.flash>0?1:0;
   x.save();x.translate(e.x,e.y);x.scale(sp*(1+hq*.2),sp*(1-hq*.16));x.translate(-e.x,-e.y);
   OV=e.flash>0?'#ffffff':e.frz>0?'#a8ecff':null;enemyBody(e);OV=null;x.restore();
+  if(e.frz>0){const w=d.w+6,h=d.h+6,top=(d.fly?e.y-d.h/2:e.y-d.h)-3,lx=e.x-w/2;x.globalAlpha=.5;r(lx,top,w,h,'#9fe8ff');x.globalAlpha=.9;r(lx,top,w,1,'#e8fbff');r(lx,top,1,h,'#e8fbff');r(lx+w-1,top,1,h,'#2a7ab0');r(lx,top+h-1,w,1,'#2a7ab0');
+    r(lx+2,top+2,1,h*.4,'#ffffff');r(lx+w-4,top+h*.5,1,h*.3,'#ffffff');x.globalAlpha=1;if(Math.random()<.08)S.parts.push({x:lx+rnd(0,w),y:top+rnd(0,h),vx:0,vy:-8,g:0,life:.5,max:.5,c:'#e8fbff',s:1})}
   if(e.shield){x.globalAlpha=.35+Math.sin(S.t*6)*.1;ring(e.x,ecy(e),Math.max(d.w,d.h)/2+3,'#9ab0ff');x.globalAlpha=1}
   drawTelegraph(e);
   if(e.armorMax&&e.armor>0){const w=Math.min(24,d.w+2),top=(d.fly?e.y-d.h/2:e.y-d.h)-9;r(e.x-w/2,top,w,2,'#2a2a2a');r(e.x-w/2,top,w*e.armor/e.armorMax,2,'#d8d8e0')}
@@ -179,15 +181,22 @@ function buildLights(){
   for(const f of S.fruitDrops)L.push({x:f.x,y:f.y,r:10,c:LC[f.k]||'#ffd34a',a:.5});
   LIGHTS=L;
 }
+// at night the moss itself glows: a thin bright line along every grassy edge and down the hanging vines (bloom layer)
+function drawRimGlow(){const a=(S.night-.15)*.7;if(a<=0||!MAP.mossTop)return;gx.globalAlpha=Math.min(.6,a);const c=MAP.mossTop,c0=Math.floor(S.cam)-2,c1=c0+W+4;
+  for(let u=c0;u<c1;u++){if(inWater(u))continue;r(u,gy(u)-1,1,1.5,c)}
+  for(const pl of MAP.plats){if(pl.wall||pl.x+pl.w<c0||pl.x>c1)continue;r(pl.x-1,pl.y-1,pl.w+2,1.5,c)}
+  for(const v of MAP.vines){if(v.x<c0||v.x>c1)continue;r(v.x,v.y,1,v.len,'#5fe0a0')}gx.globalAlpha=1}
 function glowBlob(ctx,L,mul=1){if(L.r<=1)return;const g=ctx.createRadialGradient(L.x,L.y,0,L.x,L.y,L.r);g.addColorStop(0,L.c);g.addColorStop(1,'rgba(0,0,0,0)');
   ctx.globalAlpha=Math.min(1,L.a*mul);ctx.fillStyle=g;ctx.fillRect(L.x-L.r,L.y-L.r,L.r*2,L.r*2);ctx.globalAlpha=1}
+// shafts of light in every garden: soft leaning bands of sun by day, of moonlight at night (Sinai keeps its storm light)
 function drawRays(){
-  const nk=1-S.night;if(nk<.05||MAP.rays==='none')return;
+  const moon=S.night>.5,k=moon?.6*(S.night-.4):1-S.night;if(k<.03||(MAP.rays==='none'&&!moon))return;
+  const col=moon?'170,195,255':MAP.mood==='dusk'?'255,170,110':MAP.mood==='dawn'?'255,205,165':'255,228,165';
   x.save();x.globalCompositeOperation='lighter';
-  if(MAP.rays==='eden'){for(let i=0;i<5;i++){const span=W+220,bx=((i*120-S.cam*.3)%span+span)%span-110,a=(.045+.025*Math.sin(S.t*.7+i*2))*nk;
-    x.fillStyle=`rgba(255,205,150,${a})`;x.beginPath();x.moveTo(bx,0);x.lineTo(bx+16,0);x.lineTo(bx+86,178);x.lineTo(bx+52,178);x.fill()}}
-  else{for(let i=0;i<6;i++){const a=(.03+.02*Math.sin(S.t*.9+i*1.7))*nk*(S.bolt>0?3:1),bx=150+i*42+Math.sin(S.t*.3+i)*6;
+  if(MAP.rays==='sinai'&&!moon){for(let i=0;i<6;i++){const a=(.03+.02*Math.sin(S.t*.9+i*1.7))*k*(S.bolt>0?3:1),bx=150+i*42+Math.sin(S.t*.3+i)*6;
     x.fillStyle=`rgba(190,180,255,${a})`;x.beginPath();x.moveTo(284+i*2,42);x.lineTo(288+i*2,42);x.lineTo(bx+22,216);x.lineTo(bx,216);x.fill()}}
+  else{x.transform(1,0,.34,1,0,0);for(let i=0;i<5;i++){const span=W+300,bx=((i*118+hs(i,5)*40-S.cam*.3)%span+span)%span-150,a=(.13+.06*Math.sin(S.t*.6+i*2))*k,w=24+i*8;
+    const g=x.createLinearGradient(bx,0,bx+w,0);g.addColorStop(0,`rgba(${col},0)`);g.addColorStop(.5,`rgba(${col},${a})`);g.addColorStop(1,`rgba(${col},0)`);x.fillStyle=g;x.fillRect(bx,-10,w,230)}}
   x.restore();
 }
 function fog(y,a,spd){const fc=MAP.mood==='day'?'214,236,246':MAP.fog;for(let k=0;k<3;k++){const span=W+260,bx=((k*200-S.cam*spd+S.t*5)%span+span)%span-130;
@@ -262,16 +271,19 @@ function subpixel(f){SUBPX=Math.round(f*8)/8;const live=S&&(S.state==='prep'||S.
   const t=`translateX(${(-SUBPX*100/(W+1)).toFixed(3)}%)`+(z!==1?` scale(${z})`:''),o=(VIEW.ox*100).toFixed(2)+'% '+(VIEW.oy*100).toFixed(2)+'%';
   cv.style.transformOrigin=gl.style.transformOrigin=o;cv.style.transform=t;gl.style.transform=t}
 function screenToWorld(cx,cy){const rc=$('stage').getBoundingClientRect(),fx=VIEW.ox+((cx-rc.left)/rc.width-VIEW.ox)/VIEW.z,fy=VIEW.oy+((cy-rc.top)/rc.height-VIEW.oy)/VIEW.z;return[fx*W+S.cam,fy*H-VY]}
-function drawParts(){for(const p of S.parts){x.globalAlpha=Math.min(1,p.life/p.max*1.5)*(p.a??1);r(p.x,p.y,p.s,p.s,p.c)}x.globalAlpha=1}
+const partA=p=>Math.min(1,p.life/p.max*1.5,(p.max-p.life)*3)*(p.a??1);
+function drawParts(){for(const p of S.parts){if(p.blink&&Math.sin(p.life*p.blink)<0)continue;x.globalAlpha=partA(p);r(p.x,p.y,p.s,p.s,p.c)}x.globalAlpha=1}
 const PCOL={grape:['#7b2fbf','#c58cff'],oil:['#d9c24a','#fff3a0'],seed:['#e8e070','#fff'],mustard:['#c9c040','#fff8a0'],sow:['#e8c86a','#fff'],fig:['#6a2a5a','#c070b0'],date:['#d9802a','#ffc080'],almond:['#e8d0b0','#fff'],pstone:['#9a9aa8','#e0e0e8']};
 // fruit shots: a short fading trail, a dark rim so they read on any background, a bright core
 function drawProj(){for(const p of S.proj){const c=PCOL[p.kind],s=p.kind==='mustard'||p.kind==='fig'?4:3;
-    if(C===x)for(let k=3;k>=1;k--){x.globalAlpha=.18*(4-k);r(p.x-1-p.vx*k*.016,p.y-1-p.vy*k*.016,s-1,s-1,c[1])}x.globalAlpha=1;
+    if(C===x){const n=p.big?9:3;for(let k=n;k>=1;k--){x.globalAlpha=.6*(1-k/(n+1));r(p.x-1-p.vx*k*.016,p.y-1-p.vy*k*.016,s-1,s-1,c[1])}}x.globalAlpha=1;
     if(C===x)r(p.x-1.5,p.y-1.5,s+1,s+1,'#1a0806');r(p.x-1,p.y-1,s,s,c[0]);r(p.x-1,p.y-1,1,1,c[1])}
   for(const s of S.eproj){r(s.x-2,s.y-2,4,4,'#7a7a80');r(s.x-2,s.y-2,2,1,'#c9c9d0')}}
 function drawBeams(){for(const f of S.fx){
-  if(f.k==='beam'){const a=1-f.t/f.max,w=f.w*a;x.globalAlpha=a;r(f.x-w,0,w*2,gy(f.x),'#ff4f7b');r(f.x-w/3,0,w*2/3,gy(f.x),'#fff0f4');x.globalAlpha=1;
-    if(Math.random()<.5)S.parts.push({x:f.x+rnd(-f.w,f.w),y:rnd(20,gy(f.x)),vx:0,vy:-20,g:0,life:.3,max:.3,c:'#ff9aa8',s:1})}
+  if(f.k==='beam'){const a=1-f.t/f.max,w=f.w*a,h=gy(f.x),g=x.createLinearGradient(f.x-w*1.7,0,f.x+w*1.7,0);
+    g.addColorStop(0,'rgba(255,79,123,0)');g.addColorStop(.3,'rgba(255,79,123,.85)');g.addColorStop(.5,'#fff4f8');g.addColorStop(.7,'rgba(255,79,123,.85)');g.addColorStop(1,'rgba(255,79,123,0)');
+    x.globalAlpha=a;x.fillStyle=g;x.fillRect(f.x-w*1.7,0,w*3.4,h);for(let i=0;i<3;i++)r(f.x-w+rnd(0,w*2),rnd(0,h),1,rnd(4,12),'#ffffff');x.globalAlpha=1;
+    if(Math.random()<.8)S.parts.push({x:f.x+rnd(-w*1.5,w*1.5),y:h-2,vx:rnd(-40,40),vy:rnd(-120,-40),g:200,life:.5,max:.5,c:pick(['#ff9aa8','#ffffff']),s:1})}
   else if(f.k==='ring'){x.globalAlpha=1-f.t/.45;ring(f.x,f.y,f.r,f.c);ring(f.x,f.y,f.r*.8,f.c);x.globalAlpha=1}
   else if(f.k==='bird'){const w=(S.t*12|0)%2;r(f.x-2,f.y-w,2,1,'#2a2030');r(f.x,f.y,1,1,'#2a2030');r(f.x+1,f.y-w,2,1,'#2a2030')}
   else if(f.k==='swing'){const a=1-f.t/f.max;x.globalAlpha=a;const n=f.wide?14:9;for(let i=0;i<=n;i++){const an=(-1.2+i/n*2.2)*(f.wide?1.2:1);r(f.x+f.f*Math.cos(an)*f.r,f.y+Math.sin(an)*f.r*(f.wide?1:.6),2,1,'#ffffff')}x.globalAlpha=1}
@@ -360,9 +372,9 @@ function draw(){
   gx.clearRect(0,0,W+1,H);if(CFG.lite)return;gx.save();view(gx);gx.globalCompositeOperation='lighter';
   for(const L of LIGHTS)glowBlob(gx,{...L,x:L.x-cam});
   gx.translate(-cam,0);C=gx;
-  gx.globalAlpha=.16;for(const e of S.en){if(e.dive>0||S.mini==='escuro'&&!darkVisible(e))continue;OV=EN[e.k].glow;enemyBody(e)}OV=null;gx.globalAlpha=1;
+  for(const e of S.en){if(e.dive>0||S.mini==='escuro'&&!darkVisible(e))continue;gx.globalAlpha=e.flash>0?.75:e.frz>0?.4:.16;OV=e.flash>0?'#ffffff':e.frz>0?'#9fe8ff':EN[e.k].glow;enemyBody(e)}OV=null;gx.globalAlpha=1;
   drawProj();drawDrops();
-  for(const p of S.parts){gx.globalAlpha=Math.min(1,p.life/p.max*1.5)*(p.a??1);r(p.x,p.y,p.s,p.s,p.c)}gx.globalAlpha=1;
+  for(const p of S.parts){if(p.blink&&Math.sin(p.life*p.blink)<0)continue;gx.globalAlpha=partA(p);r(p.x,p.y,p.s,p.s,p.c)}gx.globalAlpha=1;drawRimGlow();
   for(const f of S.fx){if(f.k==='beam'){const a=1-f.t/f.max,w=f.w*a;gx.globalAlpha=a;r(f.x-w,0,w*2,gy(f.x),'#ff4f7b');gx.globalAlpha=1}
     else if(f.k==='ring'){gx.globalAlpha=1-f.t/.45;ring(f.x,f.y,f.r,f.c);gx.globalAlpha=1}}
   C=x;gx.restore();
