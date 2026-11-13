@@ -12,7 +12,9 @@ const WORLDS=[
 // the card each level gives on its first win (index = level number): the newer cards arrive just before the pests they answer
 // (the Stone before the crowned Pride, the Hyssop and the Light before the Lie, the Bitterness and the Vanity)
 const UNLOCK_ORDER=['roma','oliveira','chuva','sarca','figueira','jerico','lirio','talentos','tamareira','semeador','amendoeira','mostarda','profecia',
-  'pedra','paz','fermento','cedro','hissopo','luz','fogo','ovelha','acacia','sicomoro','nogueira','vento','uncao','nuvem','estrela'];
+  'pedra','paz','fermento','cedro','hissopo','luz','fogo','ovelha','acacia','sicomoro','nogueira',
+  // boss stages 1-5 to 7-5
+  'orvalho','espada','rede','sal','linguas','virgens','vinha','vento','uncao','nuvem','estrela'];
 const RULES={poucas:{name:'Mão curta',desc:'Só 3 cartas na mão'},sempisao:{name:'Sem pisão',desc:'O pisão não funciona'},trevas:{name:'Noite total',desc:'Escuridão quase completa'}};
 // Adventure difficulty: pests' life, mana speed, coins won and the best stars possible; a Hard win crowns the level
 const DIFF={facil:{name:'Fácil',hp:.7,mana:1.25,eden:.6,coin:.75,stars:2,desc:'Pragas mais fracas, maná mais rápido e o Éden aguenta mais. Vale até 2 estrelas.'},
@@ -22,20 +24,27 @@ const DIFF={facil:{name:'Fácil',hp:.7,mana:1.25,eden:.6,coin:.75,stars:2,desc:'
 const DMODS={poucas:{name:'Mão curta',desc:'Só 3 cartas na mão'},sempisao:{name:'Sem pisão',desc:'O pisão não funciona'},trevas:{name:'Noite total',desc:'Escuridão quase completa'},
   forte:{name:'Pragas fortes',desc:'+30% de vida nas pragas',hp:1.3},pressa:{name:'Pressa',desc:'Pragas 25% mais rápidas',spd:1.25},
   farto:{name:'Maná farto',desc:'Maná 50% mais rápido',mana:1.5},fragil:{name:'Éden frágil',desc:'O Éden começa com 12 de vida'}};
-function dailyAdv(){const k=todayKey(),done=LEVELS.filter(l=>META.done[l.id]);if(done.length<2)return null;seedRng(+k.replace(/-/g,''));
+function dailyAdv(){const k=todayKey(),done=LEVELS.filter(l=>META.done[l.id]&&!l.bossStage);if(done.length<2)return null;seedRng(+k.replace(/-/g,''));
   const L=done[Math.floor(RNG()*done.length)],keys=Object.keys(DMODS),a=keys.splice(Math.floor(RNG()*keys.length),1)[0],b=keys[Math.floor(RNG()*keys.length)];RNG=Math.random;
   return{n:L.n,mods:[a,b],won:!!(META.dailyAdv||{})[k]}}
 const diffNow=()=>{const D=DIFF[RUN&&RUN.mode==='level'&&!RUN.mini&&RUN.diff||'normal'];if(!RUN||!RUN.dmods)return D;
   const o={...D};RUN.dmods.forEach(m=>['hp','spd','mana'].forEach(f=>{if(DMODS[m][f])o[f]=(o[f]||1)*DMODS[m][f]}));return o};
 const RULE_AT={5:'poucas',9:'sempisao',13:'trevas',17:'poucas',21:'sempisao'};
 // a world with a fixed sky (Getsêmani at night, the resurrection garden at dawn) keeps it on all four levels
-const LEVELS=[];WORLDS.forEach((w,wi)=>{for(let l=0;l<4;l++){const n=wi*4+l;LEVELS.push({id:(wi+1)+'-'+(l+1),wi,l,n,night:w.sky?w.sky==='night':l%2===1||RULE_AT[n]==='trevas',boss:l===3?w.boss:null,rule:RULE_AT[n]||null})}});
+const LEVELS=[];WORLDS.forEach((w,wi)=>{for(let l=0;l<4;l++){const n=wi*4+l;LEVELS.push({id:(wi+1)+'-'+(l+1),wi,l,n,night:w.sky?w.sky==='night':l%2===1||RULE_AT[n]==='trevas',boss:null,rule:RULE_AT[n]||null})}});
+// the fifth level of every world belongs to its boss (BSTAGE); they come after the 28 others so the numbered tables stay put.
+// The Shadow of Death waits in the dark, so its stage is at night even in the dawn garden.
+{const base=LEVELS.length;WORLDS.forEach((w,wi)=>{w.boss=BSTAGE[wi].boss;LEVELS.push({id:(wi+1)+'-5',wi,l:4,n:base+wi,night:w.id==='ressurreicao'||(w.sky?w.sky==='night':true),boss:w.boss,bossStage:1,rule:null})})}
+const bossStageOf=wi=>LEVELS.find(l=>l.bossStage&&l.wi===wi);
 // players who won a level before its card reward existed get the card now
 {const late=LEVELS.map(l=>UNLOCK_ORDER[l.n]).filter((k,i)=>k&&META.done[LEVELS[i].id]&&!META.unlocked.includes(k));
   if(late.length){late.forEach(k=>{META.unlocked.push(k);META.seen.c[k]=1});saveMeta();setTimeout(()=>toast('Cartas novas da Aventura',late.slice(0,4).map(k=>CARDS[k].name).join(', ')+(late.length>4?' e outras '+(late.length-4):'')),1500)}}
 const starsOf=id=>(META.stars||{})[id]||0;
 const starStr=n=>'★'.repeat(n)+'☆'.repeat(3-n);
-const levelOpen=n=>n===0||!!META.done[LEVELS[n-1].id];
+// a level opens after the one before it; a boss stage after its world's fourth level; a new world after the last boss stage.
+// Levels already won stay open, so saves from before the boss stages keep everything they had.
+const levelOpen=n=>{const L=LEVELS[n];if(!L)return false;if(n===0||META.done[L.id])return true;if(L.bossStage)return !!META.done[LEVELS[L.wi*4+3].id];
+  if(L.l===0)return !!META.done[bossStageOf(L.wi-1).id];return !!META.done[LEVELS[n-1].id]};
 const gardenOpen=()=>!!META.done['1-4'];
 const jornadaOpen=()=>!!META.done['2-4'];
 
@@ -197,24 +206,24 @@ function drawWorldMap(){
 function showWorld(sel){
   if(sel!=null)selWorld=sel;else if(selWorld==null){selWorld=0;for(let i=WORLDS.length-1;i>=0;i--)if(levelOpen(i*4)){selWorld=i;break}}
   const plate=(w,i)=>{const n=LEVELS.filter(l=>l.wi===i&&META.done[l.id]).length,open=levelOpen(i*4);
-    return `<button type="button" class="isle ${selWorld===i?'on':''} ${open?'':'locked'}" style="left:${w.x/480*100}%;top:${(w.y+18)/300*100}%;${w.x>400?'translate:-36% 0':w.x<80?'translate:36% 0':''}" data-w="${i}" ${open?'':'disabled'}><b>${w.name}</b><small>${open?n+'/4 fases':'bloqueada'}</small></button>`};
+    return `<button type="button" class="isle ${selWorld===i?'on':''} ${open?'':'locked'}" style="left:${w.x/480*100}%;top:${(w.y+18)/300*100}%;${w.x>400?'translate:-36% 0':w.x<80?'translate:36% 0':''}" data-w="${i}" ${open?'':'disabled'}><b>${w.name}</b><small>${open?n+'/5 fases':'bloqueada'}</small></button>`};
   prefetchTrack(WORLDS[selWorld].map);
   const w=WORLDS[selWorld],lv=LEVELS.filter(l=>l.wi===selWorld),st=STORY[w.map]||STORY[w.arena]||['',''],wstars=lv.reduce((a,l)=>a+starsOf(l.id),0);
   const next=LEVELS.find(l=>levelOpen(l.n)&&!META.done[l.id]);
   // one card per level: number, sky, what is special about it, who is new, the stars won and the prize of the first win
   const card=l=>{const open=levelOpen(l.n),done=META.done[l.id],unl=UNLOCK_ORDER[l.n],nu=(PEST_INTRO[l.n]||[]),isNext=next&&next.n===l.n;
     const chips=[l.boss?`<span class="lc boss"><canvas width="48" height="48" data-enemy="${l.boss}"></canvas>${EN[l.boss].name}</span>`:'',
-      l.rule?`<span class="lc rule">${RULES[l.rule].name}</span>`:'',l.goal?`<span class="lc goal">${GOALS[l.goal].name}</span>`:'',
+      l.rule?`<span class="lc rule">${RULES[l.rule].name}</span>`:'',l.goal?`<span class="lc goal">${GOALS[l.goal].name}</span>`:'',l.bossStage?`<span class="lc goal">⏱ ${BSTAGE[l.wi].time}s · ${BSTAGE[l.wi].rule}</span>`:'',
       ...nu.map(k=>`<span class="lc new"><canvas width="48" height="48" data-enemy="${k}"></canvas>Nova: ${EN[k].name}</span>`)].join('');
     const prize=done?`<span class="lprize got">✓</span>`:unl&&!META.unlocked.includes(unl)?`<span class="lprize card" title="Carta: ${CARDS[unl].name}"><canvas width="${MINI_W*CK}" height="${MINI_H*CK}" data-mini-unl="${unl}"></canvas></span>`:`<span class="lprize coin"><canvas width="12" height="12" class="coin"></canvas></span>`;
     return`<button type="button" class="lvcard ${l.night?'night':'day'} ${done?'done':''} ${isNext?'next':''} ${open?'':'locked'}" data-l="${l.n}" ${open?'':'disabled'}>
       <span class="lnum"><canvas width="16" height="16" data-sky="${l.night?1:0}"></canvas><b>${l.id}</b></span>
-      <span class="linfo"><i>${l.night?'Noite':'Dia'}${l.boss?' · Chefe':''}</i><span class="lchips">${chips||'<span class="lc">Fase comum</span>'}</span></span>
+      <span class="linfo"><i>${l.bossStage?'Fase do chefe':(l.night?'Noite':'Dia')}</i><span class="lchips">${chips||'<span class="lc">Fase comum</span>'}</span></span>
       <span class="lend"><span class="stars">${(META.crown||{})[l.id]?'<b class="lcrown" title="Vencida no Difícil">👑</b>':''}${done?starStr(starsOf(l.id)):open?'':'🔒'}</span>${isNext?'<b class="lgo">Jogar ›</b>':prize}</span></button>`};
   menu(`<div class="mbox wide modern adv"><div class="topbar"><button class="btn ghost" data-go="hub">‹ Menu</button><h2>Aventura</h2>${coinsTag()}</div>
     <div class="wmap"><canvas id="wmapc" width="480" height="300"></canvas>${WORLDS.map(plate).join('')}</div>
     <div class="lvpanel"><div class="whead"><small>Capítulo ${selWorld+1} de ${WORLDS.length}</small><h3>${w.name}</h3>
-      <div class="wstars"><i style="width:${wstars/12*100}%"></i><span>★ ${wstars}/12</span></div>
+      <div class="wstars"><i style="width:${wstars/15*100}%"></i><span>★ ${wstars}/15</span></div>
       <div class="diffsel" role="radiogroup" aria-label="Dificuldade">${Object.entries(DIFF).map(([k,d])=>`<button type="button" role="radio" aria-checked="${(META.diff||'normal')===k}" data-diff="${k}" class="${(META.diff||'normal')===k?'on':''}">${d.name}</button>`).join('')}</div><small class="diffdesc">${DIFF[META.diff||'normal'].desc}</small><p>${st[1]} <em>${st[0]}</em></p></div>
       <div class="lvrow">${lv.map(card).join('')}</div></div></div>`);
   paintCoins();
@@ -222,7 +231,7 @@ function showWorld(sel){
   $('menu').querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>{sfx('card');showWorld(+b.dataset.w)});
   $('menu').querySelectorAll('[data-diff]').forEach(b=>b.onclick=()=>{sfx('card');META.diff=b.dataset.diff;saveMeta();showWorld()});
   $('menu').querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{initAudio();startLevel(+b.dataset.l)});
-  const bossDone=META.done[LEVELS[selWorld*4+3].id],best=(META.endless||{})[selWorld]||0;
+  const bossDone=META.done[bossStageOf(selWorld).id],best=(META.endless||{})[selWorld]||0;
   $('menu').querySelector('.lvpanel').insertAdjacentHTML('beforeend',`<button class="btn ${bossDone?'':'ghost'} lendless" id="endless" ${bossDone?'':'disabled'}>∞ Modo infinito${bossDone?' · recorde '+best+' ondas':' · vença a última fase'}</button>`);
   const dly=dailyAdv();$('endless').insertAdjacentHTML('beforebegin',`<button class="btn dailyb ${dly&&dly.won?'ghost':''}" id="dailyadv" ${dly?'':'disabled'}><b>☀ Desafio do dia</b><small>${dly?`Fase ${LEVELS[dly.n].id} · ${dly.mods.map(m=>DMODS[m].name).join(' + ')} · ${dly.won?'✓ vencido hoje':'prêmio: pacote + 150 moedas'}`:'vença 2 fases para liberar'}</small></button>`);
   if(dly)$('dailyadv').onclick=()=>{initAudio();startLevel(dly.n);RUN.dmods=dly.mods;RUN.diff='normal';toast('Desafio do dia',dly.mods.map(m=>DMODS[m].name+': '+DMODS[m].desc).join(' · '))};
@@ -241,6 +250,8 @@ function startLevel(n){
   RUN={mode:'level',level:n,diff:META.diff||'normal',char:META.char,asc:0,daily:false,seed:0,act:w.act,row:0,rows:[],path:[],hp:20,maxhp:20,siclos:0,coll:advColl(),deck:[],relics:[],handSize:4,esau:-1,samaritano:0,seenEv:[],stats:{kills:0,bosses:0},podas:0};
   const prev=META.lastDeck&&META.lastDeck.length?META.lastDeck:null;
   RUN.deck=prev?RUN.coll.filter((c,i,a)=>prev.includes(c.k)&&a.findIndex(o=>o.k===c.k)===i).concat(RUN.coll.filter((c,i,a)=>prev.includes(c.k)&&a.findIndex(o=>o.k===c.k)!==i)).slice(0,levelBag(n)[1]):RUN.coll.slice(0,levelBag(n)[1]);
+  // the boss stage brings its own cards on the seed cart: no bag to choose
+  if(L.bossStage){RUN.deck=RUN.coll.slice(0,10);return startLevelBattle()}
   showDeck();
 }
 function levelNode(){
@@ -250,6 +261,7 @@ function levelNode(){
   const nW=L.l===0?2:3,waves=[];
   for(let i=0;i<nW;i++)waves.push(genWave(w.act,i+L.l,'batalha',0,levelPool(L.n)));
   if(L.boss){waves[waves.length-1].list.unshift([L.boss,2.5]);waves[waves.length-1].name=EN[L.boss].name}
+  if(L.bossStage){waves.length=0;const pool=levelPool(L.wi*4+3);waves.push({name:EN[L.boss].name,list:[[L.boss,1.5],...[0,1,2,3].map(()=>[rpick(pool),rr(2.5,4)])]})}
   RNG=Math.random;
   return{type:L.boss?'chefe':'batalha',map:w.arena&&L.boss?w.arena:w.map,waves,night:L.night,level:L.id};
 }
@@ -266,16 +278,16 @@ function levelWon(){
   saveMeta();MUS.mode='calm';mission('win',1);if(stars===3)mission('star3',1);
   // every win leaves a seedling of a tree you know in the greenhouse
   const known=META.unlocked.filter(k=>CARDS[k].type==='semente'),sprout=known.length?known[(Math.random()*known.length)|0]:null;if(sprout){const sk='t:'+sprout;META.garden.seeds[sk]=(META.garden.seeds[sk]||0)+1;saveMeta()}
-  const news=unlocksAfter(L.n).filter(([k])=>first&&(k==='bag'||k==='pest'||k==='sys'||k==='shop'||(k==='mode'&&L.l===3))).map(([,t])=>'Liberado · '+t);if(sprout&&gardenOpen())news.push('Uma muda de '+CARDS[sprout].name+' foi para a estufa do jardim.');if(first&&L.boss)news.push('Presente: um Pacote da Bênção na Tenda das Cartas');if(L.id==='1-4')news.push('O Jardim foi liberado! Plante, regue e venda. Junte moedas para a semente da Árvore da Vida.');
+  const news=unlocksAfter(L.n).filter(([k])=>first&&(k==='bag'||k==='pest'||k==='sys'||k==='shop'||(k==='mode'&&(L.l===3||L.bossStage)))).map(([,t])=>'Liberado · '+t);if(sprout&&gardenOpen())news.push('Uma muda de '+CARDS[sprout].name+' foi para a estufa do jardim.');if(first&&L.boss)news.push('Presente: um Pacote da Bênção na Tenda das Cartas');if(L.id==='1-4')news.push('O Jardim foi liberado! Plante, regue e venda. Junte moedas para a semente da Árvore da Vida.');
   if(L.id==='2-4')news.push('O modo Jornada foi liberado no menu.');
   if(RUN.dmods){const dk=todayKey();META.dailyAdv=META.dailyAdv||{};if(!META.dailyAdv[dk]){META.dailyAdv[dk]=1;META.gifts=(META.gifts||0)+1;META.coins+=150;saveMeta();news.unshift('Desafio do dia vencido! +150 moedas e um Pacote da Bênção na Tenda das Cartas.')}}
-  const last=RUN.level===LEVELS.length-1,total=reward+picked;
+  const last=!!L.bossStage&&L.wi===WORLDS.length-1,nextN=L.bossStage?(L.wi+1)*4:L.l===3?bossStageOf(L.wi).n:RUN.level+1,total=reward+picked;
   endScreen({win:true,eyebrow:`${WORLDS[L.wi].name} · ${L.id} · ${L.night?'Noite':'Dia'} · ${RUN.dmods?'Desafio do dia':D.name}`,title:RUN.diff==='dificil'?'👑 Vitória!':'Vitória!',stars,
     hint:RUN.diff==='facil'?'No Fácil vale até 2 estrelas. Tente o Normal para a terceira.':stars<3?'3 estrelas: termine com 18 de Vida ou mais.':newBest&&!first?'Perfeito! Novo recorde!':'Perfeito!',
     coins:total,coinNote:`${reward} da fase + ${picked} recolhidas${treeBonus>1?' · Árvore da Vida +'+Math.round((treeBonus-1)*100)+'%':''}`,card,news,
     buttons:`<button class="btn ghost" id="tomap">Mapa</button>${last?`<button class="btn" id="fim">Ir ao último jardim</button>`:`<button class="btn" id="next">Próxima fase ›</button>`}`});
   $('tomap').onclick=()=>showWorld();
-  if($('next'))$('next').onclick=()=>{const n=RUN.level+1;selWorld=LEVELS[n].wi;startLevel(n)};
+  if($('next'))$('next').onclick=()=>{const n=nextN;selWorld=LEVELS[n].wi;startLevel(n)};
   if($('fim'))$('fim').onclick=()=>startEpilogue();
 }
 function levelLost(){
@@ -315,13 +327,14 @@ function endScreen(o){
   let k=0,n=0;const steps=Math.min(30,o.coins),count=()=>{n++;$('vcoin').textContent='+'+Math.round(o.coins*n/steps);if(n%3===0)sfx('coin');if(n<steps)at(28,count)};
   for(let i=0;i<(o.stars||0);i++)at(450+i*450,()=>show(i));
   const tCoins=500+(o.stars||0)*450;if(o.coins>0)at(tCoins,count);else $('vcoin').textContent='+0';
-  const tCard=tCoins+steps*28+300;if(o.card)at(tCard,()=>{$('vflip').classList.add('on');sfx('super')});
+  const tCard=tCoins+steps*28+300;let shown=false;const showcase=()=>{if(o.card&&!shown){shown=true;showcaseCard(o.card)}};
+  if(o.card)at(tCard,()=>{$('vflip').classList.add('on');sfx('super');setTimeout(showcase,900)});
   at(o.card?tCard+600:tCoins+steps*28+150,()=>box.classList.add('done'));
   if(o.win)for(let i=0;i<40;i++)S.parts.push({x:S.cam+rnd(0,W),y:rnd(-30,-4),vx:rnd(-20,20),vy:rnd(20,50),g:20,life:5,max:5,c:pick(['#ffe36a','#ff8ab0','#9ff7b8','#7ac0ff','#ffffff']),s:1,sway:1});
   // click anywhere on the panel to skip to the end
   box.addEventListener('pointerdown',ev=>{if(box.classList.contains('done')||ev.target.closest('button'))return;T.forEach(clearTimeout);
     for(let i=0;i<(o.stars||0);i++){const c=box.querySelector(`[data-vs="${i}"]`);starPx(c,true);c.classList.add('lit')}
-    $('vcoin').textContent='+'+o.coins;if(o.card)$('vflip').classList.add('on');box.classList.add('done')});
+    $('vcoin').textContent='+'+o.coins;if(o.card){$('vflip').classList.add('on');showcase()}box.classList.add('done')});
 }
 
 // ---------- the gardener: character and tool

@@ -263,3 +263,29 @@ Object.assign(SPR,{
     box(P,-4,-12,9,11,R);P(-3,-9,2,1,INK);P(1,-9,2,1,INK);P(-3,-6,5,1,INK);P(-4,-7,1,1,INK);P(2,-7,1,1,INK);P(4,-3,1,2,'#ff3a8a');feet(P,t,-3,2,'#1a0a3a')},
   ilusao(e){const a=C.globalAlpha;C.globalAlpha=a*(.45+Math.sin(e.t*8)*.15);SPR.engano(e);C.globalAlpha=a}
 });
+
+// ----- the bosses of the new boss stages (half-unit grid like the others; drawn bigger by drawEnemy)
+Object.assign(SPR,{
+  // the serpent of Eden (Gn 3:1): a long scaled body along the ground, the neck raised, a forked tongue; it lunges when it strikes
+  serpente(e){const t=e.t,rage=e.ph2,P=H2(e),G=['#1a4a1a','#2f7a2f','#5fb04a'],B='#d8c860',ln=e.lunge>0?-12:0,o=-20;
+    for(let i=14;i>=0;i--){const cx=o+18+i*6,cy=-8-Math.round(Math.sin(t*4+i*.7)*3),rad=Math.max(3,Math.round(9-i*.35));ball(P,cx,cy,rad,rad,G[0],G[1],G[2]);if(i%2)P(cx-1,cy-rad+1,3,2,'#e8d050');P(cx-rad+2,cy+rad-2,rad*2-4,2,B)}
+    for(let j=0;j<6;j++)ball(P,o+14-j*4+Math.round(ln*j/6),-14-j*5,7,6,G[0],G[1],G[2]);
+    const hx=o-12+ln,hy=-44+Math.round(Math.sin(t*2)*2);
+    ball(P,hx,hy,12,9,G[0],G[1],G[2]);P(hx-16,hy-3,10,8,G[1]);P(hx-16,hy+3,10,2,B);P(hx-16,hy-3,10,2,G[2]);
+    P(hx-7,hy-7,6,5,rage?'#ff2020':'#ffd34a');P(hx-6,hy-7,2,5,'#111');P(hx-9,hy-9,9,2,G[0]);
+    if((t*6|0)%2){P(hx-24,hy+2,8,1,'#e0284a');P(hx-27,hy,3,1,'#e0284a');P(hx-27,hy+4,3,1,'#e0284a')}
+    if(e.lunge>0){P(hx-14,hy+5,2,4,'#ffffff');P(hx-10,hy+5,2,4,'#ffffff')}
+    for(let i=0;i<3;i++)P(o+40+i*14,-16-Math.round(Math.sin(t*4+i*2)*3),2,2,'#e0284a')},
+  // Nimrod the mighty hunter (Gn 10:9): tall, crowned, a leopard pelt, a great bow drawn when he shoots
+  ninrode(e){const t=e.t,rage=e.ph2,P=H2(e),w=(t*3|0)%2,dr=e.draw>0,ey=rage?'#ff2020':'#111';
+    P(-10,-24,8,24-(w?2:0),'#5a3a24');P(2,-24,8,24-(w?0:2),'#5a3a24');P(-12,-4,11,4,'#3a2414');P(1,-4,11,4,'#3a2414');
+    P(-14,-56,28,34,'#a0603a');P(-14,-56,6,34,'#7a4424');P(8,-52,6,28,'#c08050');P(-14,-30,28,4,'#5a3420');P(-2,-30,4,4,'#f7c948');
+    P(-14,-56,28,6,'#e0b050');for(const[a,b]of[[-10,-48],[0,-44],[6,-38],[-6,-38],[2,-34],[-10,-36]])P(a,b,3,3,'#3a2414');
+    P(14,-54,6,18,'#c88a60');P(-20,-54,6,16,'#c88a60');
+    for(let j=0;j<30;j++){const yy=-66+j*1.7,xx=-32+Math.round(Math.abs(j-15)*.45);P(xx,yy,3,2,'#6a3a1a')}
+    P(dr?-24:-29,-66,1,50,'#e8dcc0');if(dr){P(-24,-42,14,1,'#c8b090');P(-29,-43,5,3,'#c0c0c8')}
+    P(-10,-76,20,20,'#c88a60');P(-10,-76,4,20,'#a06a40');P(-10,-64,20,10,'#2a1810');P(-7,-58,14,8,'#2a1810');
+    P(-8,-72,5,4,'#ffffff');P(-8,-72,2,4,ey);P(2,-72,5,4,'#ffffff');P(2,-72,2,4,ey);P(-10,-75,9,2,'#111');P(1,-75,9,2,'#111');
+    P(-12,-84,24,8,'#f7c948');for(let i=0;i<5;i++)P(-12+i*5,-88,3,4,'#f7c948');P(-2,-82,4,4,'#e0284a');
+    P(12,-72,6,22,'#7a4a2a');for(let i=0;i<3;i++){P(12+i*2,-78,1,6,'#e8dcc0');P(11+i*2,-79,3,2,'#c84a3a')}}
+});

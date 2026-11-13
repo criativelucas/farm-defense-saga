@@ -1,7 +1,13 @@
 // ---------- sprites: enemies and bosses
-function drawEnemy(e){
+// bosses and the golden calf are drawn BOSS_SCALE times bigger, grown from their feet
+function drawEnemy(e){const d=EN[e.k];if(!(d.boss||d.elite)||e.dive>0)return drawEnemyBody(e);
+  x.save();x.translate(e.x,e.y);x.scale(BOSS_SCALE,BOSS_SCALE);x.translate(-e.x,-e.y);drawEnemyBody(e);x.restore();
+  if(e.hooked>0){const p=.5+.5*Math.sin(S.t*10);r(e.x-1,e.y-d.h-30,2,30,'#c8b090');x.globalAlpha=.5+.4*p;ring(e.x,ecy(e),d.w/2,'#f7c948');x.globalAlpha=1}
+  if(e.fury&&Math.random()<.6)S.parts.push({x:e.x+rnd(-d.w/2,d.w/2),y:e.y-rnd(0,d.h),vx:rnd(30,60),vy:rnd(-30,-10),g:0,life:.5,max:.5,c:'#ff3a1a',s:2})}
+function drawEnemyBody(e){
   if(S.mini==='escuro'&&!darkVisible(e))return;
-  const d=EN[e.k];
+  // inside the boss scale the overlays (ice, shadow, bars) use the body's unscaled size
+  const d0=EN[e.k],bs=(d0.boss||d0.elite)&&!(e.dive>0)?BOSS_SCALE:1,d=bs===1?d0:{...d0,w:d0.w/bs,h:d0.h/bs};
   // a root moving underground: a mound of earth with cracks; a lie in disguise: only a faint shape
   if(e.dive>0&&d.ai==='burrow'){const X=Math.round(e.x),Y=Math.round(gy(e.x));r(X-5,Y-2,10,2,'#5a3a20');r(X-3,Y-3,6,1,'#7a5430');for(let i=0;i<3;i++)r(X+4+i*4,Y-1,2,1,'#3a2414');if(Math.random()<.3)S.parts.push({x:e.x+rnd(-4,4),y:Y-2,vx:rnd(-10,10),vy:rnd(-30,-10),g:200,life:.4,max:.4,c:'#7a5430',s:1});return}
   if(e.dive>0&&d.ai==='disguise'){x.globalAlpha=.22+.08*Math.sin(S.t*5);enemyBody(e);x.globalAlpha=1;return}

@@ -9,7 +9,7 @@ const GOAL_AT={2:'ovelhas',6:'esteira',10:'colheita',14:'seca',18:'vigilia',22:'
 LEVELS.forEach(l=>{l.goal=GOAL_AT[l.n]||null});
 const HARVEST_GOAL=15,VIGIL_TIME=90;
 
-function goalStart(){const L=RUN.mode==='level'&&!RUN.endless&&!RUN.mini?LEVELS[RUN.level]:null,g=L&&L.goal;S.goal=g||null;if(!g)return;const G=GOALS[g];
+function goalStart(){const L=RUN.mode==='level'&&!RUN.endless&&!RUN.mini?LEVELS[RUN.level]:null,g=L&&L.goal;S.goal=g||null;S.bstage=null;S.bs=null;if(L&&L.bossStage)return bossStageStart(L);if(!g)return;const G=GOALS[g];
   banner('Objetivo · '+G.ref,G.name);toast(G.name,G.desc);
   if(g==='esteira'){S.hand=[null,null,null,null,null];S.draw=[];S.convT=1;RUN.handSize=5;renderHand()}
   if(g==='ovelhas'){const mid=MAP.ww*.45;S.sheep=[0,1,2].map(k=>{const x0=mid+(k-1)*34;return{x:x0,home:x0,hp:6,max:6,t:rnd(0,9),face:1,hurt:0}})}
@@ -20,7 +20,7 @@ function goalStart(){const L=RUN.mode==='level'&&!RUN.endless&&!RUN.mini?LEVELS[
 // cards for the seed cart: what this player has unlocked, seeds weighted up
 function cartCard(){const pool=META.unlocked.filter(k=>CARDS[k]&&CARDS[k].type!=='joio');const seeds=pool.filter(k=>CARDS[k].type==='semente');
   return mk(Math.random()<.75&&seeds.length?rpick(seeds):rpick(pool))}
-function goalUpdate(dt){const g=S.goal;if(!g)return;
+function goalUpdate(dt){const g=S.goal;if(!g)return;if(g==='chefe')return bossStageUpdate(dt);
   if(g==='esteira'){S.mana=MAXM;S.convT-=dt;if(S.convT<=0){S.convT=3.2;const i=S.hand.findIndex(c=>!c);if(i>=0){S.hand[i]=cartCard();S.newIdx=i;renderHand();S.newIdx=-1;sfx('card')}}}
   if(g==='seca')S.rain=0;
   if(g==='ovelhas'){let alive=0;for(const sh of S.sheep){if(sh.hp<=0)continue;alive++;sh.t+=dt;sh.hurt=Math.max(0,sh.hurt-dt);
@@ -36,14 +36,14 @@ function goalUpdate(dt){const g=S.goal;if(!g)return;
 function goalKeepsWaves(){const g=S.goal;if(g==='colheita'&&S.harvest<HARVEST_GOAL||g==='vigilia'&&S.vig>0){const L=LEVELS[RUN.level],w=WORLDS[L.wi];
   S.waves.push(genWave(w.act,L.l+S.waves.length,'batalha',0,levelPool(L.n)));return true}return false}
 function goalHarvest(n){if(S.goal!=='colheita')return;S.harvest+=n;if(S.harvest>=HARVEST_GOAL&&S.state!=='menu'){banner('Tempo de colheita','O celeiro está cheio');battleWon()}}
-function goalHud(){const g=S.goal;if(!g)return'';
+function goalHud(){const g=S.goal;if(!g)return'';if(g==='chefe')return bossHud();
   if(g==='ovelhas')return'Ovelhas: '+S.sheep.filter(s=>s.hp>0).length+'/3';
   if(g==='colheita')return'Colheita: '+S.harvest+'/'+HARVEST_GOAL+' frutos';
   if(g==='vigilia')return S.state==='wave'?'Vigiai: '+Math.ceil(S.vig)+'s':'Vigiai: chame a onda (Enter)';
   if(g==='esteira')return'Carroça: nova semente em '+Math.max(0,Math.ceil(S.convT))+'s';
   if(g==='seca')return'Seca: maná pela metade, sem chuva';return''}
 // fluffy sheep grazing, with a little health bar when hurt
-function drawGoal(){if(S.goal!=='ovelhas'||!S.sheep)return;
+function drawGoal(){if(S.goal==='chefe')return drawBossStage();if(S.goal!=='ovelhas'||!S.sheep)return;
   for(const sh of S.sheep){if(sh.hp<=0)continue;const y=gy(sh.x),b=Math.abs(Math.sin(sh.t*3))*.8,f=sh.face,X=sh.x,fl=sh.hurt>0&&(S.t*20|0)%2;
     const R=(dx,dy,w,h,c)=>r(f>0?X+dx:X-dx-w,y+dy-b,w,h,fl?'#ff8080':c);
     R(-5,-2,1.5,2,'#2a2a2a');R(-2,-2,1.5,2,'#2a2a2a');R(2,-2,1.5,2,'#2a2a2a');R(4.5,-2,1.5,2,'#2a2a2a');

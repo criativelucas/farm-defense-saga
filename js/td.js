@@ -70,7 +70,7 @@ const WUP={
   cesto:{name:'Cesto farto',desc:'As pragas soltam 50% mais moedas',price:20,icon:'g:vender',fn:()=>S.up.coin*=1.5},
   braco:{name:'Braço forte',desc:'Golpe e pisão 50% mais fortes',price:20,icon:'w:foice',fn:()=>S.up.str*=1.5},
   azeite:{name:'Bilha de azeite',desc:'+5 de maná agora',price:12,icon:'g:mel',fn:()=>{S.mana=Math.min(MAXM,S.mana+5)}}};
-const shopOk=()=>RUN&&RUN.mode==='level'&&!RUN.mini&&S.goal!=='esteira'&&RUN.level>=1&&!!META.tut&&S.coins>=12;
+const shopOk=()=>RUN&&RUN.mode==='level'&&!RUN.mini&&S.goal!=='esteira'&&S.goal!=='chefe'&&RUN.level>=1&&!!META.tut&&S.coins>=12;
 const upPrice=k=>Math.round(WUP[k].price*(1+.3*(S.upN[k]||0)));
 function openWaveShop(){S.shop=rshuffle(Object.keys(WUP)).slice(0,3);sfx('card');renderShop()}
 function closeWaveShop(){S.shop=null;renderShop()}

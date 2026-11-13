@@ -362,3 +362,30 @@ const FUSIONS=[
   {a:'roma',b:'macieira',name:'Pomar do Amor',ref:'Cânticos 4:13',every:6,desc:'Raio de amor de 14 de dano na praga mais perto.'}
 ];
 const fusionOf=(a,b)=>FUSIONS.find(f=>(f.a===a&&f.b===b)||(f.a===b&&f.b===a))||null;
+
+// ---------- boss stages: a fifth level in every world, only for its boss. Like the boss levels of a lawn-defense game:
+// a seed cart instead of the bag and the mana, a clock, and one rule that must be learned to bring the boss down
+Object.assign(EN,{
+  serpente:{name:'A Serpente',hp:480,spd:8,rew:60,dmg:10,fly:0,w:46,h:20,c:'#3a8a3a',glow:'#9ff05a',weak:null,boss:1,ref:'Gênesis 3:15',desc:'Chefe. Enrola-se nas árvores e dá botes. As árvores mal a arranham: um pisão na cabeça a fere de verdade.'},
+  ninrode:{name:'Ninrode',hp:520,spd:7,rew:70,dmg:12,fly:0,w:24,h:40,c:'#a0603a',glow:'#ffb060',weak:null,boss:1,ref:'Gênesis 10:9',desc:'Chefe. O caçador de Babel atira flechas e aprende cada golpe: o mesmo tipo de árvore fere cada vez menos.'}
+});
+// bosses (and the golden calf) are drawn bigger in draw.js, and their bodies are as big as they look
+const BOSS_SCALE=1.5;
+['golias','farao','leviata','sombra','serpente','ninrode','bezerro'].forEach(k=>{EN[k].w=Math.round(EN[k].w*BOSS_SCALE);EN[k].h=Math.round(EN[k].h*BOSS_SCALE)});
+Object.assign(ACH,{serpente:{name:'Esmagará a cabeça',ref:'Gênesis 3:15',desc:'Derrote a Serpente.'},ninrode:{name:'Confundidas as línguas',ref:'Gênesis 11:9',desc:'Derrote Ninrode.'}});
+// one per world: the boss, the clock in seconds, the cards the cart brings, the rule and how to beat it
+const BSTAGE=[
+  {boss:'serpente',time:150,hp:1.8,rule:'Fira a cabeça',ref:'Gênesis 3:15',tip:'As árvores mal arranham a Serpente. Depois de cada bote a cabeça fica no chão por um instante: é a hora do pisão.',
+    belt:['videira','roma','oliveira','lirio','figueira','chuva','jerico','tamareira']},
+  {boss:'golias',time:120,hp:1.15,rule:'Uma pedra na testa',ref:'1 Samuel 17:49',tip:'A armadura de bronze segura as árvores. Pegue as pedras lisas do ribeiro: cada uma vai direto na testa e o atordoa.',
+    belt:['pedras','videira','roma','sarca','cedro','pedra','oliveira','jerico','lirio']},
+  {boss:'farao',time:180,hp:1,rule:'As águas voltam',ref:'Êxodo 14:28',tip:'Segure o Faraó no meio do mar. Cada vez que as águas se fecham sobre ele, o golpe é enorme.',
+    belt:['oliveira','salgueiro','nuvem','rede','maraberto','videira','roma','lirio','cedro']},
+  {boss:'bezerro',time:170,hp:1.15,rule:'Queimado no fogo',ref:'Êxodo 32:20',tip:'O ouro só derrete no fogo: a Sarça fere muito, as outras árvores quase nada. Os adoradores curam o ídolo: derrube-os.',
+    belt:['sarca','sarca','fogo','linguas','fogoceu','hissopo','acacia','oliveira','videira']},
+  {boss:'ninrode',time:160,hp:1.25,rule:'Confusão de línguas',ref:'Gênesis 11:7',tip:'Ninrode aprende cada golpe. Misture árvores diferentes: o mesmo tipo seguido fere cada vez menos.',
+    belt:['videira','roma','oliveira','sarca','figueira','macieira','nogueira','murta','cedro','sicomoro','jubileu']},
+  {boss:'leviata',time:180,hp:1.4,rule:'O anzol',ref:'Jó 41:1',tip:'As escamas quase nada deixam passar. Quando ele passar perto do anzol dourado, dê um pisão no anzol: fisgado, fica preso e frágil.',
+    belt:['cedro','roma','videira','salgueiro','rede','paz','nogueira','oliveira','jerico']},
+  {boss:'sombra',time:200,hp:1.6,rule:'Lâmpadas acesas',ref:'Salmos 119:105',tip:'No escuro ela não sente nada. Acenda as lâmpadas com um pisão ao lado: perto da luz ela é ferida, e as três acesas juntas a fazem recuar.',
+    belt:['virgens','luz','paz','roma','videira','lirio','hissopo','tamareira','sarca']}];

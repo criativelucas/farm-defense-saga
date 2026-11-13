@@ -3,6 +3,7 @@
 // The robot plants seeds on free beds, uses blessings when the screen is crowded, evolves grown trees and swings
 // the hoe at the nearest pest: an average player, not a perfect one. Compare levels with each other, not with 100%.
 // BOT=fraco plays like a beginner: it thinks every 1.5 s, never blesses and never swings the hoe.
+// FROM=28 starts at the boss stages (levels 1-5 to 7-5).
 // usage: node tools/balance.mjs [runs per level] [difficulty]     e.g. node tools/balance.mjs 4 normal   ·   BOT=fraco node tools/balance.mjs
 import {openGame} from './browser.mjs';
 
@@ -23,12 +24,19 @@ const play=(n,run)=>G.js(`(()=>{
         if(I.kinds){const si=MAP.slots.findIndex((s,j)=>!S.tw[j]);if(si>=0)playCard(hi,si)}
         else if(!${WEAK}&&crowd>=4||(c.k==='mana'&&S.mana<4))playCard(hi)});
       S.tw.forEach(tw=>{if(tw&&(tw.lvl||0)>=3&&!tw.branch&&S.mana>=BRANCH_COST+2){S.mana-=BRANCH_COST;tw.branch=RNG()<.5?'a':'b'}});
+      // boss stages: the robot knows each boss's rule (stomp the head, fetch the stones, stomp the hook when the beast is close, light the lamps)
+      if(S.bstage&&!${WEAK}){S.bt=(S.bt||0)-.5;const Z=S.bs,e=Z.boss;if(e&&e.hp>0&&S.bt<=0){S.bt=1.2;
+        if(e.k==='serpente'&&e.headDown>0){S.p.x=e.x-EN.serpente.w*.42;bossStomp(S.p)}
+        if(e.k==='golias'&&Z.stones.length){S.p.x=Z.stones[0].x;S.p.on=true}
+        if(e.k==='leviata'&&Math.abs(e.x-Z.hook.x)<60){S.p.x=Z.hook.x;bossStomp(S.p)}
+        if(e.k==='sombra'){const l=Z.lamps.find(l=>!l.lit);if(l){S.p.x=l.x;bossStomp(S.p)}}}}
       const near=S.en.filter(e=>e.hp>0&&!EN[e.k].fly).sort((a,b)=>a.x-b.x)[0];if(near&&!${WEAK}){S.p.x+=Math.sign(near.x-S.p.x)*Math.min(40,Math.abs(near.x-S.p.x));playerAttack()}}
     update(dt);t+=dt}
   return JSON.stringify({id:LEVELS[${n}].id,win:S.state==='victory'&&S.vicWin,hp:Math.max(0,RUN.hp),t:Math.round(t),wave:S.wi,leak:Object.entries(S.leaks||{}).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([k,v])=>k+' '+v).join(', '),goal:LEVELS[${n}].goal||''})})()`).then(JSON.parse);
 
 const out=[];
-for(let n=0;n<28;n++){const rs=[];for(let k=0;k<RUNS;k++)rs.push(await play(n,k));
+const NL=await G.js('LEVELS.length');// FROM=28 plays only the boss stages
+for(let n=+process.env.FROM||0;n<NL;n++){const rs=[];for(let k=0;k<RUNS;k++)rs.push(await play(n,k));
   const wins=rs.filter(r=>r.win).length,hp=Math.round(rs.reduce((a,r)=>a+r.hp,0)/RUNS),tm=Math.round(rs.reduce((a,r)=>a+r.t,0)/RUNS);
   const tag=wins<RUNS*.5?'DIFÍCIL':hp>=19&&wins===RUNS?'fácil':'';
   const leak=rs.map(r=>r.leak).filter(Boolean)[0]||'';out.push({id:rs[0].id,wins,hp,tm,goal:rs[0].goal,tag,leak});

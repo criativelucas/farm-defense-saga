@@ -27,7 +27,7 @@ function announceSystems(){META.sysSeen=META.sysSeen||{};for(const k in SYS_AT)i
 function bossIntro(k){const d=EN[k],el=$('bossintro');el.innerHTML=`<div class="bi"><canvas width="48" height="48"></canvas><div><small>Chefe · ${d.ref||''}</small><b>${d.name}</b><span>${d.desc.replace(/^Chefe\.\s*/,'')}</span></div></div>`;
   enemyIconTo(el.querySelector('canvas'),k);el.hidden=false;el.classList.remove('show');void el.offsetWidth;el.classList.add('show');sfx('horn');shake(6);
   clearTimeout(bossIntro.t);bossIntro.t=setTimeout(()=>el.hidden=true,3200)}
-function drawTelegraph(e){const d=EN[e.k];if(!d.boss||e.dive>0||e.st>.9||(S.t*10|0)%2)return;const top=(d.fly?e.y-d.h/2:e.y-d.h)-14;
+function drawTelegraph(e){const d=EN[e.k];if(!d.boss||e.dive>0||e.st>.9||(S.t*10|0)%2)return;const top=(d.fly?e.y-d.h/2:e.y-d.h/BOSS_SCALE)-14;
   r(e.x-1,top,2.5,6,'#1a0808');r(e.x-.5,top+.5,1.5,5,'#ff3a3a');r(e.x-1,top+7,2.5,2.5,'#1a0808');r(e.x-.5,top+7.5,1.5,1.5,'#ff3a3a')}
 
 // ---------- daily missions
@@ -124,7 +124,7 @@ function unlocksAfter(n){const L=[],lv=LEVELS[n];if(!lv)return L;
   for(const k in SHOP_AT)if(SHOP_AT[k]===n+1)L.push(['shop','Quitanda: '+SHOP_NAME[k]]);
   for(const k in MINIS)if(MINIS[k].at===n+1)L.push(['mode','Minijogo: '+MINIS[k].name]);
   const nx=LEVELS[n+1];if(nx&&nx.goal)L.push(['sys','Fase especial: '+GOALS[nx.goal].name]);
-  if(lv.id==='1-4')L.push(['mode','Estufa do jardim']);if(lv.id==='2-4')L.push(['mode','Modo Jornada']);if(lv.l===3)L.push(['mode','Modo infinito: '+WORLDS[lv.wi].name]);
+  if(lv.id==='1-4')L.push(['mode','Estufa do jardim']);if(lv.id==='2-4')L.push(['mode','Modo Jornada']);if(lv.l===3)L.push(['mode','Fase do chefe: '+EN[BSTAGE[lv.wi].boss].name]);if(lv.bossStage)L.push(['mode','Modo infinito: '+WORLDS[lv.wi].name]);
   return L}
 
 // ---------- a small log of adventure battles (last 80), to tune balance from real games instead of guesses

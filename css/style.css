@@ -1125,3 +1125,26 @@ body.cb #hpfill{background:linear-gradient(#9ad8ff,#3a8ad8)!important}
 .wsu.off{opacity:.55;filter:grayscale(.5);cursor:not-allowed}
 .wsf{display:flex;justify-content:space-between;gap:.5em}
 #wshop .btn small{letter-spacing:0;text-transform:none;font-weight:400;color:#6a4a10}
+
+/* ---------- a newly discovered card, shown up close */
+.showcase{position:absolute;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6em;overflow:hidden;perspective:800px;cursor:pointer;
+  font-size:max(10px,1.4cqw);background:radial-gradient(circle at 50% 42%,color-mix(in srgb,var(--rc) 35%,#1a0e24),#07040cf5 70%);animation:pkfade .35s}
+.showcase .scrays{position:absolute;left:50%;top:42%;width:170%;aspect-ratio:1;translate:-50% -50%;pointer-events:none;
+  background:repeating-conic-gradient(color-mix(in srgb,var(--rc) 30%,transparent) 0 6deg,transparent 6deg 18deg);animation:pkspin 16s linear infinite}
+.showcase .sctop{position:relative;color:#fff6c0;font-weight:700;letter-spacing:.15em;text-transform:uppercase;font-size:1.1em;text-shadow:0 2px 0 #000;animation:scdrop .5s .1s both}
+.showcase .sccard{position:relative;width:min(30%,38vh);aspect-ratio:120/168;filter:drop-shadow(0 0 1.2em var(--rc)) drop-shadow(0 .6em 0 #0008);
+  animation:scin .9s cubic-bezier(.2,1.4,.4,1) both,scfloat 3.2s 1s ease-in-out infinite}
+.showcase .sccard canvas{display:block;width:100%;height:100%;image-rendering:pixelated}
+.showcase .sccard::after{content:'';position:absolute;inset:0;pointer-events:none;mix-blend-mode:overlay;
+  background:linear-gradient(115deg,transparent 35%,#ffffffb0 48%,transparent 60%);background-size:250% 100%;animation:scshine 2.4s 1s ease-in-out infinite}
+.showcase .scinfo{position:relative;max-width:34em;text-align:center;color:#fff;animation:scdrop .5s .7s both}
+.showcase .scinfo h3{margin:.15em 0;font-size:1.8em;color:#fff6c0;text-shadow:0 3px 0 #000}.showcase .scinfo p{margin:.2em 0}.showcase .scinfo i{color:#c8bca8}
+.showcase .btn{position:relative;animation:scdrop .4s 1.1s both}
+.showcase .scsp{position:absolute;left:50%;top:44%;width:.5em;height:.5em;background:var(--rc);box-shadow:0 0 .4em var(--rc);opacity:0;animation:scsp 1.6s ease-out infinite;pointer-events:none}
+.showcase.r-lendaria .sccard{animation:scin 1.2s cubic-bezier(.2,1.4,.4,1) both,scfloat 3.2s 1.3s ease-in-out infinite}
+@keyframes scin{0%{transform:scale(.15) rotateY(540deg) translateY(40%);opacity:0}60%{opacity:1}100%{transform:none}}
+@keyframes scfloat{50%{transform:translateY(-3%) rotate(1.2deg)}}
+@keyframes scshine{0%{background-position:150% 0}60%,100%{background-position:-60% 0}}
+@keyframes scdrop{from{opacity:0;transform:translateY(-.6em)}}
+@keyframes scsp{0%{opacity:1;transform:none}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.2)}}
+@media (prefers-reduced-motion:reduce){.showcase .scrays,.showcase .sccard,.showcase .sccard::after,.showcase .scsp{animation:none}.showcase .scsp{display:none}}

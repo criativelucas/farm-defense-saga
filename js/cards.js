@@ -283,7 +283,7 @@ function openPack(id,onClose){
       setTimeout(()=>{if(!alive)return;const[cx,cy]=at(el),col=RAR[o.rk].c;el.classList.add('lit');burst(cx,cy,[12,26,46,80][ri],[col,'#ffffff',shade(col,.45),shade(col,-.2)],[.6,.85,1.15,1.5][ri]);
         if(ri>=2)flash('fl-'+o.rk);if(ri>=3){ov.classList.remove('quake');void ov.offsetWidth;ov.classList.add('quake');sfx('legend')}
         sfx('flip');sfx(['card','coin','shine','ach'][ri]);if(ri>=2)setTimeout(()=>sfx('shine'),120);if(o.foil)setTimeout(()=>sfx('beam'),150);
-        el.classList.add('shown');if(flipped.size===got.length)setTimeout(done,700)},480)};
+        el.classList.add('shown');if(o.st==='nova')setTimeout(()=>{if(alive)showcaseCard(mk(o.k,o.foil?{rare:true}:{}))},550);if(flipped.size===got.length)setTimeout(done,700)},480)};
     if(ri>=1){el.classList.add('charge');sfx('hit');setTimeout(go,[0,450,800,1150][ri])}else go()};
   const pk=ov.querySelector('.ppack');
   const open=()=>{if(opened||pk.classList.contains('shake'))return;pk.classList.add('shake');sfx('hit');
@@ -354,3 +354,20 @@ function pairArtTo(cvs,p){const g=hdCtx(cvs,96,48,3),keep=C;C=g;
   finally{C=keep}}
 // a relic icon redrawn sharper, with the same dark outline as the cards
 function relicCardArt(cvs,k){const t=mkHD(32,32,4),keep=C;C=t.getContext('2d');try{RICONS[k]&&RICONS[k]()}finally{C=keep}const g=hdCtx(cvs,32,32,4);inked(g,t,0,0,32,32,COUT,.7)}
+
+// ---------- a newly discovered card gets its moment: the screen dims, the card spins in close with light turning behind it,
+// sparks in the rarity's colour, then its name, rule and verse. Several new cards wait in line.
+const SHOWQ=[];
+function showcaseCard(c){SHOWQ.push(c);if(SHOWQ.length===1)showNextCard()}
+function showNextCard(){const c=SHOWQ[0];if(!c)return;const I=info(c),rk=rarOf(c),R=RAR[rk],ri=RAR_ORDER.indexOf(rk);
+  const ov=document.createElement('div');ov.className='showcase r-'+rk;ov.style.setProperty('--rc',R.c);
+  const sparks=Array.from({length:10+ri*8},()=>{const a=Math.random()*6.28,d=8+Math.random()*16;
+    return`<i class="scsp" style="--dx:${(Math.cos(a)*d).toFixed(1)}em;--dy:${(Math.sin(a)*d).toFixed(1)}em;animation-delay:${(.9+Math.random()*1.6).toFixed(2)}s"></i>`}).join('');
+  ov.innerHTML=`<div class="scrays"></div>${sparks}<small class="sctop">Nova carta descoberta!</small><div class="sccard"></div>
+    <div class="scinfo"><b style="color:${R.c}">${R.sym} ${R.name} · ${TYPE_LABEL[I.type]||''}</b><h3>${I.name}</h3><p>${I.desc}</p><i>${I.ref||''}</i></div>
+    <button type="button" class="btn">Guardar na coleção</button>`;
+  ov.querySelector('.sccard').append(cardCanvas(c));$('stage').append(ov);
+  sfx('super');setTimeout(()=>sfx('shine'),500);if(ri>=3)setTimeout(()=>sfx('legend'),300);
+  const t0=performance.now(),close=()=>{if(performance.now()-t0<600)return;removeEventListener('keydown',key,true);ov.remove();SHOWQ.shift();showNextCard()};
+  const key=ev=>{if(['Escape','Enter','Space'].includes(ev.code)){ev.preventDefault();ev.stopPropagation();close()}};
+  ov.onclick=close;addEventListener('keydown',key,true)}

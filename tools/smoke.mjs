@@ -134,6 +134,30 @@ async function expansion(label){
     showCodex('vizinhas');o.codex=document.querySelectorAll('canvas[data-fusion]').length===FUSIONS.length&&document.querySelectorAll('canvas[data-evo]').length===Object.keys(EVO).length;showCodex('inimigos');
     for(let i=0;i<60;i++)update(1/60);draw();return JSON.stringify(o)})()`);
   const o=JSON.parse(r||'{}'),bad=Object.entries(o).filter(([,v])=>!v).map(([k])=>k);check(label+': expansion '+Object.keys(o).length+' tricks',Object.keys(o).length>=40&&!bad.length,bad.join(', ')||r)}
+// the boss stages: each world's fifth level, its seed cart, clock and rule, and the way on to the next world
+async function bossStages(label){
+  const r=await js(`(()=>{const o={};Object.keys(EN).forEach(k=>META.seen.e[k]=1);META.scenes={1:1,2:1,3:1,4:1,5:1,6:1};const step=n=>{for(let i=0;i<n;i++){if(S.intro)closeFoeIntro();update(1/60)}};
+    o.levels=LEVELS.filter(l=>l.bossStage).length===7&&BSTAGE.every((b,i)=>bossStageOf(i).boss===b.boss)&&LEVELS.every((l,i)=>l.n===i);
+    const keep={...META.done};META.done={};o.gate=!levelOpen(bossStageOf(0).n);META.done['1-4']=1;o.gate=o.gate&&levelOpen(bossStageOf(0).n)&&!levelOpen(4);META.done['1-5']=1;o.gate=o.gate&&levelOpen(4);META.done=keep;
+    const go=wi=>{startLevel(bossStageOf(wi).n);S.dialog=null;S.intro=null;tutStep=-1;startWave();step(150);const e=S.bs.boss;return e};
+    const res=[];
+    for(let wi=0;wi<7;wi++){const B=BSTAGE[wi];let e=go(wi),ok=!!e&&S.goal==='chefe'&&S.hand.some(c=>c)&&S.mana===MAXM;if(!e){res.push(wi+':noboss');continue}
+      e.frz=0;e.x=Math.min(e.x,MAP.ww*.6);step(1);const h=e.hp;
+      if(B.boss==='serpente'){damage(e,10,'videira');ok=ok&&h-e.hp<4;const h2=e.hp;S.p.x=e.x-EN.serpente.w*.42;S.p.y=gy(S.p.x);bossStomp(S.p);ok=ok&&e.hp===h2;e.headDown=2;bossStomp(S.p);ok=ok&&h2-e.hp>=25}
+      if(B.boss==='golias'){damage(e,10,'videira');ok=ok&&h-e.hp<3;S.bs.stones=[{x:S.p.x,t:0}];S.p.on=true;const n0=S.pstones;step(1);ok=ok&&S.pstones===n0+1;const h2=e.hp;damage(e,10,'funda');ok=ok&&h2-e.hp>=19&&e.frz>0}
+      if(B.boss==='farao'){e.x=(MAP.sea[0]+MAP.sea[1])/2;S.seaOpen=true;step(1);S.bs.prevSea=true;S.seaOpen=false;const h2=e.hp;step(1);ok=ok&&h2-e.hp>=e.max*.19}
+      if(B.boss==='bezerro'){damage(e,10,'videira');const a=h-e.hp,h2=e.hp;damage(e,10,'sarca');ok=ok&&a<3&&h2-e.hp>=15;S.bs.wor=0;step(1);ok=ok&&S.en.some(x=>x.k==='idolatria')}
+      if(B.boss==='ninrode'){const hs=[];for(let i=0;i<6;i++){const h0=e.hp;damage(e,10,'videira');hs.push(h0-e.hp)}const h0=e.hp;damage(e,10,'roma');ok=ok&&hs[5]<hs[0]*.5&&h0-e.hp>hs[5]*2}
+      if(B.boss==='leviata'){e.dive=0;e.x=S.bs.hook.x+20;damage(e,10,'videira');ok=ok&&h-e.hp<3;S.p.x=S.bs.hook.x;bossStomp(S.p);ok=ok&&e.hooked>0;const h2=e.hp;damage(e,10,'videira');ok=ok&&h2-e.hp>=19}
+      if(B.boss==='sombra'){S.lamps=0;S.bs.lamps.forEach(l=>l.lit=0);e.x=MAP.ww*.9;damage(e,10,'videira');ok=ok&&h-e.hp<2;const L=S.bs.lamps[0];e.x=L.x+20;S.p.x=L.x;bossStomp(S.p);ok=ok&&L.lit>0;const h2=e.hp;damage(e,10,'videira');ok=ok&&h2-e.hp>=14}
+      // the clock runs out: the boss charges in fury
+      S.bs.t=.01;step(2);ok=ok&&e.fury===1;
+      // bring it down: the stage is won and the next button leads to the next world
+      draw();damage(e,1e9);for(let i=0;i<400&&S.state==='wave';i++)step(1);ok=ok&&S.state==='victory';if(wi===0){levelWon();o.next=$('next')&&(()=>{$('next').onclick();return RUN.level===4})()}
+      res.push(wi+':'+(ok?'ok':'bad'))}
+    o.stages=res.every(x=>x.endsWith('ok'));o.res=res.join(',');
+    return JSON.stringify(o)})()`);
+  const o=JSON.parse(r||'{}'),bad=Object.entries(o).filter(([k,v])=>!v&&k!=='res').map(([k])=>k);check(label+': fases de chefe '+(o.res||''),Object.keys(o).length>=4&&!bad.length,bad.join(', ')||r)}
 // a short battle in every world: plant, call the wave, let it run, draw frames
 async function battles(label){
   for(let w=0;w<7;w++){const before=errors.length;
@@ -199,7 +223,7 @@ async function waveShop(label){const before=errors.length;
     return out.join(',')})()`);
   check(label+': portais, loja entre ondas, poderes '+r,errors.length===before&&r==='portais,loja,compra,poderes,pisao',errors.slice(before).join(' | ').slice(0,200))}
 console.log('— new player');await load(true,false);await loopAndScene('new');
-console.log('— player with progress');await js(`Object.assign(META,{intro:1,tut:1,coins:5000});['1-1','1-2','1-3','1-4','2-1','2-4'].forEach(i=>META.done[i]=1);saveMeta();1`);await everyScreen('progress');await farmers('progress');await packs('progress');await pests('progress');await newCards('progress');await expansion('progress');await battles('progress');await goals('progress');await minis('progress');await audio('progress');await polish('progress');await waveShop('progress');
+console.log('— player with progress');await js(`Object.assign(META,{intro:1,tut:1,coins:5000});['1-1','1-2','1-3','1-4','2-1','2-4'].forEach(i=>META.done[i]=1);saveMeta();1`);await everyScreen('progress');await farmers('progress');await packs('progress');await pests('progress');await newCards('progress');await expansion('progress');await bossStages('progress');await battles('progress');await goals('progress');await minis('progress');await audio('progress');await polish('progress');await waveShop('progress');
 console.log('— embed with gamepad blocked');await load(false,true);await loopAndScene('blocked-pad');
 const fails=checks.filter(c=>!c[1]);console.log(`\n${checks.length-fails.length}/${checks.length} checks passed`+(errors.length?`; ${errors.length} error(s) logged:`:''));
 errors.forEach(e=>console.log('  · '+String(e).split('\n').slice(0,3).join(' / ')));
