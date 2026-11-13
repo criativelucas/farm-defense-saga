@@ -12,6 +12,13 @@ function growProf(M){const seg=M.seg,onPlat=s=>M.plats.some(p=>Math.abs(s.y-p.y)
   const L=seg[seg.length-1];P.push([L[1],L[2]]);return P}
 function buildProfile(){const M=MAP,P=M.prof||(M.prof=growProf(M)),n=Math.ceil(M.ww*2)+2,T=new Float32Array(n);let i=1;
   for(let j=0;j<n;j++){const u=j/2;while(i<P.length-1&&u>=P[i][0])i++;const[a,ya]=P[i-1],[b,yb]=P[i];T[j]=u<=a?ya:u>=b?yb:ya+(yb-ya)*sstep((u-a)/(b-a))}
+  // organic relief over the hand-made profile: rolling rises and dips, and here and there a terraced stretch that breaks
+  // into small cliffs. It stays calm by the home, the portals, water, the sea, walls and the story spots of each world.
+  {const sd=MAPID.charCodeAt(0)*7+MAPID.length*3+(M.variant||0)*19,amp=MAPID==='babel'||MAPID==='tumulo'?4:10;
+    const calm=u=>{let m=clamp((u-84)/50,0,1)*clamp((M.ww-34-u)/40,0,1);const near=(a,b,pad)=>{if(u>a-pad&&u<b+pad)m=Math.min(m,clamp(Math.max(a-u,u-b)/pad,0,1))};
+      if(M.water)near(M.water[0],M.water[1],26);if(M.sea)near(M.sea[0],M.sea[1],30);if(MAPID==='eden')near(530,530,30);if(MAPID==='sinai')near(470,470,30);
+      for(const p of M.plats)if(p.wall)near(p.x,p.x+p.w,22);return m};
+    for(let j=0;j<n;j++){const u=j/2;let d=(vn(u*.016,sd)-.5)*2*amp+(vn(u*.05,sd+3)-.5)*5;if(vn(u*.006,sd+9)>.52)d=Math.round(d/6)*6;T[j]=clamp(T[j]+d*calm(u),112,186)}}
   M.gyT=T;M.flats=[];for(let k=1;k<P.length;k++)if(P[k][1]===P[k-1][1]&&P[k][0]-P[k-1][0]>=16)M.flats.push([P[k-1][0],P[k][0],P[k][1]]);
   M.slots.forEach(s=>{if(s.pl==null)s.y=gy(s.x)})}
 // how far an island's body hangs below its top at x: a rounded wedge with lumpy lobes, never a smooth curve
@@ -166,6 +173,13 @@ function varyIslands(v){const M=MAP;
     const nw=pl.w*[.9,1,1.5,1.9,2.4][(hs(i*7+v*3,23)*5)|0],cx=pl.x+pl.w/2;let a=Math.max(lo,Math.min(pl.x,cx-nw/2)),b=Math.min(hi,Math.max(pl.x+pl.w,cx+nw/2));
     let low=1e9;for(let x0=a;x0<=b;x0+=2)low=Math.min(low,gy(x0));if(pl.y>low-24){a=pl.x;b=pl.x+pl.w}
     pl.x=Math.round(a);pl.w=Math.round(b-a)});
+  // two or three extra islets per level: small stepping stones at their own heights, some stacked a jump above another island
+  {const sd=MAPID.charCodeAt(0)*5+v*23;for(let k=0;k<3;k++){const w=16+(hs(sd,k+40)*16|0),x0=Math.round(70+hs(sd,k+50)*(M.ww-150)),under=M.plats.find(p=>!p.wall&&x0+w>p.x&&x0<p.x+p.w);let y;
+      if(under){if(hs(sd,k+60)<.45)continue;y=under.y-30}else{let lo=1e9;for(let u=x0;u<=x0+w;u+=2)lo=Math.min(lo,gy(u));y=lo-(30+(hs(sd,k+70)*14|0))}
+      if(y<56||M.plats.some(p=>p!==under&&x0<p.x+p.w+10&&x0+w>p.x-10&&Math.abs(p.y-y)<26)||(under&&M.plats.some(p=>p.wall&&x0<p.x+p.w+10&&x0+w>p.x-10)))continue;
+      M.plats.push({x:x0,xs:x0,y:Math.round(y),w,extra:1})}}
+  // no island sinks into the new relief: every one floats at least 24 units over the highest ground under it
+  M.plats.forEach(pl=>{if(pl.wall)return;let hi=1e9;for(let u=pl.x;u<=pl.x+pl.w;u+=2)hi=Math.min(hi,gy(u));if(pl.y>hi-24)pl.y=Math.round(hi-24)});
   // one or two islands spill a waterfall, in every world
   if(v||!M.plats.some(p=>p.fall)){let n=0;M.plats.forEach((pl,i)=>{delete pl.fall;const h=hs(v*5+i,11);if(!pl.wall&&h>.55&&n<2){pl.fall=h>.78?'L':'R';n++}})}
   M.slots.forEach(s=>{if(s.pl!=null){const pl=M.plats[s.pl];s.x=pl.xs+s.dx;s.y=pl.y}})}

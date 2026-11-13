@@ -1,29 +1,32 @@
 // ---------- HUD and hand
 const garble=s=>s.replace(/\S/g,()=>pick([...'ʘΔλΣЖЊѮᚠᚢᚦ϶']));
 function onCardClick(i){const c=S.hand[i];if(!c)return;const I=info(c);
-  if(I.kinds&&slotAt()<0){S.sel=S.sel===i?-1:i;renderHand();if(S.sel>=0)pop(S.p.x,S.p.y-24,'toque num canteiro','#f7c948');return}
+  if(I.kinds&&slotAt()<0&&(!S.p.on||plantCheck(S.p.x,S.p.y,I.kinds))){S.sel=S.sel===i?-1:i;renderHand();if(S.sel>=0)pop(S.p.x,S.p.y-24,'toque onde quer plantar','#f7c948');return}
   playCard(i)}
 // drag a card from the hand onto a slot (or anywhere for blessings)
 let drag=null;
 function slotFromClient(cx,cy){const[wx,wy]=screenToWorld(cx,cy);
   let best=-1,bd=20;MAP.slots.forEach((s,i)=>{const d=Math.hypot(s.x-wx,s.y-8-wy);if(d<bd){bd=d;best=i}});return best}
+// where a dragged or tapped seed would land when no bed or tree is under the pointer: {x,y,err}
+function spotFromClient(cx,cy,kinds){const[wx,wy]=screenToWorld(cx,cy),x0=clamp(wx,4,MAP.ww-4),y0=surfaceAt(x0,wy);return{x:x0,y:y0,err:plantCheck(x0,y0,kinds)}}
+function plantAtClient(hi,cx,cy){const c=S.hand[hi],kinds=c&&info(c).kinds;if(!kinds)return;const si=slotFromClient(cx,cy);if(si>=0)return playCard(hi,si);
+  const sp=spotFromClient(cx,cy,kinds),f=sp.err?sp:freeSlot(sp.x,sp.y,kinds);if(f.err){sfx('no');pop(sp.x,sp.y-24,f.err,'#c9a99a');return}playCard(hi,f.i)}
 function startDrag(e,i,b){if(e.button>0||!S.hand[i])return;drag={i,b,x0:e.clientX,y0:e.clientY,moved:false,ghost:null};try{b.setPointerCapture(e.pointerId)}catch(_){}}
 addEventListener('pointermove',e=>{if(!drag)return;
   if(!drag.moved&&Math.hypot(e.clientX-drag.x0,e.clientY-drag.y0)>8){drag.moved=true;const c=S.hand[drag.i];if(!c)return;
     const g=document.createElement('div');g.className='hc2 dragghost';const gc=cardCanvas(c,true);g.append(gc);$('stage').append(g);drag.ghost=g;
     S.dragKinds=info(c).kinds;drag.b.classList.add('lifted')}
-  if(drag.ghost){const rc=$('stage').getBoundingClientRect();drag.ghost.style.left=(e.clientX-rc.left)+'px';drag.ghost.style.top=(e.clientY-rc.top)+'px';S.dragSlot=S.dragKinds?slotFromClient(e.clientX,e.clientY):-1}});
+  if(drag.ghost){const rc=$('stage').getBoundingClientRect();drag.ghost.style.left=(e.clientX-rc.left)+'px';drag.ghost.style.top=(e.clientY-rc.top)+'px';S.dragSlot=S.dragKinds?slotFromClient(e.clientX,e.clientY):-1;S.dragSpot=S.dragKinds&&S.dragSlot<0?spotFromClient(e.clientX,e.clientY,S.dragKinds):null}});
 addEventListener('pointerup',e=>{if(!drag)return;const d=drag;drag=null;if(d.ghost)d.ghost.remove();d.b.classList.remove('lifted');
-  const kinds=S.dragKinds;S.dragSlot=-1;S.dragKinds=null;
+  const kinds=S.dragKinds;S.dragSlot=-1;S.dragKinds=null;S.dragSpot=null;
   if(!d.moved){onCardClick(d.i);return}
   if(!S.hand[d.i])return;
-  if(kinds){const si=slotFromClient(e.clientX,e.clientY);if(si>=0)playCard(d.i,si)}
+  if(kinds){const rc=$('stage').getBoundingClientRect();if(e.clientY<rc.top+rc.height*.8)plantAtClient(d.i,e.clientX,e.clientY)}
   else{const rc=$('stage').getBoundingClientRect();if(e.clientY<rc.top+rc.height*.72)playCard(d.i)}});
 cv.parentElement.addEventListener('pointerdown',e=>{
   if(!S||S.sel<0||(S.state!=='prep'&&S.state!=='wave')||e.target.closest('button,#menu'))return;
   const[wx,wy]=screenToWorld(e.clientX,e.clientY);
-  let best=-1,bd=16;MAP.slots.forEach((s,i)=>{const d=Math.hypot(s.x-wx,s.y-8-wy);if(d<bd){bd=d;best=i}});
-  if(best>=0)playCard(S.sel,best);
+  plantAtClient(S.sel,e.clientX,e.clientY);
 });
 function flyCard(i,c,tx,ty){
   if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
@@ -56,6 +59,7 @@ function updHUD(){
   const ab=$('abilbtn');if(ab){const f=(S.abil||0)/abilCD();ab.style.setProperty('--cd',f);ab.classList.toggle('ready',f<=0)}
   $('fruits').hidden=!sysOn('fruitset');
   const sh=[sysOn('basket')?'Cesto '+S.basket+'/5'+(S.basket>=5?' · pisão de colheita!':''):''];
+  if(S.tw)sh.unshift('Árvores '+treesNow()+'/'+treeCap());
   if(MAPID==='jerico')sh.push(S.fallen?'As muralhas caíram':'Voltas pela torre: '+S.laps+'/7');
   if(S.folk)sh.push(S.folk.saved?'O povo atravessou':'Leve o povo à outra margem');
   if(S.idol)sh.push(S.idol.hp>0?'Ídolo: faltam '+S.idol.hp+' pisões':'Ídolo destruído');

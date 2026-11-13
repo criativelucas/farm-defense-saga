@@ -2,7 +2,7 @@
 let S=null,RUN=null;
 // saved progress is merged over these defaults key by key (nested objects too), so saves from older versions gain new fields
 const META_DEFAULTS={celeiro:store.get('jardim-do-fruto-celeiro',[]),chars:{lavrador:1},ascMax:0,stats:{kills:0,podas:0,runs:0,wins:0},ach:{},tut:0,daily:{},
-  coins:0,char:'lavrador',weapon:'enxada',weapons:{enxada:1},items:{cerca:2,espantalho:1,lama:2},upg:{hearts:0,bag:0,mana:0,treeHearts:0},done:{},unlocked:['videira','mana'],seen:{c:{},e:{},r:{}},
+  coins:0,char:'lavrador',weapon:'enxada',weapons:{enxada:1},items:{cerca:2,espantalho:1,lama:2},upg:{hearts:0,bag:0,mana:0,treeHearts:0,trees:0},wtier:{},itier:{},done:{},unlocked:['videira','mana'],seen:{c:{},e:{},r:{}},
   garden:{pots:[],potsN:8,seeds:{trigo:2,'t:videira':1},adubo:1,spray:3,mel:1,fertil:0,treeSeed:0,tree:{planted:false,lvl:0,xp:0,lastWater:0},lastVisit:0},
   stars:{},talents:{},cardLv:{},copies:{},foil:{},sysSeen:{},dlg:{},endless:{},mg:{},missions:null,intro:0,v:2};
 function fillDefaults(t,d){for(const k in d){const dv=d[k];if(t[k]===undefined||t[k]===null&&dv!==null)t[k]=structuredClone(dv);
@@ -67,7 +67,7 @@ function startWave(){
   if(S.bank){const b=Math.round(S.bank*1.5);S.mana+=b;S.bank=0;pop(S.p.x,S.p.y-34,'+'+b+' dos celeiros','#f7c948')}
   if(isChar('noe')&&S.wi===1)S.floodIn=8;
   banner('Onda '+(S.wi+1)+' de '+S.waves.length,w.name);sfx('wave');
-  if(relic('vara')){const i=MAP.slots.findIndex((s,j)=>!S.tw[j]&&s.soil==='boa');if(i>=0){plantAt(i,[rpick(['videira','roma','oliveira'])],false,.2);pop(MAP.slots[i].x,MAP.slots[i].y-40,'a vara floresceu','#f7c948')}}
+  if(relic('vara')&&treesNow()<treeCap()){const i=MAP.slots.findIndex((s,j)=>!S.tw[j]&&s.soil==='boa');if(i>=0){plantAt(i,[rpick(['videira','roma','oliveira'])],false,.2);pop(MAP.slots[i].x,MAP.slots[i].y-40,'a vara floresceu','#f7c948')}}
   tutEvent('wave');
 }
 function endWave(){
@@ -227,6 +227,10 @@ function doSlam(){if(S.bstage)bossStomp(S.p);mission('slam',1);onoma(S.p.x,S.p.y
     pop(S.idol.x,S.idol.y-40,S.idol.hp?'o ídolo rachou':'O ÍDOLO CAIU','#f7c948',9);
     if(!S.idol.hp){S.tw.forEach(t=>{if(t)t.seduced=false});RUN.siclos+=20;banner('Sinai','O bezerro virou pó · +20 siclos')}}
 }
+// ---------- a garden holds only so many trees: more in later worlds, and more with the Quitanda's "Canteiro extra".
+// With planting free everywhere, the limit is what makes you choose: pull one up, or make the ones you have stronger.
+const treesNow=()=>S.tw.filter(Boolean).length;
+function treeCap(){const up=(META.upg&&META.upg.trees)||0;return(RUN&&RUN.mode==='level'?6+LEVELS[RUN.level].wi+(LEVELS[RUN.level].bossStage?3:0):8+(RUN?RUN.act*2:0))+up}
 const slotAt=()=>MAP.slots.findIndex(s=>Math.abs(s.x-S.p.x)<12&&Math.abs(s.y-S.p.y)<3);
 
 // ---------- trees
@@ -238,7 +242,26 @@ function lob(sx,sy,e,kind,dmg,src,T=.55){const g=300,tx=e.x-EN[e.k].spd*1.2*T*(e
   S.proj.push({x:sx,y:sy,vx:(tx-sx)/T,vy:(ty-sy)/T-.5*g*T,g,kind,dmg,src,life:2})}
 function beam(xx,w,d){S.fx.push({k:'beam',x:xx,w,t:0,max:.4});shake(4);sfx('beam');flash(.22,'255,80,140');
   for(const e of S.en)if(Math.abs(e.x-xx)<w){burst(e.x,ecy(e),7,['#e0284a','#ff9aa8','#ffffff'],80,320,.5);damage(e,d,'roma')}}
-const SOIL_MSG={boa:['boa terra: +30%','#5fe08a'],espinho:['espinhos: -40%','#ff9a3c'],pedra:['pedregoso: murcha no fim da onda','#c9a99a']};
+// ---------- free planting: a tree can go anywhere on walkable ground or on an island, not only on the beds. Every species
+// needs its own room (FOOT, half the width it takes), so bushes pack close and big trees stand apart. The old beds stay as
+// patches of good, thorny or stony soil; everywhere else is common soil with no bonus.
+const FOOT={sarca:9,lirio:9,hissopo:9,murta:9,mostarda:10,videira:12,roma:12,tamareira:12,amendoeira:13,macieira:13,acacia:13,salgueiro:14,oliveira:14,figueira:14,cedro:14,nogueira:15,sicomoro:16};
+const footOf=kinds=>Math.max(...kinds.map(k=>FOOT[k]||12))+(kinds.length>1?2:0);
+// the surface nearest to a world point: an island top or the ground
+function surfaceAt(wx,wy){let best=gy(wx),bd=Math.abs(best-8-wy);for(const p of MAP.plats){if(wx<p.x+3||wx>p.x+p.w-3)continue;const d=Math.abs(p.y-8-wy);if(d<bd){bd=d;best=p.y}}return best}
+// why a tree cannot stand here, or '' when it can
+function plantCheck(x0,y0,kinds){if(x0<58)return'perto demais do Éden';if(x0>MAP.ww-46)return'perto demais do portal';
+  const onPl=MAP.plats.some(p=>Math.abs(p.y-y0)<1.5&&x0>=p.x&&x0<=p.x+p.w);
+  if(!onPl&&(inWater(x0)||MAP.sea&&x0>=MAP.sea[0]&&x0<MAP.sea[1]))return'na água não cresce';
+  if(!onPl&&Math.abs(gy(x0)-y0)>3)return'precisa de chão firme';
+  const f=footOf(kinds);for(let i=0;i<MAP.slots.length;i++){const s=MAP.slots[i],t=S.tw[i];if(t&&Math.abs(s.y-y0)<14&&Math.abs(s.x-x0)<f+footOf(t.kinds))return'falta espaço: '+CARDS[kinds[0]].name+' precisa de mais chão'}
+  return''}
+// a place for a tree at this point: the bed right there if there is one, else a new spot of common soil. Returns {i} or {err}
+function freeSlot(x0,y0,kinds){const bed=MAP.slots.findIndex(s=>!s.free&&Math.abs(s.x-x0)<10&&Math.abs(s.y-y0)<3);if(bed>=0)return{i:bed};
+  const err=plantCheck(x0,y0,kinds);if(err)return{err};
+  let i=MAP.slots.findIndex((s,j)=>s.free&&!S.tw[j]);if(i<0){i=MAP.slots.length;MAP.slots.push({free:1,soil:'comum'});S.tw.push(null)}
+  Object.assign(MAP.slots[i],{x:Math.round(x0),y:y0});return{i}}
+const SOIL_MSG={comum:['terra comum','#d8c8a8'],boa:['boa terra: +30%','#5fe08a'],espinho:['espinhos: -40%','#ff9a3c'],pedra:['pedregoso: murcha no fim da onda','#c9a99a']};
 function plantAt(si,kinds,rare,delay=.6,plus=false){
   const s=MAP.slots[si];
   if(S.tw[si])burst(s.x,s.y-10,10,['#7a5a3a','#5fe08a'],50,200,.5);
@@ -292,7 +315,7 @@ function water(t,s,amt){const was=t.water||0;t.water=Math.min(3,was+amt);const s
 function updTowers(dt){
   const buffs=[],myr=[],doubt=S.en.filter(e=>EN[e.k].ai==='doubt'&&e.hp>0);MAP.slots.forEach((s,i)=>{const t=S.tw[i];if(t&&t.grow>=1&&!t.joio){if(t.kinds.includes('amendoeira'))buffs.push(s.x);if(t.kinds.includes('murta'))myr.push(s.x)}});
   const P=S.p;
-  MAP.slots.forEach((s,i)=>{const t=S.tw[i];if(!t)return;
+  MAP.slots.forEach((s,i)=>{const t=S.tw[i];if(!t){if(s.free)s.x=-999;return}
     const was=t.grow;t.grow=Math.min(1,t.grow+dt*(t.soil==='pedra'?4:1.6));
     if(was<=0&&t.grow>0){vfx('puff',s.x,s.y-2,{n:4,c:'#8a5a3a'});vfx('sparkle',s.x,s.y-12,{s:3});burst(s.x,s.y-2,14,['#6a3a24','#8a5236','#4a2a1a'],60,300,.5);burst(s.x,s.y-6,8,['#5fe08a','#9ff7b8'],40,150,.5);shake(2);sfx('plant')}
     if(t.grow>=1&&!t.joio&&(t.water||0)<3){const near=P.on&&Math.abs(P.x-s.x)<16&&Math.abs(P.y-s.y)<6&&Math.abs(P.vx)<30&&P.faint<=0;
@@ -385,7 +408,8 @@ function playCard(i,si=null){
   const c=S.hand[i];if(!c)return;const I=info(c),P=S.p;
   if(S.mana<I.cost){sfx('no');pop(P.x,P.y-24,'falta maná','#c58cff');return}
   let tx=P.x-S.cam,ty=P.y-14;
-  if(I.kinds){si=si??slotAt();if(si<0){sfx('no');pop(P.x,P.y-24,'fique num canteiro ou toque nele','#c9a99a');return}
+  if(I.kinds){si=si??slotAt();if(si<0){const f=P.on?freeSlot(P.x,P.y,I.kinds):{err:'pise no chão para plantar'};if(f.err){sfx('no');pop(P.x,P.y-24,f.err,'#c9a99a');return}si=f.i}
+    if(!S.tw[si]&&treesNow()>=treeCap()){sfx('no');pop(P.x,P.y-24,'jardim cheio ('+treeCap()+' árvores): arranque uma ou evolua as que tem','#ffb060',8);return}
     const s=MAP.slots[si];tx=s.x-S.cam;ty=s.y-8;plantAt(si,I.kinds,c.rare,.6,c.plus)}
   else if(c.k==='joio'){RUN.deck=RUN.deck.filter(k=>k!==c);RUN.coll=RUN.coll.filter(k=>k!==c);pop(P.x,P.y-24,'joio arrancado da bolsa','#ffffff')}
   else{if(c.k==='chuva'){tx=W/2;ty=30}if(blessing(c.k)===false)return}
@@ -446,7 +470,9 @@ function blessing(k){
   if(k==='maraberto'){if(MAP.sea){S.seaOpen=true;S.seaT=12;banner('Moisés','As águas se dividiram')}else{S.en.forEach(e=>e.frz=3);banner('Moisés','Estende a mão')}}
 }
 function sowLand(px,py){
+  if(treesNow()>=treeCap()){pop(px,py-12,'jardim cheio','#c9a99a');return}
   let best=-1,bd=20;MAP.slots.forEach((s,i)=>{if(S.tw[i])return;const d=Math.abs(s.x-px);if(d<bd&&Math.abs(s.y-py)<6){bd=d;best=i}});
+  if(best<0){const k=pick(['videira','roma','oliveira']),f=freeSlot(px,py,[k]);if(!f.err){plantAt(f.i,[k],false,.15);return}}
   if(best<0){pop(px,py-12,'as aves comeram','#c9a99a');for(let i=0;i<2;i++)S.fx.push({k:'bird',x:px,y:py-4,vx:rnd(-40,40),vy:-60,t:0,max:1});return}
   plantAt(best,[pick(['videira','roma','oliveira'])],false,.15);
 }
@@ -511,7 +537,7 @@ function fallWalls(){S.fallen=true;MAP._fallen=true;C=GROUND.getContext('2d');C.
 function nearestTreeSlot(){let best=-1,bd=90;MAP.slots.forEach((s,i)=>{if(!S.tw[i])return;const d=Math.hypot(s.x-S.p.x,s.y-S.p.y);if(d<bd){bd=d;best=i}});return best}
 
 // ---------- the gardener fights back, and gets hurt
-function playerAttack(){if(S.mini==='funda')return slingShot();const p=S.p;if(p.stun>0||p.atkCD>0)return;tutEvent('attack');const w=WEAPONS[META.weapon||'enxada'];p.atkCD=w.cd;p.swing=.22;sfx('hit');
+function playerAttack(){if(S.mini==='funda')return slingShot();const p=S.p;if(p.stun>0||p.atkCD>0)return;tutEvent('attack');const w=weaponNow();p.atkCD=w.cd;p.swing=.22;sfx('hit');
   if(w.dash){p.dash=.22;p.dashHit=new Set();sfx('wind');return}
   for(const e of S.en){if(e.dive>0)continue;const d=EN[e.k],ddx=(e.x-p.x)*p.face,ddy=ecy(e)-(p.y-8);
     if(ddx>-(w.wide?10:4)&&ddx<w.rng*(S.swordT>0?2:1)+d.w/2&&Math.abs(ddy)<(w.wide?26:14)+d.h/2){damage(e,w.dmg*(1+.15*atr('for'))*(S.up?S.up.str:1)*(S.swordT>0?3:1));onoma(e.x,ecy(e)-6,'hit',.45);if(!d.boss)e.x+=p.face*(w.push||8);burst(e.x,ecy(e),5,['#ffffff','#e8dcc0'],60,200,.3)}}
@@ -521,13 +547,13 @@ function hurtPlayer(n,src){const p=S.p;if(p.inv>0||p.faint>0||S.shieldT>0)return
   if(p.hp<=0){p.hp=0;p.stun=3;p.faint=3;const lost=Math.min(3,Math.floor(S.mana));S.mana-=lost;pop(p.x,p.y-38,'desmaiou! -'+lost+' maná','#ff4f4f',9);banner('Você desmaiou','Evite encostar nas pragas')}}
 function updHazards(dt){const p=S.p;
   for(const e of S.en){if(e.dive>0||e.hp<=0)continue;const d=EN[e.k];if(Math.abs(e.x-p.x)<d.w/2+3&&Math.abs(ecy(e)-(p.y-6))<d.h/2+6){
-    if(p.dash>0){if(!p.dashHit.has(e)){p.dashHit.add(e);damage(e,WEAPONS.arado.dmg);if(!d.boss)e.x+=p.face*14}}else if(!p.slam)hurtPlayer(d.boss||d.elite?2:1,e)}}
+    if(p.dash>0){if(!p.dashHit.has(e)){p.dashHit.add(e);damage(e,weaponNow().dmg);if(!d.boss)e.x+=p.face*14}}else if(!p.slam)hurtPlayer(d.boss||d.elite?2:1,e)}}
   S.fences=S.fences.filter(f=>{if(f.hp<=0){burst(f.x,f.y-6,14,['#8a5a2a','#c9a060'],70,300,.6);pop(f.x,f.y-20,'a cerca quebrou','#c9a060');return false}return true});
   if(S.fire){S.fire.t-=dt;if(S.fire.t<=0)S.fire=null;else for(const e of S.en)if(!EN[e.k].fly&&e.hp>0&&!(e.dive>0)&&Math.abs(e.x-S.fire.x)<9){damage(e,6*dt);e.slow=Math.max(e.slow,.5)}}
   S.scares=S.scares.filter(s=>(s.t-=dt)>0);S.muds=S.muds.filter(m=>(m.t-=dt)>0)}
 function placeItem(k){const p=S.p;if(p.stun>0||!sysOn('barriers'))return;if(!META.items||!META.items[k]){sfx('no');pop(p.x,p.y-24,'sem '+ITEMS[k].name.toLowerCase()+': compre na loja','#c9a99a');return}
   const x0=clamp(p.x+p.face*12,10,MAP.ww-10),y0=gy(x0);META.items[k]--;saveMeta();sfx('plant');burst(x0,y0-4,10,['#8a5a2a','#c9a060'],50,200,.4);
-  if(k==='cerca')S.fences.push({x:x0,y:y0,hp:30,max:30});if(k==='espantalho')S.scares.push({x:x0,y:y0,t:20});if(k==='lama')S.muds.push({x:x0,y:y0,t:15});renderItems()}
+  const tr=1+.5*iTier(k);if(k==='cerca')S.fences.push({x:x0,y:y0,hp:30*tr,max:30*tr});if(k==='espantalho')S.scares.push({x:x0,y:y0,t:20*tr});if(k==='lama')S.muds.push({x:x0,y:y0,t:15*tr});renderItems()}
 
 // ---------- update
 function update(dt){
@@ -545,7 +571,7 @@ function update(dt){
   S.wet+=((S.rain>0?1:0)-S.wet)*Math.min(1,dt*(S.rain>0?1.5:.12));
   if(S.rain>0&&Math.random()<dt*70)S.parts.push({x:S.cam+rnd(0,W+40),y:-4,vx:-30,vy:260,g:0,life:.9,max:.9,c:'#8ac8ff',s:1,a:.7});
   if(MAPID==='eden'&&Math.random()<dt*3)S.parts.push({x:S.cam+rnd(0,W+60),y:rnd(-10,60),vx:rnd(-22,-8),vy:rnd(8,16),g:0,life:9,max:9,c:pick(['#ffb0c8','#ff8ab0','#fff0f4']),s:1,sway:1});
-  if(S.parts.length<200&&Math.random()<dt*(CFG.lite?1.5:5)){const night=S.night>.35,c=night?pick(['#7af0d0','#b0ffe8','#fff4a0']):MAP.pal.grass?pick(['#fff4b0','#d8ffb0','#ffffff']):pick(['#ffe8b0','#fff6d8','#ffd8a0']);
+  if(S.parts.length<200&&Math.random()<dt*(CFG.lite?1.5:S.night>.35?6:5)){const night=S.night>.35,c=night?pick(['#7af0d0','#b0ffe8','#fff4a0']):MAP.pal.grass?pick(['#fff4b0','#d8ffb0','#ffffff']):pick(['#ffe8b0','#fff6d8','#ffd8a0']);
     S.parts.push({x:S.cam+rnd(-20,W+20),y:rnd(20,190),vx:rnd(-6,6),vy:night?rnd(-6,6):rnd(-14,-5),g:0,life:rnd(4,8),max:8,c,s:1,sway:1,a:night?.9:.6,blink:night?rnd(3,6):0})}
   if(MAPID==='getsemani'&&Math.random()<dt*2)S.parts.push({x:S.cam+rnd(0,W),y:rnd(60,160),vx:rnd(-4,4),vy:rnd(-4,4),g:0,life:3,max:3,c:'#fff4a0',s:1,sway:1});
   if(MAP.storm){
@@ -640,7 +666,7 @@ function update(dt){
   S.drops=S.drops.filter(d=>!d.got&&d.t<13);
   if(S.comboT>0){S.comboT-=dt;if(S.comboT<=0)S.combo=0}
   S.lifeHit=Math.max(0,S.lifeHit-dt);if(S.pPulse)for(let i=0;i<2;i++)S.pPulse[i]=Math.max(0,S.pPulse[i]-dt*2.5);
-  let nt=S.trevas?.82:S.levelNight===true?.55+S.wi*.05:S.levelNight===false?.13+S.wi*.04:(MAP.nightBase||0)+S.wi*.13;if(relic('lampada'))nt*=.6;if(S.lamps>0)nt=0;nt=Math.min(.85,nt);
+  let nt=S.trevas?.82:S.levelNight===true?.64+S.wi*.05:S.levelNight===false?.13+S.wi*.04:(MAP.nightBase||0)+S.wi*.13;if(relic('lampada'))nt*=.6;if(S.lamps>0)nt=0;nt=Math.min(.85,nt);
   S.night+=(nt-S.night)*Math.min(1,dt*.6);
   tutCheck();
   if(S.state==='wave'&&!S.q.length&&!S.en.length)endWave();
@@ -706,7 +732,7 @@ function hitProj(p,e){
 }
 function updFx(dt){updVfx(dt);
   for(const p of S.parts){p.vy+=p.g*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;if(p.sway)p.x+=Math.sin(p.life*4+p.vx)*.45}
-  S.parts=S.parts.filter(p=>p.life>0);if(CFG.lite&&S.parts.length>120)S.parts.splice(0,S.parts.length-120);
+  S.parts=S.parts.filter(p=>p.life>0);if(S.parts.length>300)S.parts.splice(0,S.parts.length-300);if(CFG.lite&&S.parts.length>120)S.parts.splice(0,S.parts.length-120);
   for(const p of S.pops)p.t+=dt;S.pops=S.pops.filter(p=>p.t<.9);
   for(const f of S.fx){f.t+=dt;if(f.k==='ring')f.r+=(f.max-f.r)*Math.min(1,dt*10);if(f.k==='bird'){f.x+=f.vx*dt;f.y+=f.vy*dt}if(f.k==='shock')f.r=f.max*Math.min(1,f.t/.5)}
   S.fx=S.fx.filter(f=>f.k==='ring'?f.t<.45:f.k==='shock'?f.t<.5:f.t<f.max);

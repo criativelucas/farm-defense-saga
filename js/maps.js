@@ -112,15 +112,16 @@ function gy(px){const T=MAP.gyT,j=Math.round(px*2);return T[j<0?0:j>=T.length?T.
 const inWater=px=>!!MAP.water&&px>=MAP.water[0]&&px<MAP.water[1];
 const inSea=px=>!!MAP.sea&&S&&!S.seaOpen&&px>=MAP.sea[0]&&px<MAP.sea[1];
 function buildMap(id,day=false,variant=0){
-  MAPID=id;MAP=MAPS[id];MUS.world=id;MAP.day=day;MAP.variant=variant;varyTerrain(variant);buildProfile();varyIslands(variant);
+  MAPID=id;MAP=MAPS[id];MAP.slots=MAP.slots.filter(s=>!s.free);MUS.world=id;MAP.day=day;MAP.variant=variant;varyTerrain(variant);buildProfile();varyIslands(variant);
   const lw=f=>Math.ceil(W+2+(MAP.ww-W)*f);
   paintScene(lw,day);GROUND=mkHD(MAP.ww,H);
   C=GROUND.getContext('2d');drawGround();outlinedGround(()=>MAP.homeDraw());
   C=x;
   MAP.fgItems=MAP.fg(Math.ceil(MAP.ww*FGK+W));buildProps();
   MAP.tufts=[];MAP.vines=[];MAP.puddles=[];
+  MAP.lamps=[];if(!day)for(let x0=96,k=0;x0<MAP.ww-50;x0+=84+hs(k,77)*60,k++){const lx=Math.round(x0);if(!inWater(lx)&&!(MAP.sea&&lx>MAP.sea[0]-8&&lx<MAP.sea[1]+8))MAP.lamps.push({x:lx})}
   for(let i=4;i<MAP.ww-4;i+=3){if(hs(i,9)<.45||inWater(i)||Math.abs(gy(i+2)-gy(i-2))>2)continue;MAP.tufts.push({x:i,y:gy(i),h:1+(hs(i,9)*2|0)})}
-  MAP.flats.forEach(([a,b,y])=>{if(b-a>50&&!(MAP.sea&&a>=MAP.sea[0]&&b<=MAP.sea[1])&&!inWater(a+20)&&!inWater(b-20))MAP.puddles.push({x:a+12+(hs(a,7)*(b-a-34)|0),y,w:8+(hs(a,8)*8|0)})});
+  MAP.flats.forEach(([a,b,y])=>{if(b-a>50&&!(MAP.sea&&a>=MAP.sea[0]&&b<=MAP.sea[1])&&!inWater(a+20)&&!inWater(b-20)){const px=a+12+(hs(a,7)*(b-a-34)|0),pw=8+(hs(a,8)*8|0);if(Math.abs(gy(px)-gy(px+pw))<1)MAP.puddles.push({x:px,y:gy(px),w:pw})}});
   MAP.plats.forEach((pl,k)=>{if(pl.wall)return;for(let j=0;j<2+pl.w/10;j++){const vx=Math.round(pl.x+4+hs(k,j+60)*(pl.w-8));{const top=Math.round(pl.y+Math.min(islandDepth(pl,vx),gy(vx)-pl.y-5)-2);MAP.vines.push({x:vx,y:top,len:Math.max(2,Math.min(6+(hs(k,j+70)*18|0),gy(vx)-top-3))})}}});
 }
 const STORY={

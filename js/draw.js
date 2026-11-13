@@ -119,6 +119,7 @@ function drawMostarda(X,Y,age){
 function drawJoio(X,Y,t){for(let i=0;i<6;i++){const lx=X-6+i*2.4,h=8+(i%3)*4,sw=Math.sin(t*2+i)*.8;r(lx,Y-h,1,h,'#6a6a2a');r(lx+sw-1,Y-h-3,3,3,'#8a8a3a');r(lx+sw,Y-h-4,1,1,'#2a2a10')}}
 function drawSoil(s){
   const X=s.x,Y=s.y;
+  if(s.soil==='comum'){r(X-4,Y-1,8,1,'#3a2014');r(X-2,Y-2,4,1,'#5a3420');return}
   if(s.soil==='boa'){r(X-6,Y-2,12,2,'#2a1410');r(X-4,Y-3,8,1,'#4a2a1a')}
   if(s.soil==='pedra'){r(X-6,Y-3,4,3,'#7a7a8a');r(X-1,Y-2,3,2,'#9a9aa8');r(X+3,Y-3,3,3,'#6a6a78');r(X-5,Y-3,1,1,'#b0b0c0')}
   if(s.soil==='espinho'){for(let i=0;i<5;i++){r(X-6+i*3,Y-4+(i%2),1,4-(i%2),'#6a3a2a');r(X-7+i*3,Y-4+(i%2),1,1,'#a05a3a')}}
@@ -180,9 +181,11 @@ function enemyIconTo(cvs,k,t=1){const g=hdCtx(cvs,48,48);C=g;const d=EN[k];g.sav
   OV=INK;for(const[ox,oy]of[[-o,0],[o,0],[0,-o],[0,o]]){g.translate(ox,oy);enemyBody(e);g.translate(-ox,-oy)}OV=null;enemyBody(e);g.restore();C=x}
 
 // ---------- frame
-const dc=mkHD(W+1,H),dx=dc.getContext('2d');
+const dc=mkHD(W+1,H,1),dx=dc.getContext('2d');// the night's dark is all soft gradients: one device pixel per unit is enough
 const LC={macieira:'#ff5a6a',sicomoro:'#d8c060',salgueiro:'#9ad890',acacia:'#e8d070',murta:'#ffffff',nogueira:'#a08050',hissopo:'#b8c0ff',cedro:'#a8e0a0',videira:'#a05ae8',roma:'#ff4f7b',oliveira:'#d8f0a8',sarca:'#ff8a2a',mostarda:'#f7d050',figueira:'#9ae060',tamareira:'#ffa64a',amendoeira:'#ffc8e4',lirio:'#f4f4ff'};
 let LIGHTS=[];
+// night levels share one deep teal-navy dark, so the glowing things (moss, lanterns, fruit, pests) carry the colour
+const NIGHT_DEEP='4,12,32';
 const easeBack=g=>1+2.70158*Math.pow(g-1,3)+1.70158*Math.pow(g-1,2);
 const HOMEY={tree:118,tabernacle:158,pillar:120,rahab:146,altar:150,rock:150,tomb:150};
 // the world is drawn VY units higher than the screen, so the hand of cards at the bottom covers dirt, not the ground you play on
@@ -205,6 +208,7 @@ function buildLights(){
   for(const e of S.en){const d=EN[e.k];if(d.boss||d.elite)L.push({x:e.x,y:e.y-14,r:56,c:d.glow,a:.5*(MAP.day?.55+S.night:1)});else if(e.k==='feitico')L.push({x:e.x,y:e.y,r:16,c:'#5af0ff',a:.5})}
   if(S.state!=='title')L.push({x:P.x,y:P.y-8,r:30,c:'#ffd8a0',a:.22});
   propLights(L);
+  for(const l of MAP.lamps||[])L.push({x:l.x,y:gy(l.x)-13,r:30+Math.sin(S.t*9+l.x)*2,c:'#4aa8ff',a:.6});
   if(S.pPulse&&live())portalSpots().forEach(([px,py],i)=>L.push({x:px,y:py,r:30+S.pPulse[i]*26,c:'#ff3a7a',a:.6+S.pPulse[i]*.4}));
   for(const f of MAP.gfalls||[])L.push({x:f.x+f.w/2,y:f.y1-4,r:22,c:'#7ad8ff',a:.4});
   L.push({x:18,y:HOMEY[MAP.home],r:MAP.home==='pillar'?60:44,c:MAP.home==='pillar'?'#ff8a2a':'#ffe36a',a:.35+Math.sin(S.t*2)*.08});
@@ -215,12 +219,18 @@ function buildLights(){
   LIGHTS=L;
 }
 // at night the moss itself glows: a thin bright line along every grassy edge and down the hanging vines (bloom layer)
-function drawRimGlow(){const a=(S.night-.15)*.7;if(a<=0||!MAP.mossTop)return;gx.globalAlpha=Math.min(.6,a);const c=MAP.mossTop,c0=Math.floor(S.cam)-2,c1=c0+W+4;
+function drawRimGlow(){const deep=S.levelNight===true,a=(S.night-.15)*(deep?1.2:.7);if(a<=0||!MAP.mossTop)return;gx.globalAlpha=Math.min(deep?.85:.6,a);const c=deep?'#4af0c8':MAP.mossTop,c0=Math.floor(S.cam)-2,c1=c0+W+4;
   for(let u=c0;u<c1;u++){if(inWater(u))continue;r(u,gy(u)-1,1,1.5,c)}
   for(const pl of MAP.plats){if(pl.wall||pl.x+pl.w<c0||pl.x>c1)continue;r(pl.x-1,pl.y-1,pl.w+2,1.5,c)}
   for(const v of MAP.vines){if(v.x<c0||v.x>c1)continue;r(v.x,v.y,1,v.len,'#5fe0a0')}gx.globalAlpha=1}
-function glowBlob(ctx,L,mul=1){if(L.r<=1)return;const g=ctx.createRadialGradient(L.x,L.y,0,L.x,L.y,L.r);g.addColorStop(0,L.c);g.addColorStop(1,'rgba(0,0,0,0)');
-  ctx.globalAlpha=Math.min(1,L.a*mul);ctx.fillStyle=g;ctx.fillRect(L.x-L.r,L.y-L.r,L.r*2,L.r*2);ctx.globalAlpha=1}
+// blue-flame lanterns along the path on night levels
+function drawLamps(){for(const l of MAP.lamps||[]){if(l.x<S.cam-6||l.x>S.cam+W+6)continue;const y=gy(l.x),f=Math.round(Math.sin(S.t*11+l.x));
+    r(l.x,y-11,1,11,'#1c2a44');r(l.x-1,y-1,3,1,'#1c2a44');r(l.x-1,y-12,3,1,'#2c3c5c');r(l.x-1,y-15-f,3,3,'#3a8aff');r(l.x,y-16-f,1,3,'#9ad8ff');r(l.x,y-14,1,1,'#ffffff')}}
+// a soft round light. The gradient of each colour is painted once on a small canvas and stretched, and lights off the screen are skipped
+const GLOWS=new Map();
+function glowBlob(ctx,L,mul=1){if(L.r<=1||L.x+L.r<0||L.x-L.r>W+1)return;let sp=GLOWS.get(L.c);
+  if(!sp){sp=mkCanvas(64,64);const q=sp.getContext('2d'),g=q.createRadialGradient(32,32,0,32,32,32);g.addColorStop(0,L.c);g.addColorStop(1,'rgba(0,0,0,0)');q.fillStyle=g;q.fillRect(0,0,64,64);GLOWS.set(L.c,sp)}
+  ctx.globalAlpha=Math.min(1,L.a*mul);ctx.drawImage(sp,L.x-L.r,L.y-L.r,L.r*2,L.r*2);ctx.globalAlpha=1}
 // shafts of light in every garden: soft leaning bands of sun by day, of moonlight at night (Sinai keeps its storm light)
 function drawRays(){
   const moon=S.night>.5,k=moon?.6*(S.night-.4):1-S.night;if(k<.03||(MAP.rays==='none'&&!moon))return;
@@ -272,6 +282,7 @@ function drawFG(){const F=MAP.fgSpr;if(!F)return;
     if(f.t==='vine'){if(MAP.day&&f.s%2)continue;const sw=Math.round(Math.sin(S.t*1.1+f.s)*3)/2;dl(x,F.vine,fx-13+sw,f.len<20?-24:-6)}
     else if(f.t==='fern')dl(x,F.fern,fx-22,H-30);else if(f.t==='rock')dl(x,F.rock,fx-20,H-22);else if(f.t==='frond')dl(x,F.frond,fx-26,-8)}
 }
+const TCW=120,TCH=112,TCX=60,TCY=100;// a tree's own canvas, and where its foot stands on it
 function drawTree(t,s,i){
   if(t.grow<.35){const h=1+t.grow*12|0;r(s.x,s.y-2-h,1,h,'#5fe08a');r(s.x-1,s.y-3-h,1,1,'#9ff7b8');r(s.x+1,s.y-2-h,1,1,'#5fe08a');return}
   if(t.joio){drawJoio(s.x,s.y,S.t);return}
@@ -283,9 +294,15 @@ function drawTree(t,s,i){
     else if(t.kinds[0]==='mostarda')drawMostarda(s.x,s.y,t.age);
     else drawTower(t.kinds[0],s.x,s.y,t.t,t,z(t.kinds[0]))};
   // a dark outline first, like the monsters, so every tree reads as one solid shape
-  OV='#14241a';for(const[ox,oy]of[[-.5,0],[.5,0],[0,-.5]]){x.translate(ox,oy);body();x.translate(-ox,-oy)}
-  OV=t.stun>0?'#6a7a9a':t.seduced?'#d9a521':t.sleep?'#4a5070':null;body();
-  OV=null;x.restore();
+  // the outline and the body are painted to the tree's own canvas about 14 times a second (or when its look changes)
+  // and stamped from there every frame: four full paintings of every tree per frame were the heaviest part of a battle
+  const key=(t.stun>0?1:t.seduced?2:t.sleep?3:0)+t.kinds.join()+(t.age>=2)+t.branch,bx=Math.round(s.x),by=Math.round(s.y);
+  if(C!==x){OV='#14241a';for(const[ox,oy]of[[-.5,0],[.5,0],[0,-.5]]){x.translate(ox,oy);body();x.translate(-ox,-oy)}OV=t.stun>0?'#6a7a9a':t.seduced?'#d9a521':t.sleep?'#4a5070':null;body();OV=null}
+  else{if(!t._cv)t._cv=mkHD(TCW,TCH);
+    if(t._key!==key||t._bx!==bx||t._by!==by||Math.abs(S.t-(t._at??-9))>.07||Math.abs(t.szv-t._sz)>.004){t._key=key;t._bx=bx;t._by=by;t._at=S.t;t._sz=t.szv;const g=t._cv.getContext('2d');g.clearRect(0,0,TCW,TCH);C=g;g.save();g.translate(TCX-bx,TCY-by);
+      OV='#14241a';for(const[ox,oy]of[[-.5,0],[.5,0],[0,-.5]]){g.translate(ox,oy);body();g.translate(-ox,-oy)}OV=t.stun>0?'#6a7a9a':t.seduced?'#d9a521':t.sleep?'#4a5070':null;body();OV=null;g.restore();C=x}
+    dl(x,t._cv,bx-TCX,by-TCY)}
+  x.restore();
   if(t.sleep)for(let i=0;i<3;i++){const zx=s.x+6+i*3,zy=s.y-30-i*5-((S.t*6)%4);r(zx,zy,3,1,'#c0d0ff');r(zx+1,zy+1,1,1,'#c0d0ff');r(zx,zy+2,3,1,'#c0d0ff')}
   if(t.branch){const bx=s.x+7,by=s.y+3;if(t.branch==='a'){r(bx,by-1,1,3,'#f7c948');r(bx-1,by,3,1,'#f7c948');r(bx,by,1,1,'#fff6c0')}else{r(bx-1,by,3,1,'#5ab0ff');r(bx,by-1,2,1,'#9ad8ff')}}
   if(t.evo){const a=S.t*2;for(let j=0;j<3;j++)r(s.x+Math.cos(a+j*2.09)*10,s.y-30+Math.sin(a+j*2.09)*3,1,1,j?'#fff6c0':'#f7c948');r(s.x+5,s.y+3,4,1,'#f7c948')}
@@ -328,7 +345,7 @@ function drawDrops(){for(const d of S.drops){if(d.t>10&&(S.t*10|0)%2)continue;co
 function draw(){
   if(!S)return;
   const sh=S.shake;S.sx=Math.round(rnd(-sh,sh));S.sy=Math.round(rnd(-sh,sh));
-  x.setTransform(RS,0,0,RS,0,0);gx.setTransform(RS,0,0,RS,0,0);
+  x.setTransform(RS,0,0,RS,0,0);gx.setTransform(GK,0,0,GK,0,0);
   const cam=Math.round(S.cam*RS)/RS,P=S.p,live=S.state==='prep'||S.state==='wave';
   buildLights();
   x.save();view(x);
@@ -346,11 +363,11 @@ function draw(){
   const gc=S.wet>.3?'#8affb0':MAP.mossTop||MAP.pal.top1;
   for(const t of MAP.tufts){if(t.x<cam-4||t.x>cam+W+4)continue;const l=Math.sin(S.t*2.2+t.x*.07)>.25?1:0;r(t.x,t.y-t.h,1,t.h,gc);r(t.x+l,t.y-t.h-1,1,1,gc)}
   for(const v of MAP.vines)for(let i=0;i<v.len;i++){const px=v.x+Math.sin(S.t*1.3+v.x+i*.3)*i*.08;r(px,v.y+i,1,1,'#2f9a5a');if(i%3===1)r(px+1,v.y+i,1,1,gc)}
-  drawProps();drawPuddles();drawHomeDyn();drawLinks();drawStoryWorld();drawGoal();drawMini();drawBarriers();
-  MAP.slots.forEach((s,i)=>{const t=S.tw[i];drawSoil(s);
+  drawProps();drawLamps();drawPuddles();drawHomeDyn();drawLinks();drawStoryWorld();drawGoal();drawMini();drawBarriers();
+  MAP.slots.forEach((s,i)=>{const t=S.tw[i];if(s.free&&!t)return;drawSoil(s);
     if(!t){r(s.x,s.y-6,1,3,'#5fe08a');r(s.x-1,s.y-6,1,1,'#5fe08a');r(s.x+1,s.y-5,1,1,'#5fe08a');if(S.sel>=0&&live&&(S.t*4|0)%2)ring(s.x,s.y-6,6,'#f7c948')}
     if(live&&Math.abs(s.x-P.x)<12&&Math.abs(s.y-P.y)<3){const b=(S.t*4|0)%2;r(s.x-8,s.y-4-b,2,1,'#f7c948');r(s.x+6,s.y-4-b,2,1,'#f7c948');
-      x.font='7px "Pixelify Sans", monospace';x.textAlign='center';const lbl={boa:'boa terra',pedra:'pedregoso',espinho:'espinhos'}[s.soil];
+      x.font='7px "Pixelify Sans", monospace';x.textAlign='center';const lbl={comum:'',boa:'boa terra',pedra:'pedregoso',espinho:'espinhos'}[s.soil];
       x.fillStyle='#000';x.fillText(lbl,s.x+1,s.y+9);x.fillStyle=SOIL_MSG[s.soil][1];x.fillText(lbl,s.x,s.y+8)}
     if(!t||t.grow<=0)return;
     drawTree(t,s,i);
@@ -382,7 +399,7 @@ function draw(){
   x.restore();
   if(S.wx==='mist'&&!CFG.lite){fog(166,.24,1.05);fog(180,.2,1.25)}
   drawWater();
-  if(S.night>.01){dx.globalCompositeOperation='source-over';dx.clearRect(0,0,W+1,H);dx.fillStyle=`rgba(${MAP.night},${S.night})`;dx.fillRect(0,0,W+1,H);
+  if(S.night>.01){dx.globalCompositeOperation='source-over';dx.clearRect(0,0,W+1,H);dx.fillStyle=`rgba(${S.levelNight===true?NIGHT_DEEP:MAP.night},${S.night})`;dx.fillRect(0,0,W+1,H);
     dx.globalCompositeOperation='destination-out';for(const L of LIGHTS)glowBlob(dx,{x:L.x-cam,y:L.y+VY,r:L.r*1.3,c:'#000',a:L.a},1.8);
     dx.globalCompositeOperation='source-over';dl(x,dc,0,-VY)}
   for(const f of S.fx)if(f.k==='shock'&&!CFG.lite){const cx=f.x-cam,cy=f.y,R=f.r;x.save();x.beginPath();x.arc(cx,cy,R+7,0,Math.PI*2);x.arc(cx,cy,Math.max(0,R-7),0,Math.PI*2,true);x.clip();
@@ -407,7 +424,10 @@ function draw(){
   gx.clearRect(0,0,W+1,H);if(CFG.lite)return;gx.save();view(gx);gx.globalCompositeOperation='lighter';
   for(const L of LIGHTS)glowBlob(gx,{...L,x:L.x-cam});
   gx.translate(-cam,0);C=gx;
-  for(const e of S.en){if(e.dive>0||S.mini==='escuro'&&!darkVisible(e))continue;gx.globalAlpha=e.flash>0?.75:e.frz>0?.4:.16;OV=e.flash>0?'#ffffff':e.frz>0?'#9fe8ff':EN[e.k].glow;enemyBody(e)}OV=null;gx.globalAlpha=1;
+  for(const e of S.en){if(e.dive>0||S.mini==='escuro'&&!darkVisible(e))continue;const big=EN[e.k].boss||EN[e.k].elite;if(big){gx.save();gx.translate(e.x,e.y);gx.scale(BOSS_SCALE,BOSS_SCALE);gx.translate(-e.x,-e.y)}
+    if(e.x<S.cam-30||e.x>S.cam+W+30){if(big)gx.restore();continue}
+    if(S.night>.45&&!(e.flash>0)){OV=EN[e.k].glow;gx.globalAlpha=Math.min(.16,(S.night-.45)*.5);for(const[ox,oy]of[[-1,-1],[1,1]]){gx.translate(ox,oy);enemyBody(e);gx.translate(-ox,-oy)}}
+    gx.globalAlpha=e.flash>0?.75:e.frz>0?.4:S.night>.45?.08:.16;OV=e.flash>0?'#ffffff':e.frz>0?'#9fe8ff':EN[e.k].glow;enemyBody(e);if(big)gx.restore()}OV=null;gx.globalAlpha=1;
   drawProj();drawDrops();
   for(const p of S.parts){if(p.blink&&Math.sin(p.life*p.blink)<0)continue;gx.globalAlpha=partA(p);r(p.x,p.y,p.s,p.s,p.c)}gx.globalAlpha=1;drawRimGlow();
   for(const f of S.fx){if(f.k==='beam'){const a=1-f.t/f.max,w=f.w*a;gx.globalAlpha=a;r(f.x-w,0,w*2,gy(f.x),'#ff4f7b');gx.globalAlpha=1}
@@ -490,9 +510,13 @@ function drawOverlays(){
     for(let i=0;i<10;i++)x.fillText('ʘΔλΣЖᚠᚦ'[(i+(S.t*3|0))%7],(hs(i,5)*W+S.t*10)%W,40+hs(i,6)*120)}
   if(MAPID==='getsemani'&&S.state==='wave'){}
 }
-function drawDragPreview(){if(S.dragSlot==null||S.dragSlot<0||!S.dragKinds)return;const s=MAP.slots[S.dragSlot];x.globalAlpha=.45+Math.sin(S.t*8)*.15;
+function drawDragPreview(){if(!S.dragKinds)return;const sp=S.dragSpot,s=S.dragSlot>=0?MAP.slots[S.dragSlot]:sp&&{x:sp.x,y:sp.y,soil:'comum'};if(!s)return;
+  // a free spot shows the room the tree needs: green when it fits, red (with the reason) when it does not
+  if(S.dragSlot<0){const f=footOf(S.dragKinds),c=sp.err?'#ff5a5a':'#5fe08a';x.globalAlpha=.8;r(s.x-f,s.y+1,f*2,1,c);r(s.x-f,s.y-2,1,3,c);r(s.x+f-1,s.y-2,1,3,c);x.globalAlpha=1;
+    if(sp.err){x.font='7px "Pixelify Sans", monospace';x.textAlign='center';x.fillStyle='#000';x.fillText(sp.err,s.x+1,s.y+10);x.fillStyle='#ff9a9a';x.fillText(sp.err,s.x,s.y+9);x.globalAlpha=.25}}
+  if(!(x.globalAlpha<1))x.globalAlpha=.45+Math.sin(S.t*8)*.15;
   if(S.dragKinds.length>1){drawTower(S.dragKinds[0],s.x-4,s.y,S.t);drawTower(S.dragKinds[1],s.x+4,s.y,S.t)}else if(S.dragKinds[0]==='mostarda')drawMostarda(s.x,s.y,0);else drawTower(S.dragKinds[0],s.x,s.y,S.t);
-  x.globalAlpha=1;ring(s.x,s.y-10,10,'#f7c948');x.font='7px "Pixelify Sans", monospace';x.textAlign='center';x.fillStyle=SOIL_MSG[s.soil][1];x.fillText(SOIL_MSG[s.soil][0],s.x,s.y+9)}
+  x.globalAlpha=1;if(sp&&S.dragSlot<0&&sp.err)return;ring(s.x,s.y-10,10,'#f7c948');x.font='7px "Pixelify Sans", monospace';x.textAlign='center';x.fillStyle=SOIL_MSG[s.soil][1];x.fillText(SOIL_MSG[s.soil][0],s.x,s.y+9)}
 
 // ---------- farm tools in the gardener's hand (R mirrors with facing)
 const TOOLS={

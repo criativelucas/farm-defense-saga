@@ -228,22 +228,39 @@ function grantCard(o){const k=o.k,tree=CARDS[k].type==='semente'||!!CARDS[k].pla
 const freePackToday=()=>META.freeDay!==todayKey();
 const packGifts=()=>(freePackToday()?1:0)+(META.gifts||0);
 // the pack itself, 48x64: a foil pouch with crimped ends, a tear line, a medallion and a ribbon with its name
-function packDraw(id,label,back){const P=PACKS[id],[c0,c1,c2]=P.col;
-  rrect(3,2,42,60,3,COUT);for(let y=3;y<61;y++){const t=(y-3)/58;r(4,y,40,1,t<.5?mixHex(c2,c1,t*2):mixHex(c1,c0,(t-.5)*2))}
-  for(let y=3;y<61;y++){const sx=4+((y*.55+6)%40);r(sx,y,3,1,'#ffffff30');r(sx+5,y,1,1,'#ffffff22')}
-  r(4,3,2,58,'#ffffff38');r(42,3,2,58,'#00000038');
-  for(const y0 of[3,55]){r(4,y0,40,6,shade(c0,-.15));for(let i=4;i<44;i+=2)r(i,y0,1,6,shade(c0,-.4));r(4,y0+(y0<9?5:0),40,1,shade(c1,.3))}
-  for(let i=4;i<44;i+=2)r(i,2,1,1,c0),r(i+1,61,1,1,c0);
-  for(let i=6;i<42;i+=3)r(i,10.5,2,.5,'#ffffffaa');
+function packDraw(id,label,back){const P=PACKS[id],[c0,c1,c2]=P.col,q=.25;
+  // the pouch: it bulges in the middle and is pinched flat at the two crimped ends, like a real foil pack
+  const half=y=>{const t=clamp((y-8)/48,0,1);return y<8||y>56?18.5:18.5+2.4*Math.sin(Math.PI*t)},cyl=[.3,.42,.26,.1,0,-.1,-.2,-.34];
+  for(let y=1.5;y<62.5;y+=q){const h=half(y);r(24-h-.75,y,h*2+1.5,q,COUT)}
+  for(let y=2.25;y<61.75;y+=q){const h=half(y),t=(y-2)/60,base=t<.5?mixHex(c2,c1,t*2):mixHex(c1,c0,(t-.5)*2);
+    for(let k=0;k<8;k++)r(24-h+k*h/4,y,h/4+.1,q,shade(base,cyl[k]))}
+  // foil: two diagonal bands of sheen and a fine sparkle grain
+  for(let y=8;y<56;y+=q){const h=half(y);for(const[o,w,a]of[[6,5,'30'],[13,1.5,'40'],[27,3,'1c']]){const sx=24-h+((y*.7+o)%(h*2));r(sx,y,Math.min(w,24+h-sx),q,'#ffffff'+a)}}
+  for(let i=0;i<70;i++){const y=9+hs(i,3)*46,h=half(y);r(24-h+1+hs(i,5)*(h*2-2),y,q,q,i%3?'#ffffff70':shade(c2,.5))}
+  // crimped ends: a darker pressed strip with fine vertical ridges and a saw-tooth edge
+  for(const y0 of[2.25,56]){const hh=5.75;r(5.5,y0,37,hh,shade(c0,-.2));for(let i=5.5;i<42.5;i+=1){r(i,y0,.5,hh,shade(c0,-.45));r(i+.5,y0,.25,hh,shade(c1,.15))}
+    r(5.5,y0<9?y0+hh-.25:y0,37,.25,shade(c2,.4));r(5.5,y0<9?y0+hh:y0-.25,37,.25,'#00000050')}
+  for(let i=5.5;i<42.5;i+=1.5){r(i,1.5,.75,.75,COUT);r(i+.75,61.75,.75,.75,COUT)}
+  // the tear line with its little notch
+  for(let i=7;i<41;i+=1.5)r(i,9.5,.75,.25,'#ffffffb0');r(5,9,1,1.25,COUT);
   if(back){rrect(8,14,32,28,2,COUT);r(9,15,30,26,'#f4e6c4');r(9,15,30,2,'#fffbe8');for(let j=0;j<4;j++)r(12,20+j*4,(j%2?16:22),1,'#a88a5a');RAR_ORDER.forEach((rk,i)=>{disc(14+i*6.5,37,2,COUT);disc(14+i*6.5,37,1.4,RAR[rk].c)});
     rrect(6,45,36,9,2,COUT);r(7,46,34,7,shade(c0,-.3));for(let i=0;i<14;i++)r(9+i*2.2,47,(i%3?1:.5),5,'#fff3c0');return}
-  disc(24,30,13,COUT);disc(24,30,12,c0);disc(24,30,10.5,shade(c2,.2));disc(24,29,9,c2);
-  if(id==='semeador'){r(23,27,2,10,'#6a3a1a');blob(19,27,6,3,'#1e6a2a','#4faa4a','#a8f07a',3);blob(29,24,6,3,'#1e6a2a','#4faa4a','#a8f07a',5);for(let i=0;i<5;i++)r(16+i*4,37+(i%2),2,2,'#c88a3a')}
-  if(id==='bencao'){for(let i=0;i<8;i++){const a=i/8*Math.PI*2;r(24+Math.cos(a)*8-1,29+Math.sin(a)*8-1,2,2,'#fff6c0')}disc(24,29,5,'#ffd040');disc(23,28,3,'#fff6c0')}
-  if(id==='arca'){r(15,31,18,4,'#7a4a2a');r(16,35,16,2,'#5a3018');r(19,26,10,5,'#a06a3a');r(18,25,12,1,'#5a3018');r(22,28,2,2,'#2a1408');r(29,19,4,2,'#ffffff');r(31,18,2,1,'#ffffff');r(27,20,2,1,'#ffffff');for(let i=0;i<4;i++)r(14+i*6,38,4,1,'#5ab8ff')}
-  rrect(6,45,36,9,2,COUT);r(7,46,34,7,shade(c0,-.3));r(7,46,34,1,c1);
-  if(label)pxText(C,P.short,24,52,'700 6px "Pixelify Sans", monospace','#fff3c0','#000000');
-  [[8,14],[38,40],[12,42],[36,13]].forEach(([a,b])=>{r(a,b,1,1,'#ffffff');r(a-1,b,3,1,'#ffffff66');r(a,b-1,1,3,'#ffffff66')})}
+  // an embossed frame, then the medallion on a sunburst
+  for(const[x0,y0,w,h,c]of[[7.5,12,33,.5,shade(c2,.45)],[7.5,43,33,.5,shade(c0,-.4)],[7.5,12,.5,31.5,shade(c2,.45)],[40,12,.5,31.5,shade(c0,-.4)]])r(x0,y0,w,h,c);
+  for(let a=0;a<16;a++){const an=a/16*Math.PI*2;for(let d=11;d<16.5;d+=.5)if(a%2===0)r(24+Math.cos(an)*d-.5,28+Math.sin(an)*d-.5,1.25,1.25,'#ffffff2a')}
+  disc(24,28.5,12.5,'#00000040');disc(24,28,12.5,COUT);disc(24,28,11.75,'#7a4a0a');disc(24,28,11,'#f7c948');disc(23.5,27.5,10.25,'#fff3b0');disc(24,28,9.75,'#c88a1a');disc(24,28,9,shade(c2,.2));disc(24,27.25,8.25,c2);
+  for(let a=0;a<12;a++){const an=a/12*Math.PI*2;r(24+Math.cos(an)*10.4-.25,28+Math.sin(an)*10.4-.25,.5,.5,'#7a4a0a')}
+  if(id==='semeador'){r(23.25,25.5,1.5,9,'#6a3a1a');r(23.25,25.5,.5,9,'#9a6030');blob(19.5,25.5,5.5,3,'#1e6a2a','#4faa4a','#a8f07a',3);blob(28.5,23,5.5,3,'#1e6a2a','#4faa4a','#a8f07a',5);blob(24,21.5,3.5,2.5,'#1e6a2a','#4faa4a','#a8f07a',7);for(let i=0;i<5;i++){r(17+i*3.5,34+(i%2)*.75,1.5,1.5,'#c88a3a');r(17+i*3.5,34+(i%2)*.75,.5,.5,'#f0c070')}}
+  if(id==='bencao'){for(let i=0;i<12;i++){const a=i/12*Math.PI*2,l=i%2?7.5:6;for(let d=3.5;d<l;d+=.5)r(24+Math.cos(a)*d-.4,27.5+Math.sin(a)*d-.4,.8,.8,'#fff6c0')}disc(24,27.5,4.25,'#c88a1a');disc(24,27.5,3.75,'#ffd040');disc(23.25,26.75,2.25,'#fff6c0');disc(22.75,26.25,1,'#ffffff')}
+  if(id==='arca'){r(15.5,29.5,17,3.5,'#7a4a2a');r(15.5,29.5,17,.75,'#b07a40');r(16.5,33,15,1.5,'#5a3018');r(19,24.5,10,5,'#a06a3a');r(19,24.5,10,.75,'#c88a50');r(18,23.75,12,.75,'#5a3018');r(22.25,26.5,1.75,2,'#2a1408');r(25.25,26.5,1.75,2,'#2a1408');
+    r(28.5,19.5,3.5,1.5,'#ffffff');r(30.5,18.75,1.5,.75,'#ffffff');r(27,20.25,1.75,.75,'#ffffff');r(31.75,20,1,.5,'#e0a040');for(let i=0;i<5;i++)r(14.5+i*4,35.25+(i%2)*.5,3,.75,i%2?'#9ad8ff':'#5ab8ff')}
+  // the ribbon with the pack's name: folded tails behind, a bright upper edge
+  r(3.5,46.5,4,6.5,COUT);r(40.5,46.5,4,6.5,COUT);r(4,47,3,5.5,shade(c0,-.5));r(41,47,3,5.5,shade(c0,-.5));
+  rrect(5.5,44.5,37,9.5,1.5,COUT);r(6.25,45.25,35.5,8,shade(c0,-.28));r(6.25,45.25,35.5,.75,shade(c1,.25));r(6.25,52.5,35.5,.75,shade(c0,-.5));
+  if(label)pxText(C,P.short,24,51.75,'700 6px "Pixelify Sans", monospace','#fff3c0','#000000');
+  // guaranteed rarity shown as little gems under the tear line, and a few glints
+  const gems=id==='arca'?3:id==='bencao'?2:1;for(let i=0;i<gems;i++){const gx0=24-(gems-1)*2.5+i*5;disc(gx0,14.75,1.75,COUT);disc(gx0,14.75,1.25,RAR[RAR_ORDER[Math.min(3,i+(P.min||0))]].c);r(gx0-.75,14,.5,.5,'#ffffff')}
+  [[9,18],[38.5,39],[11.5,41],[37,17.5],[33,11.5]].forEach(([a,b])=>{r(a,b,.75,.75,'#ffffff');r(a-1,b+.1,2.75,.5,'#ffffff70');r(a+.1,b-1,.5,2.75,'#ffffff70')})}
 function packTag(o){const f=o.foil?'<b class="t-foil">★ Consagrada</b>':'';
   if(o.st==='nova')return'<b class="t-new">NOVA!</b>'+f;
   if(o.st==='nivel')return`<b class="t-lv">NÍVEL ${o.lv+1}!</b>`+f;

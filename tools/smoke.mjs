@@ -158,6 +158,25 @@ async function bossStages(label){
     o.stages=res.every(x=>x.endsWith('ok'));o.res=res.join(',');
     return JSON.stringify(o)})()`);
   const o=JSON.parse(r||'{}'),bad=Object.entries(o).filter(([k,v])=>!v&&k!=='res').map(([k])=>k);check(label+': fases de chefe '+(o.res||''),Object.keys(o).length>=4&&!bad.length,bad.join(', ')||r)}
+// free planting: anywhere with room, each species with its own footprint, beds still snap, water refuses
+async function freePlant(label){
+  const r=await js(`(()=>{const o={};startLevel(0);RUN.coll=['videira','sarca','cedro','sicomoro'].map(k=>mk(k));RUN.deck=[...RUN.coll];startLevelBattle();S.dialog=null;S.intro=null;tutStep=-1;S.tw=S.tw.map(()=>null);
+    const beds=MAP.slots.length,spot=(()=>{for(let x0=90;x0<MAP.ww-90;x0+=4)if(!inWater(x0)&&!inWater(x0+30)&&!MAP.slots.some(s=>Math.abs(s.x-x0)<12||Math.abs(s.x-x0-26)<12)&&Math.abs(gy(x0)-gy(x0+26))<13)return x0})(),y0=gy(spot);
+    S.p.x=spot;S.p.y=y0;S.p.on=true;S.mana=MAXM;S.hand=[mk('sicomoro'),mk('sarca'),mk('sarca'),mk('cedro')];playCard(0);
+    const i=MAP.slots.findIndex((s,j)=>s.free&&S.tw[j]);o.planted=i>=0&&MAP.slots.length===beds+1&&S.tw[i].soil==='comum'&&Math.abs(MAP.slots[i].x-spot)<1;
+    o.tooClose=!!plantCheck(spot+FOOT.sicomoro+FOOT.sarca-2,gy(spot+23),['sarca']);o.fits=!plantCheck(spot+FOOT.sicomoro+FOOT.sarca+1,gy(spot+26),['sarca'])||Math.abs(gy(spot+26)-gy(spot+26))>3;
+    o.bigNeedsMore=FOOT.sicomoro>FOOT.sarca&&footOf(['cedro','sarca'])>FOOT.cedro;
+    o.water=!MAP.water||!!plantCheck((MAP.water[0]+MAP.water[1])/2,gy((MAP.water[0]+MAP.water[1])/2),['sarca']);o.home=!!plantCheck(30,gy(30),['sarca']);
+    const b=MAP.slots[0];o.bedSnap=freeSlot(b.x+4,b.y,['sarca']).i===0;
+    const pl=MAP.plats.find(p=>!p.wall&&p.w>24&&!MAP.slots.some(s=>Math.abs(s.y-p.y)<2&&s.x>p.x&&s.x<p.x+p.w));o.island=!pl||!plantCheck(pl.x+pl.w/2,surfaceAt(pl.x+pl.w/2,pl.y-8),['sarca'])&&surfaceAt(pl.x+pl.w/2,pl.y-8)===pl.y;
+    S.tw[i]=null;update(1/60);o.parked=MAP.slots[i].x<0;const f2=freeSlot(spot,y0,['sarca']);o.reused=f2.i===i&&MAP.slots.length===beds+1;
+    // the tree limit: a full garden refuses one more, and the shop's makes change what tools and barriers do
+    S.tw=S.tw.map(()=>null);const cap=treeCap();for(let k=0;k<cap;k++)plantAt(k,['sarca'],false,0);S.mana=MAXM;S.hand=[mk('sarca'),mk('sarca'),mk('sarca'),mk('sarca')];playCard(0,cap);o.cap=cap===6&&!S.tw[cap]&&treesNow()===cap;
+    META.upg.trees=1;o.capUp=treeCap()===7;META.upg.trees=0;const d0=weaponNow().dmg;META.wtier={[META.weapon||'enxada']:2};o.tier=weaponNow().dmg>d0*1.6;META.wtier={};
+    const w0=winsN();o.shopLock=shopItems('ferramentas').some(i=>i.id.startsWith('wt:')&&(i.lock||w0>=5))&&shopItems('barreiras').some(i=>i.id.startsWith('bt:'));
+    startLevel(0);RUN.deck=[...RUN.coll];startLevelBattle();o.reset=MAP.slots.length===beds&&S.tw.length===beds;
+    for(let i=0;i<30;i++)update(1/60);draw();return JSON.stringify(o)})()`);
+  const o=JSON.parse(r||'{}'),bad=Object.entries(o).filter(([,v])=>!v).map(([k])=>k);check(label+': plantio livre',Object.keys(o).length>=10&&!bad.length,bad.join(', ')||r)}
 // a short battle in every world: plant, call the wave, let it run, draw frames
 async function battles(label){
   for(let w=0;w<7;w++){const before=errors.length;
@@ -223,7 +242,7 @@ async function waveShop(label){const before=errors.length;
     return out.join(',')})()`);
   check(label+': portais, loja entre ondas, poderes '+r,errors.length===before&&r==='portais,loja,compra,poderes,pisao',errors.slice(before).join(' | ').slice(0,200))}
 console.log('— new player');await load(true,false);await loopAndScene('new');
-console.log('— player with progress');await js(`Object.assign(META,{intro:1,tut:1,coins:5000});['1-1','1-2','1-3','1-4','2-1','2-4'].forEach(i=>META.done[i]=1);saveMeta();1`);await everyScreen('progress');await farmers('progress');await packs('progress');await pests('progress');await newCards('progress');await expansion('progress');await bossStages('progress');await battles('progress');await goals('progress');await minis('progress');await audio('progress');await polish('progress');await waveShop('progress');
+console.log('— player with progress');await js(`Object.assign(META,{intro:1,tut:1,coins:5000});['1-1','1-2','1-3','1-4','2-1','2-4'].forEach(i=>META.done[i]=1);saveMeta();1`);await everyScreen('progress');await farmers('progress');await packs('progress');await pests('progress');await newCards('progress');await expansion('progress');await bossStages('progress');await freePlant('progress');await battles('progress');await goals('progress');await minis('progress');await audio('progress');await polish('progress');await waveShop('progress');
 console.log('— embed with gamepad blocked');await load(false,true);await loopAndScene('blocked-pad');
 const fails=checks.filter(c=>!c[1]);console.log(`\n${checks.length-fails.length}/${checks.length} checks passed`+(errors.length?`; ${errors.length} error(s) logged:`:''));
 errors.forEach(e=>console.log('  · '+String(e).split('\n').slice(0,3).join(' / ')));

@@ -10,6 +10,16 @@ Abra `jardim-do-fruto.html` num navegador (ou sirva a pasta com `python3 -m http
 - Q cerca · E espantalho · R lama
 - 1 a 4 jogar carta (ou arraste até o canteiro) · Enter chama a onda · M som
 
+## Plantio livre
+As árvores podem ser plantadas em qualquer chão firme ou ilha, não só nos canteiros: pare no lugar e jogue a carta, ou arraste a carta até lá (a marca fica verde quando cabe, vermelha com o motivo quando não cabe). Cada espécie pede seu espaço (`FOOT` em `js/game.js`): arbustos como Sarça e Lírio ficam bem juntos, árvores grandes como Sicômoro e Nogueira precisam de mais chão. Não se planta na água, colado no Éden nem no portal. Os canteiros continuam valendo: boa terra dá +30%; a terra comum não dá bônus.
+
+Cada fase tem um limite de árvores (`treeCap` em `js/game.js`): 6 no primeiro mundo, +1 por mundo, +3 nas fases de chefe, e +1 por cada "Canteiro extra" comprado na quitanda. Com o jardim cheio é preciso arrancar uma árvore ou evoluir as que já estão plantadas.
+
+## Quitanda que evolui
+Ferramentas e barreiras têm quatro feitios: madeira, bronze, ferro e ouro (`MATS` em `js/content.js`). A prateleira mostra sempre o próximo feitio de cada item, que só chega depois de um número de fases vencidas (5, 14 e 24). Ferramenta melhor dá +35% de dano por feitio, golpe mais rápido e mais longo; barreira melhor dura 50% mais por feitio.
+
+O relevo de cada fase ganha morros, vales e pequenos degraus de pedra por cima do desenho feito à mão, além de ilhotas extras em alturas diferentes. Nas fases de noite o escuro é azul profundo, com lanternas de chama azul pelo caminho, musgo e pragas com contorno de luz.
+
 ## Fases de chefe
 Cada mundo termina numa fase X-5 só do chefe, que abre depois da X-4 e libera o mundo seguinte. Fases já vencidas continuam abertas. Nela não há bolsa nem maná: uma carroça traz cartas escolhidas para aquele chefe, um cronômetro corre (quando zera, o chefe avança em fúria) e cada chefe tem uma regra própria para ser derrotado:
 

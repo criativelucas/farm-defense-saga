@@ -21,7 +21,9 @@ const play=(n,run)=>G.js(`(()=>{
     think-=dt;if(think<=0){think=${WEAK?1.5:.5};
       const crowd=S.en.filter(e=>e.hp>0).length;
       S.hand.forEach((c,hi)=>{if(!c)return;const I=info(c);if(S.mana<I.cost)return;
-        if(I.kinds){const si=MAP.slots.findIndex((s,j)=>!S.tw[j]);if(si>=0)playCard(hi,si)}
+        if(I.kinds){// beds first; when they are full, the robot plants on open ground wherever the tree fits
+        let si=MAP.slots.findIndex((s,j)=>!s.free&&!S.tw[j]);if(si<0)for(let x0=70;x0<MAP.ww-60&&si<0;x0+=8){const f=plantCheck(x0,gy(x0),I.kinds)?null:freeSlot(x0,gy(x0),I.kinds);if(f&&!f.err)si=f.i}
+        if(si>=0)playCard(hi,si)}
         else if(!${WEAK}&&crowd>=4||(c.k==='mana'&&S.mana<4))playCard(hi)});
       S.tw.forEach(tw=>{if(tw&&(tw.lvl||0)>=3&&!tw.branch&&S.mana>=BRANCH_COST+2){S.mana-=BRANCH_COST;tw.branch=RNG()<.5?'a':'b'}});
       // boss stages: the robot knows each boss's rule (stomp the head, fetch the stones, stomp the hook when the beast is close, light the lamps)

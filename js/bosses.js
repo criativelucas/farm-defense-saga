@@ -45,7 +45,7 @@ function bossMod(e,d,src){const k=e.k,tree=!!(src&&CARDS[src]);
     if(e.ln===4&&S.t-(e.lpop||0)>2){e.lpop=S.t;pop(e.x,e.y-EN[k].h-6,'já entendi essa língua!','#ffb060',8)}return d*m}
   const B=S.bstage;if(!B||B.boss!==k)return d;
   if(k==='golias'){if(src==='funda'){e.frz=Math.max(e.frz,1.2);pop(e.x,e.y-EN[k].h-6,'na testa!','#ffffff',10);shake(6);return d*2}return tree?d*.25:d}
-  if(k==='farao')return tree?d*.6:d;
+  if(k==='farao')return tree?d*.75:d;
   if(k==='bezerro')return src==='sarca'?d*1.6:tree?d*.25:d;
   if(k==='leviata')return e.hooked>0?d*2:tree?d*.25:d*.6;
   if(k==='sombra'){const lit=S.lamps>0||S.bs.lamps.some(l=>l.lit>0&&Math.abs(l.x-e.x)<100);return src==='luz'?d:lit?d*1.5:d*.1}

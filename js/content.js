@@ -259,6 +259,14 @@ const WEAPONS={
   forcado:{name:'Forcado',dmg:4,rng:32,cd:.6,push:26,price:550,desc:'Estocada longa que empurra para trás.'},
   arado:{name:'Arado',dmg:5,rng:14,cd:1.6,dash:1,price:950,desc:'Você avança arando tudo pelo caminho.'}
 };
+// the Quitanda's goods come in four makes. Each is sold once you own the one before and the adventure has gone far enough
+// (levels won): wood from the start, then bronze, iron and gold. A better tool hits 35% harder, faster and a little farther;
+// a better barrier lasts 50% longer.
+const MATS=[{name:'madeira',at:0},{name:'bronze',at:5},{name:'ferro',at:14},{name:'ouro',at:24}];
+const ITEM_MAKE={cerca:['Cerca de madeira','Cerca de pedra','Cerca de ferro','Cerca dourada'],espantalho:['Espantalho de palha','Espantalho de pano','Espantalho de lata','Espantalho dourado'],lama:['Poça de lama','Lamaçal','Brejo','Pântano']};
+const wTier=k=>(META.wtier||{})[k]||0,iTier=k=>(META.itier||{})[k]||0;
+const tierPrice=(t,k,tier)=>t==='wt'?Math.round((250+WEAPONS[k].price*.5)*tier/10)*10:(160+ITEMS[k].price*2)*tier;
+function weaponNow(){const k=META.weapon||'enxada',w=WEAPONS[k],t=wTier(k);return t?{...w,dmg:w.dmg*(1+.35*t),cd:w.cd*(1-.07*t),rng:w.rng+2*t}:w}
 const ITEMS={
   cerca:{name:'Cerca',key:'Q',price:40,qty:3,desc:'Barra os inimigos do chão até quebrar.'},
   espantalho:{name:'Espantalho',key:'E',price:60,qty:2,desc:'Afasta os voadores por 20s.'},

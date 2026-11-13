@@ -380,7 +380,8 @@ function showLavrador(){let ltab='perso';
 }
 
 // ---------- shop
-const UPGRADES={hearts:{name:'Coração extra',prices:[200,500,1000],desc:'+1 coração em toda batalha.'},bag:{name:'Bolsa maior',prices:[300,800],desc:'+1 carta na bolsa.'},mana:{name:'Maná inicial',prices:[250,600],desc:'+2 de maná no começo das batalhas.'}};
+const UPGRADES={hearts:{name:'Coração extra',prices:[200,500,1000],desc:'+1 coração em toda batalha.'},bag:{name:'Bolsa maior',prices:[300,800],desc:'+1 carta na bolsa.'},mana:{name:'Maná inicial',prices:[250,600],desc:'+2 de maná no começo das batalhas.'},
+  trees:{name:'Canteiro extra',prices:[300,700,1200,2000],desc:'+1 árvore no limite de cada fase.'}};
 const GPLANTS={trigo:{name:'Trigo',price:20,stage:40,sell:50,col:'#e8c86a'},uva:{name:'Uva',price:50,stage:90,sell:130,col:'#9b4be0'},roma:{name:'Romã',price:120,stage:180,sell:320,col:'#e0284a'},oliva:{name:'Oliva',price:300,stage:360,sell:850,col:'#b8cf9a'}};
 // the nine fruit trees as greenhouse plants: they grow, then ask for care and drop coins while happy
 [...SEED_KEYS,'mostarda'].forEach((k,i)=>GPLANTS['t:'+k]={name:CARDS[k].name,price:90+i*25,stage:120+i*20,sell:160,col:FRUIT_COL[FRUIT[k]],tree:k});
@@ -388,8 +389,13 @@ const TREE_SEED_PRICE=2000;
 // ---------- the shop is Boaz's market stall: shelves of goods, price tags, pages like a catalogue
 function shopItems(tab){let items=[];
   if(tab==='cartas')items=META.unlocked.filter(k=>CARDS[k].type==='semente').map(k=>{const lv=cardLv(k);return{id:'c:'+k,icon:['card',k],name:CARDS[k].name+' nv '+(lv+1)+'/4',desc:'Cada nível dá +15% de dano a esta árvore.',price:CARD_LV_PRICE[lv],owned:lv>=3}});
-  if(tab==='ferramentas')items=Object.entries(WEAPONS).filter(([k])=>k!=='enxada').map(([k,w])=>({id:'w:'+k,icon:['tool',k],name:w.name,desc:w.desc,price:w.price,owned:!!META.weapons[k]}));
-  if(tab==='barreiras')items=Object.entries(ITEMS).map(([k,it])=>({id:'i:'+k,icon:['bar',k],name:it.name+' ×'+it.qty,desc:it.desc+' Tecla '+it.key+'. Você tem '+(META.items[k]||0)+'.',price:it.price}));
+  // tools and barriers evolve: the shelf shows the next make of each one, locked until the adventure gets there
+  const make=(t,k,cur,nameOf,what)=>{if(cur>=3)return{id:t+':'+k,name:nameOf(3),desc:'O melhor que existe.',price:0,owned:true,tier:3};const n=cur+1,need=MATS[n].at-winsN();
+    return{id:t+':'+k,name:nameOf(n),desc:what+(need>0?' Chega à quitanda depois de mais '+need+' fase'+(need>1?'s':'')+' vencida'+(need>1?'s':'')+'.':''),price:tierPrice(t,k,n),lock:need>0,tier:n}};
+  if(tab==='ferramentas')items=Object.entries(WEAPONS).map(([k,w])=>!META.weapons[k]?{id:'w:'+k,icon:['tool',k],name:w.name+' de madeira',desc:w.desc,price:w.price,tier:0}
+    :{...make('wt',k,wTier(k),n=>w.name+' de '+MATS[n].name,'+35% de dano, golpe mais rápido e mais longo.'),icon:['tool',k]});
+  if(tab==='barreiras')items=[...Object.entries(ITEMS).map(([k,it])=>({id:'i:'+k,icon:['bar',k],name:ITEM_MAKE[k][iTier(k)]+' ×'+it.qty,desc:it.desc+' Tecla '+it.key+'. Você tem '+(META.items[k]||0)+'.',price:it.price})),
+    ...Object.keys(ITEMS).map(k=>({...make('bt',k,iTier(k),n=>ITEM_MAKE[k][n],'Todas as suas passam a durar 50% mais.'),icon:['bar',k]}))];
   if(tab==='melhorias')items=Object.entries(UPGRADES).map(([k,u])=>{const lv=META.upg[k]||0;return{id:'u:'+k,icon:['shop',k],name:u.name+' '+lv+'/'+u.prices.length,desc:u.desc,price:u.prices[lv],owned:lv>=u.prices.length}});
   if(tab==='jardim'){items=Object.entries(GPLANTS).map(([k,p])=>({id:'s:'+k,icon:['shop','seed:'+k],name:(p.tree?'Muda de ':'Semente de ')+p.name,desc:(p.tree?'Cresce na estufa e, adulta, solta moedas.':'Vende por '+p.sell+' moedas quando madura.')+' Você tem '+(META.garden.seeds[k]||0)+'.',price:p.price}));
     items.push({id:'g:vaso',icon:['shop','vaso'],name:'Vaso '+META.garden.potsN+'/32',desc:'Mais um lugar na estufa.',price:150+META.garden.potsN*40,owned:META.garden.potsN>=32},
@@ -398,9 +404,11 @@ function shopItems(tab){let items=[];
     if(treeOwned())items.push({id:'g:fertil',icon:['shop','fertil'],name:'Fertilizante',desc:'+70 de crescimento para a Árvore da Vida. Você tem '+META.garden.fertil+'.',price:400})}
   return items.map(it=>({...it,tab}))}
 function buyItem(id){const[t,k]=id.split(':');let price=0;
+  if(t==='wt'||t==='bt'){const cur=t==='wt'?wTier(k):iTier(k);if(cur>=3||winsN()<MATS[cur+1].at)return false;price=tierPrice(t,k,cur+1)}
   if(t==='w')price=WEAPONS[k].price;if(t==='i')price=ITEMS[k].price;if(t==='u')price=UPGRADES[k].prices[META.upg[k]||0];if(t==='c')price=CARD_LV_PRICE[cardLv(k)];if(t==='p')price=PACKS[k].price;if(t==='s')price=GPLANTS[k].price;
   if(t==='g')price={vaso:150+META.garden.potsN*40,adubo:100,spray:60,mel:150,fertil:400,arvore:TREE_SEED_PRICE}[k];
   if(!price||META.coins<price)return false;META.coins-=price;
+  if(t==='wt'){META.wtier=META.wtier||{};META.wtier[k]=wTier(k)+1;META.weapon=k}if(t==='bt'){META.itier=META.itier||{};META.itier[k]=iTier(k)+1}
   if(t==='w'){META.weapons[k]=1;META.weapon=k}if(t==='i')META.items[k]=(META.items[k]||0)+ITEMS[k].qty;if(t==='u')META.upg[k]=(META.upg[k]||0)+1;
   if(t==='c'){META.cardLv=META.cardLv||{};META.cardLv[k]=cardLv(k)+1}if(t==='s')META.garden.seeds[k]=(META.garden.seeds[k]||0)+1;
   if(t==='g'){const G=META.garden;if(k==='vaso'){G.potsN++;G.pots.push(null)}if(k==='adubo')G.adubo++;if(k==='spray')G.spray=(G.spray||0)+3;if(k==='mel')G.mel=(G.mel||0)+1;if(k==='fertil')G.fertil++;
@@ -416,16 +424,16 @@ function showShop2(tab){
   menu(`<div class="quitanda"><canvas id="qbg" width="960" height="540"></canvas>
     <div class="qsign">Quitanda do Boaz</div>
     <div class="qboaz"><canvas id="qboazc" width="256" height="384"></canvas><div class="qbubble" id="qbub">${pick(BOAZ)}</div></div>
-    <div class="qshelf">${pg.items.map(it=>`<button type="button" class="qitem ${it.owned?'owned':''} ${!it.owned&&META.coins<it.price?'poor':''} ${it.rare?'rare':''}" data-buy="${it.id}" ${it.owned?'disabled':''}>
-      <canvas width="32" height="32" data-si="${it.icon.join(':')}"></canvas><small>${it.name}</small><span class="tag">${it.owned?'✓ tem':it.price}</span></button>`).join('')||'<p class="qempty">Prateleira vazia por enquanto.</p>'}</div>
+    <div class="qshelf">${pg.items.map(it=>`<button type="button" class="qitem ${it.owned?'owned':''} ${!it.owned&&(it.lock||META.coins<it.price)?'poor':''} ${it.rare?'rare':''}" data-buy="${it.id}" ${it.owned?'disabled':''}>
+      <canvas width="32" height="32" data-si="${it.icon.join(':')}" data-tier="${it.tier??''}"></canvas><small>${it.name}</small><span class="tag">${it.owned?'✓ tem':it.lock?'🔒 em breve':it.price}</span></button>`).join('')||'<p class="qempty">Prateleira vazia por enquanto.</p>'}</div>
     <button type="button" class="qarrow prev" id="qprev" ${shopPage?'':'disabled'}>‹</button><button type="button" class="qarrow next" id="qnext" ${shopPage<pages.length-1?'':'disabled'}>›</button>
     <div class="qfoot"><button class="btn ghost" data-go="hub">‹ Menu</button><span class="qpage">${SHOP_NAME[pg.tab]} · página ${shopPage+1} de ${pages.length}${locked.length?' · mais prateleiras abrem com as fases':''}</span>${coinsTag()}</div></div>`);
   paintCoins();quitandaArt();
-  $('menu').querySelectorAll('canvas[data-si]').forEach(c=>{const[t,...k]=c.dataset.si.split(':');const kk=k.join(':');if(t==='tool')toolIconTo(c,kk);else if(t==='bar')barrierIconTo(c,kk);else if(t==='card')treeIconTo(c,kk);else shopIconTo(c,kk)});
+  $('menu').querySelectorAll('canvas[data-si]').forEach(c=>{const[t,...k]=c.dataset.si.split(':');const kk=k.join(':');if(t==='tool')itemIconTo(c,'w:'+kk,null,c.dataset.tier===''?undefined:+c.dataset.tier);else if(t==='bar')barrierIconTo(c,kk);else if(t==='card')treeIconTo(c,kk);else shopIconTo(c,kk)});
   const bub=$('qbub'),all=pg.items;
   $('menu').querySelectorAll('[data-buy]').forEach(b=>{const it=all.find(i=>i.id===b.dataset.buy);
     b.onmouseenter=()=>{bub.innerHTML=`<b>${it.name}</b><br>${it.desc}`};b.onmouseleave=()=>{bub.textContent=pick(BOAZ)};
-    b.onclick=()=>{if(buyItem(it.id)){showShop2();$('qbub').innerHTML=pick(['Ótima escolha!','Que Deus abençoe a colheita!','Volte sempre!','Negócio fechado!'])}else{sfx('no');bub.innerHTML='Faltam moedas para '+it.name+'. Vença umas fases e volte!'}}});
+    b.onclick=()=>{if(it.lock){sfx('no');bub.innerHTML='<b>'+it.name+'</b><br>'+it.desc;return}if(buyItem(it.id)){showShop2();$('qbub').innerHTML=pick(['Ótima escolha!','Que Deus abençoe a colheita!','Volte sempre!','Negócio fechado!'])}else{sfx('no');bub.innerHTML='Faltam moedas para '+it.name+'. Vença umas fases e volte!'}}});
   $('qprev').onclick=()=>{shopPage--;sfx('card');showShop2()};$('qnext').onclick=()=>{shopPage++;sfx('card');showShop2()}}
 // painted backdrop: sky and fields, the stall with its striped awning, shelves, crates of fruit; and Boaz himself
 function quitandaArt(){let g=hdCtx($('qbg'),480,270,2);C=g;

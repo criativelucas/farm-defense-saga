@@ -40,7 +40,7 @@ function openTree(si){const t=S.tw[si],s=MAP.slots[si];if(!t)return closeTree();
   const refund=Math.floor((CARDS[k]?CARDS[k].cost:2)*.5),lv=(t.lvl||0)+1,wat=Math.min(3,t.water||0);
   const br=BRANCH[k]||['Força','Alcance'],ev=EVO[k],fu=t.kinds.length>1&&fusionOf(t.kinds[0],t.kinds[1]);
   el.innerHTML=`<button class="tx" id="tclose" aria-label="Fechar">×</button><b>${t.kinds.map(q=>CARDS[q]?CARDS[q].name:q).join(' + ')}${t.joio?' · virou joio':''}</b>
-    <small>${FRUIT[k]?'Fruto: '+FRUIT[k]+' · ':''}Solo: ${{boa:'boa terra',pedra:'pedregoso',espinho:'espinhos'}[t.soil]}</small>
+    <small>${FRUIT[k]?'Fruto: '+FRUIT[k]+' · ':''}Solo: ${{comum:'terra comum',boa:'boa terra',pedra:'pedregoso',espinho:'espinhos'}[t.soil]}</small>
     <div class="trow"><span>Nível</span><i class="pips">${[1,2,3,4].map(n=>`<em class="${n<=lv?'on':''}"></em>`).join('')}</i></div>
     <div class="trow"><span>Rega</span><i class="wbar"><em style="width:${wat/3*100}%"></em></i><span>${Math.floor(wat)}/3</span></div>
     <div class="trow"><span>Dano ${st.dmg||'-'} · alcance ${Math.round(rangeOf(k,t))}</span></div>

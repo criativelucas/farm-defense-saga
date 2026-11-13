@@ -1,7 +1,9 @@
 // ---------- core helpers shared by every file
 const $=id=>document.getElementById(id);
 const W=384,H=216,MAXM=10,LIFE_X=26,RS=2;
-const cv=$('c'),x=cv.getContext('2d'),gl=$('glow'),gx=gl.getContext('2d');x.__k=gx.__k=RS;
+const cv=$('c'),x=cv.getContext('2d'),gl=$('glow'),gx=gl.getContext('2d');x.__k=RS;
+// the glow layer is soft light blurred by CSS, so it is drawn at one device pixel per unit: a quarter of the pixels to fill and upload
+const GK=1;gx.__k=GK;
 const rnd=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>v<a?a:v>b?b:v,pick=a=>a[Math.random()*a.length|0];
 const hs=(a,b)=>{let h=Math.imul(a|0,374761393)^Math.imul(b|0,668265263);h=Math.imul(h^(h>>>13),1274126177);return((h^(h>>>16))>>>0)/4294967295};
 const mkCanvas=(w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return c};

@@ -30,6 +30,7 @@ const ITEMI={
     r(5,4,14,2,'#c89a40');r(5,4,14,1,'#e8c060');r(8,0,8,4,'#b08030');r(8,0,8,1,'#d8a848');r(8,3,8,1,'#c0392b');r(7,6,1,2,'#e8c050');r(16,6,1,2,'#e8c050')},
   'i:lama'(){ell(12,17,10.5,4.6,['#3a2210','#5a3a20','#7a5030','#a07850']);r(6,15,5,1,'#c0a07a');r(15,18,3,1,'#a08060');
     ell(16,13.5,2,2,['#3a2210','#5a3a20','#7a5030','#c0a07a']);ell(8,12,1.4,1.4,['#3a2210','#5a3a20','#7a5030','#c0a07a']);r(3,10,1,2,'#6a4428');r(20,9,1,1,'#6a4428');r(19,7,1,1,'#7a5030')},
+  trees(){r(11,13,3,8,WD[1]);r(11,13,1,8,WD[3]);ell(12,9,7,6,['#1a5a2a','#2e9c48','#5fc060','#b0f090']);badge()},
   hearts(){px24((u,v)=>{const X=(u-12)/9.5,Y=-(v-11.5)/9;const q=X*X+Y*Y-1;if(q*q*q-X*X*Y*Y*Y>0)return;const l=-X*.7+Y*.7;
     return X+(-Y)>.85&&q>-.35?'#9a1030':l>.75?'#ffc0c8':l>.2?'#ff5a6a':'#e02848'});r(6,6,2,2,'#ffffff');badge()},
   bag(){ell(12,15,8.4,7,['#5a3418','#8a5a30','#b07a44','#d8a468']);r(9,6,6,4,'#8a5a30');r(9,6,2,4,'#b07a44');r(8,9,8,1,'#e8c890');r(11,10,2,2,'#e8c890');
@@ -65,8 +66,11 @@ const ITEMI={
       else if(k==='roma'){ell(12,15,4.5,4.5,['#7a1020','#c01a38','#e0284a','#ff9aa8']);r(11,9,3,2,'#c01a38');r(10,9,1,1,'#7a1020');r(14,9,1,1,'#7a1020')}
       else{r(8,12,9,1,'#5a6a3a');for(const[a,b]of[[9,14],[13,13],[15,16]])ell(a,b,1.8,2.2,['#2a3a1a','#4a5a2a','#6a7a3a','#c8d8a0']);r(10,10,3,2,'#8aaa6a');r(15,11,3,2,'#8aaa6a')}})}
 };
-function itemIconTo(cvs,key,draw){const N=26,src=mkCanvas(N,N),g=src.getContext('2d');g.__k=1;g.imageSmoothingEnabled=false;const keep=C;C=g;g.translate(1,1);
-  try{draw?draw():(ITEMI[key]||(key.startsWith('seed:')&&ITEMI['seed:*'])||(()=>{}))(key)}finally{C=keep}
+// tools are drawn in the make they have reached (wood, bronze, iron, gold): the metal palette is swapped while the icon is painted
+const MAKE_PAL=[['#5a4a3a','#8a7a66','#b0a48e','#d8d0bc'],['#5a3010','#a05a20','#d08a3a','#f6c888'],null,GD];
+function itemIconTo(cvs,key,draw,tier){const N=26,src=mkCanvas(N,N),g=src.getContext('2d');g.__k=1;g.imageSmoothingEnabled=false;const keep=C,mt=[...MT];C=g;g.translate(1,1);
+  if(key.startsWith('w:')){const P=MAKE_PAL[tier??wTier(key.slice(2))];if(P)MT.splice(0,4,...P)}
+  try{draw?draw():(ITEMI[key]||(key.startsWith('seed:')&&ITEMI['seed:*'])||(()=>{}))(key)}finally{C=keep;MT.splice(0,4,...mt)}
   const sil=mkCanvas(N,N),s=sil.getContext('2d');s.drawImage(src,0,0);s.globalCompositeOperation='source-in';s.fillStyle='#1a0c10';s.fillRect(0,0,N,N);
   const out=mkCanvas(N,N),o=out.getContext('2d');for(const[a,b]of[[-1,0],[1,0],[0,-1],[0,1]])o.drawImage(sil,a,b);o.drawImage(src,0,0);
   cvs.width=cvs.height=N*4;const c=cvs.getContext('2d');c.imageSmoothingEnabled=false;c.drawImage(out,0,0,N*4,N*4)}
