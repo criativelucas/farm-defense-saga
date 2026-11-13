@@ -11,7 +11,18 @@ const RARITY={videira:'comum',roma:'comum',oliveira:'comum',lirio:'comum',mana:'
 // the expansion's twenty cards: all of them can come out of packs
 Object.assign(RARITY,{macieira:'comum',murta:'comum',salgueiro:'rara',acacia:'rara',sicomoro:'epica',nogueira:'epica',
   orvalho:'comum',jubileu:'comum',espada:'comum',sal:'rara',codornizes:'rara',escudo:'rara',harpa:'epica',linguas:'epica',arcoiris:'lendaria',
-  tesouro:'comum',rede:'rara',virgens:'rara',prodigo:'epica',vinha:'lendaria'});
+  tesouro:'comum',rede:'rara',virgens:'rara',prodigo:'epica',vinha:'lendaria',
+  carvalho:'epica',carruagem:'epica',multiplica:'epica',maos:'epica',lazaro:'epica',escol:'lendaria',sol:'lendaria',diluvio:'lendaria',anjo:'lendaria',ceifa:'lendaria'});
+Object.assign(ICONS,{
+  carruagem(){for(let i=0;i<6;i++)r(2+i*2,22-i,6,2,i%2?'#ff6a1a':'#ffd34a');r(8,16,14,7,'#c83a1a');r(8,16,14,1,'#ffb060');disc(11,25,3,'#ffd34a');disc(11,25,1,'#7a2a0a');disc(19,25,3,'#ffd34a');disc(19,25,1,'#7a2a0a');r(22,14,7,4,'#ffe9a0');r(27,11,3,4,'#ffe9a0');r(29,10,1,2,'#ffffff');r(23,18,1,5,'#ffe9a0');r(27,18,1,5,'#ffe9a0');for(let i=0;i<4;i++)r(10+i*3,10-(i%2)*3,2,6,i%2?'#ff6a1a':'#ffd34a')},
+  multiplica(){for(const[a,b]of[[9,12],[17,10],[23,14],[13,18],[21,20]])blob(a,b,4,3,'#a0602a','#d9a050','#f6d090',a);for(const[a,b]of[[8,25],[20,26]]){blob(a+3,b,5,2,'#4a7aa8','#7ab0e0','#c8e8ff',b);r(a+8,b-1,2,3,'#4a7aa8');r(a,b,1,1,'#1a0c10')}r(3,29,26,2,'#8a5a2a')},
+  maos(){r(8,10,4,18,'#e8b08a');r(20,10,4,18,'#e8b08a');r(8,10,1,18,'#c4805c');r(20,10,1,18,'#c4805c');for(let i=0;i<4;i++){r(7+i,6,1,5,'#e8b08a');r(19+i,6,1,5,'#e8b08a')}r(6,22,8,8,'#c9b89a');r(18,22,8,8,'#c9b89a');for(let i=0;i<7;i++){const a=-Math.PI*i/6;r(16+Math.cos(a)*13,8+Math.sin(a)*5,2,1,'#fff6c0')}},
+  lazaro(){blob(16,18,13,11,'#5a4a4a','#7a6a6a','#a89a9a',3);r(10,14,12,16,'#140c0c');for(let i=0;i<5;i++)r(11+i*2,15+i,1,14-i,'#fff6c044');r(14,17,4,4,'#e8b08a');r(13,21,6,9,'#f4f0e8');r(13,24,6,1,'#c8c0b0');r(13,27,6,1,'#c8c0b0');for(let yy=-5;yy<=5;yy++){const w=Math.sqrt(25-yy*yy);r(27-w,24+yy,w*2,1,'#8a7a7a')}},
+  sol(){disc(16,14,8,'#ffd040');disc(15,13,5,'#fff3b0');for(let i=0;i<12;i++){const a=i/12*Math.PI*2;r(16+Math.cos(a)*11,14+Math.sin(a)*11,2,2,'#ffe36a')}r(2,27,28,3,'#c9a060');r(2,27,28,1,'#ecd090');r(14,22,1,5,'#5a3a2a');r(12,24,5,1,'#5a3a2a')},
+  diluvio(){for(let j=0;j<5;j++)for(let i=0;i<32;i++){const yy=14+j*4+Math.sin(i*.5+j*1.3)*2;r(i,yy,1,3,j%2?'#2a6aa8':'#5ab0ff');if((i+j)%7===0)r(i,yy,2,1,'#ffffff')}r(10,8,13,5,'#8a5a2a');r(9,12,15,2,'#6a4220');r(13,5,7,3,'#a06a30');for(let i=0;i<6;i++)r(3+i*5,1+(i%3),1,4,'#9ad0ff')},
+  anjo(){for(const s of[-1,1])for(let i=0;i<6;i++)r(16+s*(4+i*1.6)-(s<0?3:0),10+i*1.2,3,10-i*1.4,i%2?'#e8eef8':'#ffffff');r(13,12,6,14,'#f4f0e8');r(13,12,1,14,'#c8c0b0');disc(16,9,3,'#e8b08a');r(12,4,8,1,'#ffd040');r(11,5,1,1,'#ffd040');r(20,5,1,1,'#ffd040');r(21,8,1,18,'#d8d8e8');r(19,14,5,1,'#c89a28');r(4,29,24,1,'#fff6c0')},
+  ceifa(){for(let i=0;i<6;i++){r(4+i*3,12,1,17,'#c9a24a');r(3+i*3,8+(i%2)*2,3,5,'#f7c948');r(3+i*3,8+(i%2)*2,1,1,'#fff6c0')}r(3,22,18,2,'#8a5a2a');for(let i=0;i<10;i++){const a=-Math.PI*.1-i*.16;r(24+Math.cos(a)*8-8,14+Math.sin(a)*9,2,2,'#d8d8e8')}r(24,14,2,15,'#8a5a3a');r(4,29,26,2,'#6a4a2a')}
+});
 Object.assign(ICONS,{
   orvalho(){r(4,26,24,4,'#3a8a3a');r(4,26,24,1,'#6ac060');for(const[a,b]of[[8,6],[16,10],[24,4],[12,16],[22,15]]){r(a,b,2,3,'#bfe8ff');r(a,b,1,1,'#ffffff');r(a,b+3,2,1,'#7ac0f0')}disc(16,22,3,'#bfe8ff');r(15,20,1,1,'#ffffff')},
   sal(){for(let j=0;j<10;j++){const w=2+j*1.3;r(16-w,18+j,w*2,1,j%2?'#f4f4ff':'#d8d8e8')}r(14,10,4,6,'#c8c8d8');r(14,10,4,1,'#ffffff');for(let i=0;i<6;i++)r(6+i*4,6+(i%3)*2,1,1,'#ffffff')},
@@ -52,7 +63,7 @@ const THEME={Amor:['#3a0a1a','#7a1a2a','#c8402a','#f08a3a','#ffd08a'],Alegria:['
   bencao:['#1e1438','#4a2a6a','#a0602a','#f0b040','#fff0b0'],parabola:['#0e2a34','#1e5a5a','#3a8a7a','#8ac0a0','#e8f0c8'],
   propria:['#2a1030','#5a2058','#a0407a','#e07a8a','#ffd0b0'],hissopo:['#14203a','#2a3a6a','#5a6ab0','#a0a8e8','#e8ecff'],cedro:['#0e1a14','#1e3a2a','#3a6a4a','#7aa070','#d8e8c0'],joio:['#14140a','#2a2a14','#4a4a22','#6a6a30','#9a9a50'],hibrida:['#1a2a40','#3a3a7a','#7a4aa0','#5ab08a','#d0f0b0']};
 // tree bars: damage, range, rhythm, 1 to 5
-const RATE={macieira:[3,3,3],sicomoro:[3,5,3],salgueiro:[1,3,1],acacia:[3,1,3],murta:[1,3,4],nogueira:[5,3,2],hissopo:[2,2,2],cedro:[4,5,2],videira:[2,4,4],roma:[5,1,1],oliveira:[1,4,3],sarca:[3,2,5],figueira:[4,5,1],tamareira:[1,3,3],amendoeira:[2,3,4],lirio:[1,3,1],mostarda:[3,5,2]};
+const RATE={carvalho:[3,2,5],escol:[5,5,1],macieira:[3,3,3],sicomoro:[3,5,3],salgueiro:[1,3,1],acacia:[3,1,3],murta:[1,3,4],nogueira:[5,3,2],hissopo:[2,2,2],cedro:[4,5,2],videira:[2,4,4],roma:[5,1,1],oliveira:[1,4,3],sarca:[3,2,5],figueira:[4,5,1],tamareira:[1,3,3],amendoeira:[2,3,4],lirio:[1,3,1],mostarda:[3,5,2]};
 const BARS=[['dmg','#f0b030'],['rng','#e85a50'],['cd','#3ab8b0']];
 const cardNo=k=>String(Object.keys(CARDS).indexOf(k)+1).padStart(3,'0');
 const themeOf=(c,I,cat)=>THEME[c.k]||THEME[c.hyb?'hibrida':I.kinds?I.fruits[0]:cat]||THEME.parabola;

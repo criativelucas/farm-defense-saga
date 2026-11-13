@@ -39,7 +39,7 @@ function bossStageUpdate(dt){const B=S.bstage,Z=S.bs;
     if(Z.lamps.every(l=>l.lit>0)&&Z.allLit<=0){Z.allLit=18;damage(e,e.max*.15,'luz');e.x=Math.min(MAP.ww-20,e.x+50);flash(.6,'255,245,200');shake(10);sfx('super');banner('Lâmpada para os meus pés','A Sombra recua diante da luz')}}
 }
 // how much a hit really hurts the boss under its rule
-function bossMod(e,d,src){const k=e.k,tree=!!(src&&CARDS[src]);
+function bossMod(e,d,src){const k=e.k,tree=!!(src&&CARDS[src]&&(CARDS[src].type==='semente'||CARDS[src].plant));
   if(k==='serpente'&&tree)return d*.35;
   if(k==='ninrode'&&tree){if(src===e.lk)e.ln=(e.ln||0)+1;else{e.lk=src;e.ln=0}const m=Math.max(.2,Math.pow(.8,e.ln));
     if(e.ln===4&&S.t-(e.lpop||0)>2){e.lpop=S.t;pop(e.x,e.y-EN[k].h-6,'já entendi essa língua!','#ffb060',8)}return d*m}

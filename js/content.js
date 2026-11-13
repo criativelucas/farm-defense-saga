@@ -397,3 +397,23 @@ const BSTAGE=[
     belt:['cedro','roma','videira','salgueiro','rede','paz','nogueira','oliveira','jerico']},
   {boss:'sombra',time:200,hp:1.6,rule:'Lâmpadas acesas',ref:'Salmos 119:105',tip:'No escuro ela não sente nada. Acenda as lâmpadas com um pisão ao lado: perto da luz ela é ferida, e as três acesas juntas a fazem recuar.',
     belt:['virgens','luz','paz','roma','videira','lirio','hissopo','tamareira','sarca']}];
+
+// ---------- ten cards of high rarity: five epic, five legendary. Two are trees, the rest blessings and parables
+Object.assign(FRUIT,{carvalho:'Paciência',escol:'Alegria'});
+Object.assign(CARDS,{
+  carvalho:{type:'semente',name:'Carvalho de Manre',cost:6,ref:'Gênesis 18:1',desc:'Uma sombra larga: toda praga do chão debaixo dela anda bem mais devagar e perde 2 de vida por segundo.'},
+  escol:{type:'semente',name:'Cacho de Escol',cost:7,ref:'Números 13:23',desc:'O cacho que dois homens carregavam: lança cachos enormes que estouram em área, bem longe.'},
+  carruagem:{type:'bencao',name:'Carruagem de Fogo',cost:4,ref:'2 Reis 2:11',desc:'Cavalos de fogo partem de você: 16 de dano em toda praga à sua frente na tela, que fica lenta.'},
+  multiplica:{type:'bencao',name:'Pães e Peixes',cost:0,ref:'João 6:11',desc:'Do pouco se faz muito: +1 de maná por árvore plantada (até 8).'},
+  maos:{type:'bencao',name:'Mãos Erguidas',cost:3,ref:'Êxodo 17:11',desc:'Enquanto as mãos estão erguidas, o povo vence: por 12s as árvores dão +60% de dano.'},
+  lazaro:{type:'bencao',name:'Lázaro, Vem Para Fora',cost:4,ref:'João 11:43',desc:'O Éden recupera metade da Vida que perdeu e você recupera todos os corações.'},
+  sol:{type:'bencao',name:'Sol Parado',cost:5,ref:'Josué 10:13',desc:'O sol se detém: as pragas param por 5s (chefes por 2s) e as árvores atiram mais rápido nesse tempo.'},
+  diluvio:{type:'bencao',name:'O Dilúvio',cost:6,ref:'Gênesis 7:17',desc:'As águas varrem a tela: 18 de dano em tudo no chão, 6 nos voadores, e tudo é arrastado para trás.'},
+  anjo:{type:'bencao',name:'Anjo do Senhor',cost:5,ref:'2 Reis 19:35',desc:'Derrota na hora a praga mais forte da tela. Num chefe, tira 15% da vida.'},
+  ceifa:{type:'parabola',name:'O Trigo e o Joio',cost:3,ref:'Mateus 13:30',desc:'Chegou a ceifa: toda praga na tela com menos de um terço da vida é ceifada, e as árvores viradas joio ficam limpas.'}
+});
+SEED_KEYS.push('carvalho','escol');
+POOL.push('carvalho','escol','carruagem','multiplica','maos','lazaro','sol','diluvio','anjo','ceifa');
+Object.assign(STATS,{carvalho:{dmg:'2/s',rng:45,cd:'sempre'},escol:{dmg:'8',rng:105,cd:'2,5s'}});
+Object.assign(SHORT,{carvalho:'Sombra que deixa lento e fere.',escol:'Cachos enormes que estouram em área.',carruagem:'16 de dano em tudo à sua frente.',multiplica:'+1 de maná por árvore (até 8).',
+  maos:'Árvores com +60% de dano por 12s.',lazaro:'Éden recupera metade da Vida perdida.',sol:'Pragas paradas por 5s.',diluvio:'18 de dano no chão e arrasta tudo.',anjo:'Derrota a praga mais forte.',ceifa:'Ceifa as pragas quase vencidas.'});

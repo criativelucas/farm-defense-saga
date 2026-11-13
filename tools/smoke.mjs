@@ -177,6 +177,22 @@ async function freePlant(label){
     startLevel(0);RUN.deck=[...RUN.coll];startLevelBattle();o.reset=MAP.slots.length===beds&&S.tw.length===beds;
     for(let i=0;i<30;i++)update(1/60);draw();return JSON.stringify(o)})()`);
   const o=JSON.parse(r||'{}'),bad=Object.entries(o).filter(([,v])=>!v).map(([k])=>k);check(label+': plantio livre',Object.keys(o).length>=10&&!bad.length,bad.join(', ')||r)}
+// the ten cards of high rarity do what they say
+async function rareCards(label){
+  const r=await js(`(()=>{Object.keys(EN).forEach(k=>META.seen.e[k]=1);startLevel(0);startLevelBattle();S.dialog=null;S.intro=null;tutStep=-1;S.state='wave';S.q=[];S.en=[];const o={},T=(k,x)=>{const e=spawn(k,x??S.cam+200);e.y=gy(e.x);return e},step=n=>{for(let i=0;i<n;i++)update(1/60)};
+    S.tw=S.tw.map(()=>null);const si=MAP.slots.findIndex(s=>Math.abs(s.y-gy(s.x))<2),s=MAP.slots[si];
+    for(const k of['carvalho','escol']){S.en=[];plantAt(si,[k],false,0);S.tw[si].grow=1;S.tw[si].cd={};const e=T('gula',s.x+20),h=e.hp;step(120);o['tree_'+k]=e.hp<h&&(k!=='carvalho'||e.slow>0);superTower(S.tw[si],s)}
+    S.en=[];S.p.x=S.cam+60;S.p.face=1;let a=T('gula',S.p.x+80),b=T('odio',S.p.x-40);blessing('carruagem');o.carruagem=a.hp<a.max&&b.hp===b.max;
+    S.mana=0;blessing('multiplica');o.multiplica=S.mana===1;
+    const m0=tmult(S.tw[si]);blessing('maos');o.maos=tmult(S.tw[si])>m0*1.59;S.hands=0;
+    RUN.hp=10;S.p.hp=1;blessing('lazaro');o.lazaro=RUN.hp===15&&S.p.hp===S.p.maxhp;
+    S.en=[];a=T('odio');blessing('sol');o.sol=a.frz>4&&S.rally>4;
+    S.en=[];a=T('gula');b=T('inveja');const ax=a.x;blessing('diluvio');o.diluvio=a.hp<a.max&&b.hp<b.max&&a.x>ax+50;
+    S.en=[];a=T('soberba');b=T('odio');blessing('anjo');step(1);o.anjo=!S.en.includes(a)&&S.en.includes(b);
+    S.en=[];a=T('gula');a.hp=a.max*.2;b=T('gula');S.tw[si].joio=true;blessing('ceifa');step(1);o.ceifa=!S.en.includes(a)&&S.en.includes(b)&&!S.tw[si].joio;
+    o.rar=['carvalho','carruagem','multiplica','maos','lazaro'].every(k=>RARITY[k]==='epica')&&['escol','sol','diluvio','anjo','ceifa'].every(k=>RARITY[k]==='lendaria');
+    Object.keys(CARDS).slice(-10).forEach(k=>cardCanvas(mk(k)));draw();return JSON.stringify(o)})()`);
+  const o=JSON.parse(r||'{}'),bad=Object.entries(o).filter(([,v])=>!v).map(([k])=>k);check(label+': cartas raras',Object.keys(o).length===11&&!bad.length,bad.join(', ')||r)}
 // a short battle in every world: plant, call the wave, let it run, draw frames
 async function battles(label){
   for(let w=0;w<7;w++){const before=errors.length;
@@ -242,7 +258,7 @@ async function waveShop(label){const before=errors.length;
     return out.join(',')})()`);
   check(label+': portais, loja entre ondas, poderes '+r,errors.length===before&&r==='portais,loja,compra,poderes,pisao',errors.slice(before).join(' | ').slice(0,200))}
 console.log('— new player');await load(true,false);await loopAndScene('new');
-console.log('— player with progress');await js(`Object.assign(META,{intro:1,tut:1,coins:5000});['1-1','1-2','1-3','1-4','2-1','2-4'].forEach(i=>META.done[i]=1);saveMeta();1`);await everyScreen('progress');await farmers('progress');await packs('progress');await pests('progress');await newCards('progress');await expansion('progress');await bossStages('progress');await freePlant('progress');await battles('progress');await goals('progress');await minis('progress');await audio('progress');await polish('progress');await waveShop('progress');
+console.log('— player with progress');await js(`Object.assign(META,{intro:1,tut:1,coins:5000});['1-1','1-2','1-3','1-4','2-1','2-4'].forEach(i=>META.done[i]=1);saveMeta();1`);await everyScreen('progress');await farmers('progress');await packs('progress');await pests('progress');await newCards('progress');await expansion('progress');await bossStages('progress');await freePlant('progress');await rareCards('progress');await battles('progress');await goals('progress');await minis('progress');await audio('progress');await polish('progress');await waveShop('progress');
 console.log('— embed with gamepad blocked');await load(false,true);await loopAndScene('blocked-pad');
 const fails=checks.filter(c=>!c[1]);console.log(`\n${checks.length-fails.length}/${checks.length} checks passed`+(errors.length?`; ${errors.length} error(s) logged:`:''));
 errors.forEach(e=>console.log('  · '+String(e).split('\n').slice(0,3).join(' / ')));

@@ -33,7 +33,7 @@ cv.parentElement.addEventListener('pointerdown',e=>{if(!live()||S.sel>=0||e.targ
 const BRANCH={videira:['Vinho novo','Ramos que se estendem'],roma:['Romã madura','Romã que alcança'],oliveira:['Azeite puro','Oliveira frondosa'],sarca:['Fogo que não consome','Sarça alastrada'],
   figueira:['Figo temporão','Figueira de sombra'],tamareira:['Tâmara doce','Palmeira alta'],amendoeira:['Flor de Arão','Amendoeira vigilante'],lirio:['Lírio de Sarom','Lírio do campo'],mostarda:['Grão que move montes','Árvore das aves'],
   hissopo:['Hissopo que purifica','Ramo aspergido'],cedro:['Cedro do Líbano','Cedro altaneiro'],
-  macieira:['Maçã dourada','Macieira copada'],sicomoro:['Figo do sicômoro','Galho de Zaqueu'],salgueiro:['Raiz nas águas','Ramos que choram'],
+  carvalho:['Carvalho antigo','Carvalho frondoso'],escol:['Cacho maduro','Vide estendida'],macieira:['Maçã dourada','Macieira copada'],sicomoro:['Figo do sicômoro','Galho de Zaqueu'],salgueiro:['Raiz nas águas','Ramos que choram'],
   acacia:['Espinho de acácia','Acácia do deserto'],murta:['Murta perfumada','Murta frondosa'],nogueira:['Noz de casca dura','Nogueira alta']};
 const BRANCH_COST=4;
 function openTree(si){const t=S.tw[si],s=MAP.slots[si];if(!t)return closeTree();S.infoSlot=si;const el=$('treeinfo'),k=t.kinds[0],I=CARDS[k]||{},st=STATS[k]||{};
