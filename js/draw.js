@@ -26,7 +26,8 @@ function enemyBody(e){SPR[e.k]&&SPR[e.k](e)}
 
 // ---------- sprites: trees. sz is the size factor: each species has its own build and grows as it is watered.
 // Shapes scale with sz but fruit and leaf pixels stay 1:1, so a grown tree reads as bigger, not blurrier.
-const TREE={videira:{b:1.35,h:24},roma:{b:1.55,h:27},oliveira:{b:1.75,h:25},sarca:{b:1.25,h:14},figueira:{b:1.85,h:26},tamareira:{b:2.05,h:30},amendoeira:{b:1.65,h:26},lirio:{b:1.1,h:12},mostarda:{b:1,h:20},hissopo:{b:1.3,h:14},cedro:{b:1.5,h:32}};
+const TREE={videira:{b:1.35,h:24},roma:{b:1.55,h:27},oliveira:{b:1.75,h:25},sarca:{b:1.25,h:14},figueira:{b:1.85,h:26},tamareira:{b:2.05,h:30},amendoeira:{b:1.65,h:26},lirio:{b:1.1,h:12},mostarda:{b:1,h:20},hissopo:{b:1.3,h:14},cedro:{b:1.5,h:32},
+  macieira:{b:1.6,h:26},sicomoro:{b:1.9,h:28},salgueiro:{b:1.7,h:26},acacia:{b:1.6,h:24},murta:{b:1.2,h:14},nogueira:{b:1.8,h:30}};
 function extraFruit(X,Y,sz,n,cx,cy,rx,ry,c1,c2,seed){for(let i=0;i<n;i++){const a=hs(i,seed)*Math.PI*2,d=Math.sqrt(hs(i,seed+1)),fx=X+Math.round(Math.cos(a)*rx*d*.8),fy=Y-cy+Math.round(Math.sin(a)*ry*d*.8);r(fx-1,fy-1,3,3,c1);r(fx-1,fy-1,1,1,c2)}}
 function drawTower(k,X,Y,t,tr,sz=1){
   const q=v=>Math.round(v*sz),tw=sz>1.6?4:3,more=Math.max(0,Math.round((sz-1)*7));
@@ -73,6 +74,32 @@ function drawTower(k,X,Y,t,tr,sz=1){
       r(X-1,Y-th,tw,th,'#5a3a24');r(X,Y-th,1,th,'#7a5434');r(X-q(3),Y-1,q(7),1,'#3a2414');
       for(let k=0;k<4;k++){const yy=Y-q(9)-k*q(6),ww=w0-k*q(3),sw=Math.round(Math.sin(t*1.5+k)*.6);r(X-ww+sw,yy,ww*2,q(3),'#1e4a32');r(X-ww+1+sw,yy,ww*2-2,1,'#3a7a4a');r(X-ww+sw,yy+q(3)-1,ww*2,1,'#123a24')}
       r(X-1,Y-th-q(2),2,q(3),'#2a5a3a');break}
+    case 'macieira':{const th=q(11);// the apple tree among the trees of the wood (Ct 2:3): a round crown with red apples
+      r(X-1,Y-th,tw,th,'#6a4030');r(X-q(3),Y-1,q(7),1,'#4a2a1a');r(X+1,Y-q(8),q(3),1,'#6a4030');
+      blob(X,Y-q(18),q(10),q(7),'#1c5a2e','#34983e','#7ad85a',41);if(sz>1.3){blob(X-q(8),Y-q(14),q(5),q(4),'#1c5a2e','#34983e','#7ad85a',42);blob(X+q(8),Y-q(15),q(5),q(4),'#1c5a2e','#34983e','#7ad85a',43)}
+      [[-5,-16],[4,-20],[2,-13],[-3,-22],[6,-15]].forEach(([dx,dy])=>{const fx=X+q(dx),fy=Y+q(dy);r(fx-1,fy-1,3,3,'#d02030');r(fx-1,fy-1,1,1,'#ff8a8a');r(fx,fy-2,1,1,'#5a3a1a')});
+      extraFruit(X,Y,sz,more,0,q(18),q(10),q(7),'#d02030','#ff8a8a',93);break}
+    case 'sicomoro':{const th=q(14);// Zacchaeus' sycamore: a thick trunk, low wide limbs, a broad crown with pale figs
+      r(X-2,Y-th,tw+2,th,'#7a6248');r(X-1,Y-th,1,th,'#9a8268');r(X-q(6),Y-q(12),q(5),2,'#7a6248');r(X+q(2),Y-q(13),q(6),2,'#7a6248');r(X-q(4),Y-1,q(9),1,'#5a4630');
+      blob(X,Y-q(21),q(13),q(5),'#2a5a2a','#4a8a3a','#9ac860',61);blob(X-q(9),Y-q(17),q(6),q(4),'#2a5a2a','#4a8a3a','#9ac860',62);blob(X+q(9),Y-q(18),q(6),q(4),'#2a5a2a','#4a8a3a','#9ac860',63);
+      [[-7,-18],[5,-21],[0,-16],[9,-17],[-3,-23]].forEach(([dx,dy])=>{r(X+q(dx),Y+q(dy),2,2,'#d8b050');r(X+q(dx),Y+q(dy),1,1,'#fff0a0')});break}
+    case 'salgueiro':{const th=q(14);// the willow by the water courses (Is 44:4): strands that hang and sway
+      r(X-1,Y-th,tw,th,'#6a5a3a');r(X-q(3),Y-1,q(7),1,'#4a3a24');
+      blob(X,Y-q(19),q(9),q(5),'#2a5a3a','#4a8a5a','#9ad890',71);const n=7+Math.min(4,more);
+      for(let i=0;i<n;i++){const dx=-q(9)+Math.round(i*q(18)/(n-1)),len=q(9)+(i*7)%4,sw=Math.round(Math.sin(t*2+i));for(let j=0;j<len;j++)r(X+dx+(j>len/2?sw:0),Y-q(18)+j,1,1,j%3?'#5a9a5a':'#9ad890')}break}
+    case 'acacia':{const th=q(16);// acacia wood of the ark: a thin thorny trunk under a flat umbrella crown
+      r(X-1,Y-th,2,th,'#8a6a4a');r(X-q(4),Y-q(12),q(4),1,'#8a6a4a');r(X+1,Y-q(14),q(4),1,'#8a6a4a');r(X-q(3),Y-1,q(7),1,'#5a4630');
+      for(const[dx,dy]of[[-2,-6],[1,-9],[-2,-11]])r(X+dx,Y+q(dy),1,1,'#e8dcc0');
+      blob(X,Y-q(19),q(12),q(3),'#3a5a2a','#6a8a3a','#b8c870',81);if(sz>1.2)blob(X+q(6),Y-q(21),q(6),q(2),'#3a5a2a','#6a8a3a','#b8c870',82);
+      [[-6,-19],[0,-21],[6,-18]].forEach(([dx,dy])=>r(X+q(dx),Y+q(dy),2,1,'#f7d050'));break}
+    case 'murta':{// the myrtle (Is 55:13): a low fragrant bush with white star flowers
+      blob(X,Y-q(7),q(8),q(6),'#1e4a2a','#2f7a3e','#6ac070',91);blob(X-q(4),Y-q(11),q(4),q(3),'#1e4a2a','#2f7a3e','#6ac070',92);blob(X+q(4),Y-q(12),q(4),q(3),'#1e4a2a','#2f7a3e','#6ac070',93);
+      [[-5,-9],[3,-13],[0,-7],[-2,-14],[6,-8]].forEach(([dx,dy],i)=>{const fx=X+q(dx),fy=Y+q(dy);r(fx-1,fy,3,1,'#ffffff');r(fx,fy-1,1,3,'#ffffff');r(fx,fy,1,1,i%2?'#f7d050':'#ffe08a')});break}
+    case 'nogueira':{const th=q(14);// the garden of nuts (Ct 6:11): a tall trunk, a heavy crown, green walnuts
+      r(X-1,Y-th,tw+1,th,'#5a4030');r(X,Y-th,1,th,'#7a5a40');r(X-q(4),Y-q(11),q(4),2,'#5a4030');r(X+q(1),Y-q(13),q(5),2,'#5a4030');r(X-q(4),Y-1,q(9),1,'#3a2a1a');
+      blob(X,Y-q(21),q(11),q(7),'#1e4a26','#3a7a34','#82c050',101);if(sz>1.3){blob(X-q(9),Y-q(17),q(6),q(4),'#1e4a26','#3a7a34','#82c050',102);blob(X+q(9),Y-q(18),q(6),q(4),'#1e4a26','#3a7a34','#82c050',103)}
+      [[-6,-19],[4,-23],[1,-16],[-3,-25],[7,-18]].forEach(([dx,dy])=>{const fx=X+q(dx),fy=Y+q(dy);r(fx-1,fy-1,3,3,'#6a8a3a');r(fx,fy,1,1,'#8a6a3a')});
+      extraFruit(X,Y,sz,more,0,q(21),q(11),q(7),'#6a8a3a','#8a6a3a',94);break}
   }
 }
 function drawMostarda(X,Y,age){
@@ -148,7 +175,7 @@ function enemyIconTo(cvs,k,t=1){const g=hdCtx(cvs,48,48);C=g;const d=EN[k];g.sav
 
 // ---------- frame
 const dc=mkHD(W+1,H),dx=dc.getContext('2d');
-const LC={hissopo:'#b8c0ff',cedro:'#a8e0a0',videira:'#a05ae8',roma:'#ff4f7b',oliveira:'#d8f0a8',sarca:'#ff8a2a',mostarda:'#f7d050',figueira:'#9ae060',tamareira:'#ffa64a',amendoeira:'#ffc8e4',lirio:'#f4f4ff'};
+const LC={macieira:'#ff5a6a',sicomoro:'#d8c060',salgueiro:'#9ad890',acacia:'#e8d070',murta:'#ffffff',nogueira:'#a08050',hissopo:'#b8c0ff',cedro:'#a8e0a0',videira:'#a05ae8',roma:'#ff4f7b',oliveira:'#d8f0a8',sarca:'#ff8a2a',mostarda:'#f7d050',figueira:'#9ae060',tamareira:'#ffa64a',amendoeira:'#ffc8e4',lirio:'#f4f4ff'};
 let LIGHTS=[];
 const easeBack=g=>1+2.70158*Math.pow(g-1,3)+1.70158*Math.pow(g-1,2);
 const HOMEY={tree:118,tabernacle:158,pillar:120,rahab:146,altar:150,rock:150,tomb:150};
@@ -255,9 +282,11 @@ function drawTree(t,s,i){
   OV=null;x.restore();
   if(t.sleep)for(let i=0;i<3;i++){const zx=s.x+6+i*3,zy=s.y-30-i*5-((S.t*6)%4);r(zx,zy,3,1,'#c0d0ff');r(zx+1,zy+1,1,1,'#c0d0ff');r(zx,zy+2,3,1,'#c0d0ff')}
   if(t.branch){const bx=s.x+7,by=s.y+3;if(t.branch==='a'){r(bx,by-1,1,3,'#f7c948');r(bx-1,by,3,1,'#f7c948');r(bx,by,1,1,'#fff6c0')}else{r(bx-1,by,3,1,'#5ab0ff');r(bx,by-1,2,1,'#9ad8ff')}}
+  if(t.evo){const a=S.t*2;for(let j=0;j<3;j++)r(s.x+Math.cos(a+j*2.09)*10,s.y-30+Math.sin(a+j*2.09)*3,1,1,j?'#fff6c0':'#f7c948');r(s.x+5,s.y+3,4,1,'#f7c948')}
   if(t.ark>0){x.globalAlpha=.4+Math.sin(S.t*5)*.2;ring(s.x,s.y-14,16,'#f7c948');x.globalAlpha=1}
   // grown and not yet evolved: a bobbing gold arrow says "touch me"
-  if((t.lvl||0)>=3&&!t.branch&&t.grow>=1){const ax=s.x+11,ay=s.y-22+Math.round(Math.sin(S.t*5)*2),c=S.mana>=BRANCH_COST?'#ffd23a':'#8a8a9a';r(ax-1,ay,3,4,c);r(ax-3,ay,7,1,c);r(ax-2,ay-1,5,1,c);r(ax-1,ay-2,3,1,c);r(ax,ay-3,1,1,c)}
+  const evoReady=t.branch&&!t.evo&&EVO[t.kinds[0]];
+  if(((t.lvl||0)>=3&&!t.branch||evoReady)&&t.grow>=1){const ax=s.x+11,ay=s.y-22+Math.round(Math.sin(S.t*5)*2),c=S.mana>=(evoReady?EVO_COST:BRANCH_COST)?'#ffd23a':'#8a8a9a';r(ax-1,ay,3,4,c);r(ax-3,ay,7,1,c);r(ax-2,ay-1,5,1,c);r(ax-1,ay-2,3,1,c);r(ax,ay-3,1,1,c)}
 }
 // enemies leave a quick squash-and-fade instead of vanishing
 function drawCorpses(){for(const f of S.fx){if(f.k!=='corpse')continue;const k=f.t/f.max,e=f.e;x.globalAlpha=1-k;x.save();x.translate(e.x,e.y);x.scale(1+k*.8,Math.max(.05,1-k*.9));x.translate(-e.x,-e.y);
@@ -273,9 +302,9 @@ function subpixel(f){SUBPX=Math.round(f*8)/8;const live=S&&(S.state==='prep'||S.
 function screenToWorld(cx,cy){const rc=$('stage').getBoundingClientRect(),fx=VIEW.ox+((cx-rc.left)/rc.width-VIEW.ox)/VIEW.z,fy=VIEW.oy+((cy-rc.top)/rc.height-VIEW.oy)/VIEW.z;return[fx*W+S.cam,fy*H-VY]}
 const partA=p=>Math.min(1,p.life/p.max*1.5,(p.max-p.life)*3)*(p.a??1);
 function drawParts(){for(const p of S.parts){if(p.blink&&Math.sin(p.life*p.blink)<0)continue;x.globalAlpha=partA(p);r(p.x,p.y,p.s,p.s,p.c)}x.globalAlpha=1}
-const PCOL={grape:['#7b2fbf','#c58cff'],oil:['#d9c24a','#fff3a0'],seed:['#e8e070','#fff'],mustard:['#c9c040','#fff8a0'],sow:['#e8c86a','#fff'],fig:['#6a2a5a','#c070b0'],date:['#d9802a','#ffc080'],almond:['#e8d0b0','#fff'],pstone:['#9a9aa8','#e0e0e8']};
+const PCOL={apple:['#d02030','#ff8a8a'],bigapple:['#d02030','#ffffff'],syc:['#d8b050','#fff0a0'],leaf:['#4a9a4a','#c8f0a0'],nut:['#6a5030','#a08050'],grape:['#7b2fbf','#c58cff'],oil:['#d9c24a','#fff3a0'],seed:['#e8e070','#fff'],mustard:['#c9c040','#fff8a0'],sow:['#e8c86a','#fff'],fig:['#6a2a5a','#c070b0'],date:['#d9802a','#ffc080'],almond:['#e8d0b0','#fff'],pstone:['#9a9aa8','#e0e0e8']};
 // fruit shots: a short fading trail, a dark rim so they read on any background, a bright core
-function drawProj(){for(const p of S.proj){const c=PCOL[p.kind],s=p.kind==='mustard'||p.kind==='fig'?4:3;
+function drawProj(){for(const p of S.proj){const c=PCOL[p.kind],s=p.kind==='bigapple'?5:p.kind==='mustard'||p.kind==='fig'||p.kind==='nut'?4:3;
     if(C===x){const n=p.big?9:3;for(let k=n;k>=1;k--){x.globalAlpha=.6*(1-k/(n+1));r(p.x-1-p.vx*k*.016,p.y-1-p.vy*k*.016,s-1,s-1,c[1])}}x.globalAlpha=1;
     if(C===x)r(p.x-1.5,p.y-1.5,s+1,s+1,'#1a0806');r(p.x-1,p.y-1,s,s,c[0]);r(p.x-1,p.y-1,1,1,c[1])}
   for(const s of S.eproj){r(s.x-2,s.y-2,4,4,'#7a7a80');r(s.x-2,s.y-2,2,1,'#c9c9d0')}}

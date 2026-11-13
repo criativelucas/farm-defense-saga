@@ -213,3 +213,53 @@ Object.assign(SPR,{
     for(let i=0;i<4;i++)P(-10+i*6,-46-(i%2)*3,4,6+(i%2)*3,'#5af0c0');P(-40,-30,2,1,'#0e3a44');
     for(let i=0;i<5;i++)P(-38-i*2,-22+Math.round(Math.sin(t*4+i)*2),1,1,'#7ac0b0')}
 });
+
+// ----- the expansion's works of the flesh
+Object.assign(SPR,{
+  // carries a little golden calf over its head (Ex 32:4)
+  idolatria(e){const t=e.t,P=MP(e,(t*6|0)%2),R=['#4a2a5a','#7a4a8a','#b088c0'],G=['#8a5a08','#e8b020','#fff0a0'];
+    box(P,-4,-10,8,9,R);eyes(P,-3,-7,4,{lid:R[1]});P(-2,-4,3,1,INK);
+    P(-5,-12,1,3,R[1]);P(4,-12,1,3,R[1]);box(P,-4,-15,8,4,G);P(-5,-16,1,2,G[1]);P(3,-16,1,2,G[1]);P(-3,-14,1,1,INK);P(-2,-11,1,1,G[1]);P(1,-11,1,1,G[1]);
+    if((t*3|0)%2)P(5,-16,1,1,'#ffffff');feet(P,t,-3,1,'#2a1430')},
+  // spiky and scowling; bright red once it swears revenge
+  inimizade(e){const t=e.t,P=MP(e,(t*8|0)%2),R=e.rage?['#7a0a1a','#e0284a','#ff8a9a']:['#4a0e22','#8a2a4a','#c85a7a'];
+    box(P,-4,-10,8,9,R);for(const sx of[-4,-1,2])P(sx,-11,1,1,R[2]);eyes(P,-3,-7,4,{brow:1});P(-2,-3,4,1,INK);P(-1,-4,2,1,INK);
+    P(-6,-6,2,1,R[0]);P(4,-6,2,1,R[0]);if(e.rage&&(t*10|0)%2)P(-5,-13,1,2,'#ff5a8a');feet(P,t,-3,1,'#2a0812',e.rage?18:10)},
+  // a whitewashed face (Mt 23:27): the mask is worn, or held aside showing the scowl
+  hipocrisia(e){const t=e.t,P=MP(e,(t*5|0)%2),R=['#2a2430','#4a4058','#6a6080'],W2=['#c8c0b0','#f4f0e8','#ffffff'];
+    box(P,-4,-12,9,11,R);
+    if(e.masked>0){box(P,-5,-11,7,7,W2);P(-4,-9,2,1,INK);P(-1,-9,2,1,INK);P(-3,-6,3,1,'#e0a0a0');P(-4,-7,1,1,INK);P(0,-7,1,1,INK)}
+    else{eyes(P,-3,-9,4,{brow:1});P(-2,-5,4,1,INK);P(-2,-6,1,1,INK);box(P,4,-9,4,5,W2);P(5,-8,1,1,INK)}
+    feet(P,t,-3,2,'#1a1420')},
+  // bulky, with a club raised
+  violencia(e){const t=e.t,sw=(t*4|0)%2,P=MP(e,(t*7|0)%2),R=['#4a0808','#8a1a1a','#d04a3a'],cy=sw?-14:-12;
+    box(P,-5,-11,11,10,R);eyes(P,-4,-8,5,{brow:1});P(-3,-4,6,1,INK);P(-2,-4,1,1,'#ffffff');P(1,-4,1,1,'#ffffff');
+    P(-8,cy,2,7,'#6a4a2a');box(P,-10,cy-3,5,4,['#3a2a1a','#6a4a2a','#9a7a4a']);P(-6,-6,2,2,R[2]);feet(P,t,-4,2,'#2a0404')},
+  // big hungry eyes and a grabbing hand; a violet drop shows the mana it stole
+  cobica(e){const t=e.t,P=MP(e,(t*7|0)%2),R=['#0e4a40','#2a8a7a','#7af0d0'],g=(t*4|0)%2;
+    box(P,-4,-11,9,10,R);eyes(P,-3,-8,4,{h:3});P(-2,-4,4,1,INK);P(-1,-3,2,1,'#c05a5a');
+    P(-7,-7+g,3,2,R[1]);P(-8,-8+g,1,2,R[1]);P(-6,-9+g,1,2,R[1]);if(e.stolen)P(-7,-11,2,2,'#c58cff');feet(P,t,-3,2,'#0a2a24')},
+  // a dark winged mouth high in the sky, dropping words
+  blasfemia(e){const t=e.t,f=(t*10|0)%2,P=MP(e,Math.round(Math.sin(t*3))),R=['#1a0a1a','#3a1a3a','#6a3a6a'];
+    for(const s of[-1,1]){const W2=(dx,dy,w,h)=>P(s<0?-dx-w:dx,dy,w,h,'#2a102a');if(f){W2(4,-4,3,2);W2(7,-6,2,2)}else{W2(4,0,3,2);W2(7,1,2,2)}}
+    box(P,-5,-4,10,8,R);P(-3,-2,2,2,'#ff5af0');P(1,-2,2,2,'#ff5af0');P(-3,1,6,2,INK);P(-2,1,1,1,'#ffffff');P(1,1,1,1,'#ffffff');
+    if((t*2|0)%2){P(-9,4,2,1,'#c04ac0');P(-8,6,1,1,'#c04ac0')}},
+  // leaning forward, sweating; speed lines while it dashes
+  impaciencia(e){const t=e.t,run=e.dsh>0,P=MP(e,(t*(run?16:9)|0)%2),R=['#8a5a08','#e8a020','#ffd870'];
+    box(P,-4,-10,8,9,R);eyes(P,-4,-7,4,{brow:1});P(-3,-4,3,1,INK);P(4,-11,1,2,'#9ad0ff');
+    if(run)for(let i=0;i<3;i++)P(5+i*2,-8+i*2,2,1,'#fff0c0');feet(P,t,-3,1,'#4a2a04',run?24:12)},
+  // a heart of stone (Ez 36:26); when the shell breaks a heart of flesh shows
+  dureza(e){const t=e.t,P=MP(e,(t*3|0)%2),st=e.armor>0,R=st?['#3a3a48','#6a6a78','#a8a8b8']:['#5a1a2a','#a0303a','#e07080'];
+    box(P,-6,-12,13,11,R);P(-6,-12,1,1,R[0]);P(6,-12,1,1,R[0]);P(0,-12,1,2,R[0]);
+    if(st&&e.armorMax&&e.armor<e.armorMax*.5){P(-2,-11,1,4,'#2a2a34');P(-1,-8,1,3,'#2a2a34');P(2,-6,2,1,'#2a2a34')}
+    P(-4,-8,2,2,INK);P(1,-8,2,2,INK);P(-3,-4,5,1,INK);feet(P,t,-5,3,'#2a2a30',5)},
+  // arms crossed, a question mark bobbing over its head
+  incredulidade(e){const t=e.t,P=MP(e,(t*5|0)%2),R=['#2a3448','#5a6a8a','#9aaac8'],b=(t*3|0)%2;
+    box(P,-4,-11,9,10,R);eyes(P,-3,-8,4,{lid:R[1]});P(-2,-4,4,1,INK);P(2,-5,1,1,INK);P(-5,-6,10,2,R[0]);
+    P(-1,-17-b,3,1,'#c8d8f0');P(1,-16-b,1,2,'#c8d8f0');P(0,-14-b,1,1,'#c8d8f0');P(0,-12-b,1,1,'#c8d8f0');feet(P,t,-3,2,'#1a2030')},
+  // a false halo (2 Co 11:14) and a sly grin
+  engano(e){const t=e.t,P=MP(e,(t*6|0)%2),R=['#3a1a6a','#7a4ac8','#c8a0ff'];
+    P(-3,-15,7,1,'#fff0a0');P(-4,-14,1,1,'#fff0a0');P(4,-14,1,1,'#fff0a0');
+    box(P,-4,-12,9,11,R);P(-3,-9,2,1,INK);P(1,-9,2,1,INK);P(-3,-6,5,1,INK);P(-4,-7,1,1,INK);P(2,-7,1,1,INK);P(4,-3,1,2,'#ff3a8a');feet(P,t,-3,2,'#1a0a3a')},
+  ilusao(e){const a=C.globalAlpha;C.globalAlpha=a*(.45+Math.sin(e.t*8)*.15);SPR.engano(e);C.globalAlpha=a}
+});

@@ -358,7 +358,7 @@ function showAltar(){
   menu(`<div class="mbox"><small class="eyebrow">Altar</small><h2>Ofereça ao Senhor</h2><p>Enxerte duas sementes numa só árvore, ou consagre uma carta para que dê +50% de dano.</p>${runBar()}
     <div class="col"><button class="btn" id="a">Enxertar duas sementes</button><button class="btn ghost" id="b">Consagrar uma carta (★ +50% de dano)</button><button class="btn ghost" id="d">Aperfeiçoar uma carta (+)</button><button class="btn ghost" id="c">Seguir sem oferecer</button></div></div>`);
   $('d').onclick=()=>pickCards('Aperfeiçoar','Sementes ganham +30% de dano; bênçãos e parábolas custam 1 a menos.',c=>!c.plus&&c.k!=='joio',1,ch=>{if(ch){ch[0].plus=true;toast('Aperfeiçoada: '+info(ch[0]).name)}advance()});
-  $('a').onclick=()=>pickCards('Enxertar','Escolha duas sementes diferentes (Romanos 11:17).',baseSeed,2,ch=>{if(ch&&ch[0].k!==ch[1].k){const h=graft(ch[0],ch[1]);toast('Nova árvore: '+info(h).name)}else if(ch)toast('Escolha duas sementes diferentes');advance()});
+  $('a').onclick=()=>pickCards('Enxertar','Escolha duas sementes diferentes (Romanos 11:17).',baseSeed,2,ch=>{if(ch&&ch[0].k!==ch[1].k){const h=graft(ch[0],ch[1]);toast(info(h).fusion?'Fusão: '+info(h).name:'Nova árvore: '+info(h).name,info(h).fusion?info(h).fusion.desc:'')}else if(ch)toast('Escolha duas sementes diferentes');advance()});
   $('b').onclick=()=>pickCards('Consagrar','Escolha uma carta para virar ★.',c=>!c.rare&&c.k!=='joio',1,ch=>{if(ch){ch[0].rare=true;toast('Consagrada: '+info(ch[0]).name)}advance()});
   $('c').onclick=advance;
 }
@@ -496,7 +496,11 @@ function showCodex(tab){
   if(tab==='cartas'){cards=Object.keys(CARDS).map(k=>mk(k,cardKnown(k)?{}:{locked:true}));body=`<p class="help">${cards.filter(c=>!c.locked).length} de ${cards.length} cartas descobertas. Vença fases e abra pacotes na Tenda para encontrar as outras.</p><div class="grid">${cards.map(c=>{const I=info(c),rk=RAR[rarOf(c)],lv=cardLv(c.k),tree=!!I.kinds;
     return`<div class="cx">${cardHTML(c)}<small class="cxr" style="color:${rk.c}">${rk.sym} ${rk.name}${tree&&!c.locked?` · nível ${lv+1}${lv<3?` · cópias ${(META.copies||{})[c.k]||0}/${COPY_NEED[lv]}`:''}`:''}${(META.foil||{})[c.k]&&!c.locked?' · ★':''}</small><i>${c.locked?'???':I.ref}</i></div>`}).join('')}</div>`}
   if(tab==='vizinhas')body=`<div class="ccrules"><span style="--c:#4faa4a">Árvores a até 72 passos se ligam por ramos</span><span style="--c:#e8a020">Frutos diferentes juntos: +10% de dano</span><span style="--c:#9b5ae0">Perto de uma Videira: +25% (João 15:5)</span><span style="--c:#c8403a">A Discórdia corta ramos ao passar por baixo</span></div>
-    <div class="grid ccg pairs">${PAIRS.map((p,i)=>ccard({col:FRUIT_COL[FRUIT[p.a]],name:p.name,art:`<canvas width="288" height="144" data-pair="${i}"></canvas>`,body:`<b class="ccsub">${CARDS[p.a].name} + ${CARDS[p.b].name}</b><p>Juntas, ${p.desc}.</p>`,ref:p.ref})).join('')}</div>`;
+    <div class="grid ccg pairs">${PAIRS.map((p,i)=>ccard({col:FRUIT_COL[FRUIT[p.a]],name:p.name,art:`<canvas width="288" height="144" data-pair="${i}"></canvas>`,body:`<b class="ccsub">${CARDS[p.a].name} + ${CARDS[p.b].name}</b><p>Juntas, ${p.desc}.</p>`,ref:p.ref})).join('')}</div>
+    <h3 class="cxh">Fusões</h3><div class="ccrules"><span style="--c:#7a4aa0">No Altar, enxerte estas duas sementes: a árvore nasce com força total e um poder próprio</span></div>
+    <div class="grid ccg pairs">${FUSIONS.map((f,i)=>ccard({col:FRUIT_COL[FRUIT[f.a]]||'#7a4aa0',name:f.name,art:`<canvas width="288" height="144" data-fusion="${i}"></canvas>`,body:`<b class="ccsub">${CARDS[f.a].name} + ${CARDS[f.b].name}</b><p>${f.desc} (a cada ${f.every}s)</p>`,ref:f.ref})).join('')}</div>
+    <h3 class="cxh">Evoluções</h3><div class="ccrules"><span style="--c:#e8a020">Depois de escolher o galho, toque na árvore e evolua por ${EVO_COST} de maná: +20% de dano e um poder próprio</span></div>
+    <div class="grid ccg">${Object.entries(EVO).map(([k,v])=>ccard({col:FRUIT_COL[FRUIT[k]]||'#5a8a4a',name:v.name,tag:CARDS[k].name,art:`<canvas width="32" height="32" data-evo="${k}"></canvas>`,body:`<p>${v.desc} (a cada ${v.every}s)</p>`,ref:v.ref})).join('')}</div>`;
   if(tab==='inimigos')body=`<p class="help">Passe o mouse numa carta para ver a praga se mexer.</p><div class="grid ccg">${Object.entries(EN).filter(([,d])=>!d.hide).sort(([a],[b])=>{const o=k=>{const i=PEST_ORDER.indexOf(k);return i<0?99:i};return o(a)-o(b)}).map(([k,d])=>{const seen=META.seen.e[k];
     return seen?ccard({col:d.c,name:d.name,tag:d.boss?'Chefe':d.elite?'Elite':'',art:`<canvas width="48" height="48" data-enemy="${k}" data-anim="${k}"></canvas>`,
       body:`<div class="cattr">${[['Vida',lvlOf(d.hp,[4,8,12,30]),'#ff5a6a'],['Velocidade',lvlOf(d.spd,[12,18,25,33]),'#5ad0ff'],['Dano',lvlOf(d.dmg,[2,3,5,8]),'#ffa040']].map(([l,v,c])=>`<span>${l}</span><i style="--c:${c}">${[1,2,3,4,5].map(n=>`<u class="${n<=v?'on':''}"></u>`).join('')}</i>`).join('')}</div>
@@ -508,6 +512,8 @@ function showCodex(tab){
   menu(`<div class="mbox wide book"><h2>Códex</h2><div class="row tabs">${Object.entries(tabs).map(([k,t])=>`<button class="btn ghost ${k===tab?'act':''}" data-tab="${k}">${t}</button>`).join('')}</div>${body}<button class="btn" data-go="title">Voltar</button></div>`,cards);
   $('menu').querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>showCodex(b.dataset.tab));
   $('menu').querySelectorAll('canvas[data-pair]').forEach(c=>pairArtTo(c,PAIRS[+c.dataset.pair]));
+  $('menu').querySelectorAll('canvas[data-fusion]').forEach(c=>pairArtTo(c,FUSIONS[+c.dataset.fusion]));
+  $('menu').querySelectorAll('canvas[data-evo]').forEach(c=>iconTo(c,{k:c.dataset.evo}));
   $('menu').querySelectorAll('.relic:not(.unk) canvas[data-relic]').forEach(c=>relicCardArt(c,c.dataset.relic));
   // pests move while the mouse is over their card
   $('menu').querySelectorAll('canvas[data-anim]').forEach(cv=>{const k=cv.dataset.anim,card=cv.closest('.ccard');let raf=0,t=1,last=0;

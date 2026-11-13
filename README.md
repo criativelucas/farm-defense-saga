@@ -10,6 +10,11 @@ Abra `jardim-do-fruto.html` num navegador (ou sirva a pasta com `python3 -m http
 - Q cerca · E espantalho · R lama
 - 1 a 4 jogar carta (ou arraste até o canteiro) · Enter chama a onda · M som
 
+## Evolução e fusão
+- **Galho** (nível 4, 4 de maná): +70% de dano ou mais rápida e longe.
+- **Evolução final** (depois do galho, 7 de maná): toda árvore vira sua forma plena (ex.: Videira Verdadeira, Sarça que Não se Consome), com +20% de dano e um poder próprio a cada poucos segundos. Lista em `EVO` (`js/content.js`).
+- **Fusões** (Altar, enxertando duas sementes): 12 receitas nomeadas (ex.: Romã + Sarça = Fogo do Altar) nascem com força total, sem a perda de 20% do enxerto comum, e ganham um poder próprio. Lista em `FUSIONS`. Os poderes ficam em `POWER` (`js/game.js`). O Códex (Vizinhanças) mostra todas.
+
 ## Estrutura
 - `jardim-do-fruto.html` — página, HUD e estilos
 - `js/engine.js` — utilitários, áudio, música, entrada

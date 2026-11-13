@@ -12,7 +12,7 @@ const WORLDS=[
 // the card each level gives on its first win (index = level number): the newer cards arrive just before the pests they answer
 // (the Stone before the crowned Pride, the Hyssop and the Light before the Lie, the Bitterness and the Vanity)
 const UNLOCK_ORDER=['roma','oliveira','chuva','sarca','figueira','jerico','lirio','talentos','tamareira','semeador','amendoeira','mostarda','profecia',
-  'pedra','paz','fermento','cedro','hissopo','luz','fogo','ovelha',null,null,null,'vento','uncao','nuvem','estrela'];
+  'pedra','paz','fermento','cedro','hissopo','luz','fogo','ovelha','acacia','sicomoro','nogueira','vento','uncao','nuvem','estrela'];
 const RULES={poucas:{name:'Mão curta',desc:'Só 3 cartas na mão'},sempisao:{name:'Sem pisão',desc:'O pisão não funciona'},trevas:{name:'Noite total',desc:'Escuridão quase completa'}};
 // Adventure difficulty: pests' life, mana speed, coins won and the best stars possible; a Hard win crowns the level
 const DIFF={facil:{name:'Fácil',hp:.7,mana:1.25,eden:.6,coin:.75,stars:2,desc:'Pragas mais fracas, maná mais rápido e o Éden aguenta mais. Vale até 2 estrelas.'},

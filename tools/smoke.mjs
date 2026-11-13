@@ -90,6 +90,50 @@ async function newCards(label){
     S.en=[];const sc=MAP.slots[4];plantAt(4,['cedro'],false,0);S.tw[4].grow=1;S.tw[4].cd={};const c1=spawn('gula',sc.x+40),c2=spawn('gula',sc.x+90);const h1=c1.hp,h2=c2.hp;for(let i=0;i<60;i++)update(1/60);o.cedro=c1.hp<h1&&c2.hp<h2;
     draw();Object.keys(CARDS).forEach(k=>cardCanvas(mk(k)));return JSON.stringify(o)})()`);
   const o=JSON.parse(r||'{}'),bad=Object.entries(o).filter(([,v])=>!v).map(([k])=>k);check(label+': new cards',Object.keys(o).length===8&&!bad.length,bad.join(', ')||r)}
+// the expansion: ten more pests, twenty cards, final evolutions and named fusions
+async function expansion(label){
+  const r=await js(`(()=>{Object.keys(EN).forEach(k=>META.seen.e[k]=1);startLevel(0);startLevelBattle();S.dialog=null;S.intro=null;tutStep=-1;S.state='wave';S.q=[];S.en=[];
+    const o={},T=(k,x)=>spawn(k,x??300),step=n=>{for(let i=0;i<n;i++)update(1/60)},si=MAP.slots.findIndex(s=>Math.abs(s.y-gy(s.x))<2),s=MAP.slots[si],at=k=>{const e=T(k,s.x);e.y=gy(e.x);return e};
+    const grove=()=>{S.tw=S.tw.map(()=>null);MAP.slots.forEach((q,i)=>{plantAt(i,['videira'],false,0);S.tw[i].grow=1})};grove();
+    // pests
+    let e=at('idolatria');step(1);o.seduce=S.tw[si].seduced;S.en=[];S.tw[si].seduced=false;plantAt(si,['acacia'],false,0);S.tw[si].grow=1;e=at('idolatria');step(1);o.acaciaGuard=!S.tw[si].seduced;
+    S.en=[];grove();let a=T('inimizade',300),b=T('inimizade',320);b.hp=b.max*.3;damage(a,999);o.grudge=b.rage&&b.hp>b.max*.5;
+    S.en=[];e=T('hipocrisia');e.masked=2;let h=e.hp;damage(e,3,'videira');o.mask=e.hp>=h;damage(e,1);o.unmask=!(e.masked>0);
+    S.en=[];const nf=S.fences.length;S.fences.push({x:250,y:gy(250),hp:30,max:30});e=T('violencia',256);step(40);o.smash=S.fences.length===nf;
+    S.en=[];S.tw.forEach(t=>t&&(t.stun=0));e=at('violencia');step(1);o.smashTree=S.tw[si].stun>0;
+    S.en=[];S.mana=10;e=T('cobica',S.cam+100);e.drT=0;step(1);o.drain=S.mana<10&&e.stolen>0;damage(e,999);o.giveBack=S.mana>=9.9;
+    S.en=[];S.tw.forEach(t=>t&&(t.stun=0));e=T('blasfemia',s.x);e.cuT=0;step(1);o.curse=S.tw.some(t=>t&&t.stun>0);
+    S.en=[];e=T('impaciencia');e.dsT=0;step(1);o.dash=e.dsh>0;
+    S.en=[];e=T('dureza',S.cam+120);o.armored=e.armor>0;step(1);let x0=e.x;e.x+=30;e.slow=5;e.frz=5;step(1);o.stone=e.x<=x0&&e.frz<=0&&e.slow<=0;
+    let a0=e.armor;damage(e,2,'nogueira');o.nut=a0-e.armor>5.9;
+    S.en=[];S.tw.forEach(t=>t&&(t.stun=0));const tv=S.tw[si];tv.cd.videira=1;step(1);const d0=1-tv.cd.videira;at('incredulidade');tv.cd.videira=1;step(1);o.doubt=1-tv.cd.videira<d0*.75;
+    S.en=[];e=T('engano');damage(e,1,'videira');o.decoy=S.en.filter(x=>x.k==='ilusao').length===2;
+    // blessings and parables
+    S.en=[];S.tw.forEach(t=>t&&(t.water=0));blessing('orvalho');o.orvalho=S.tw.every(t=>!t||t.water>=1);
+    e=T('heresia');blessing('sal');o.sal=S.salt>0&&e.hp<e.max;
+    blessing('escudo');h=S.p.hp;S.p.inv=0;hurtPlayer(1);o.escudo=S.p.hp===h;
+    S.en=[];blessing('espada');S.p.atkCD=0;S.p.stun=0;S.p.face=1;e=T('gula',S.p.x+30);e.y=gy(e.x);playerAttack();o.espada=e.hp<e.max;
+    S.hand=[mk('jubileu'),mk('mana'),mk('mana'),mk('mana')];S.draw=[mk('roma'),mk('roma'),mk('roma')];blessing('jubileu');o.jubileu=S.hand[0].k==='jubileu'&&S.hand.slice(1).every(c=>c.k==='roma');
+    S.en=[];const L=[T('gula',S.cam+100),T('odio',S.cam+150)];blessing('linguas');o.linguas=L.every(x=>x.hp<x.max);
+    S.en=[];blessing('arcoiris');e=T('odio',LIFE_X+1);e.x=LIFE_X-1;h=RUN.hp;step(1);o.arcoiris=RUN.hp===h&&e.x>MAP.ww-40;
+    const nd=S.fruitDrops.length;blessing('codornizes');o.codornizes=S.fruitDrops.length>=nd+8;
+    S.en=[];blessing('harpa');RUN.hp=RUN.maxhp-2;h=RUN.hp;e=T('odio');damage(e,999);o.harpa=RUN.hp===h+1;
+    S.hand=[mk('tesouro'),mk('mana'),mk('mana'),mk('mana')];const tc=S.hand[0];S.mana=5;playCard(0);o.tesouro=S.mana>=11.9&&!S.draw.includes(tc);
+    S.en=[];S.p.face=1;e=T('odio',S.p.x+30);blessing('rede');o.rede=e.frz>2;
+    const m0=tmult(S.tw[0]);blessing('virgens');o.virgens=tmult(S.tw[0])>m0*1.29;
+    S.p.x=400;S.p.hp=1;blessing('prodigo');o.prodigo=S.p.x===40&&S.p.hp===S.p.maxhp;
+    S.tw[0].lvl=0;blessing('vinha');o.vinha=S.tw[0].lvl===2;S.lamps=0;S.shieldT=0;S.swordT=0;S.rainbow=0;S.harp=0;S.salt=0;
+    // the six new trees shoot, and their stomp power runs
+    for(const k of['macieira','sicomoro','salgueiro','acacia','murta','nogueira']){S.en=[];S.tw=S.tw.map(()=>null);plantAt(si,[k],false,0);const t=S.tw[si];t.grow=1;t.cd={};
+      e=T(k==='sicomoro'?'inveja':'gula',s.x+15);if(k!=='sicomoro')e.y=gy(e.x);h=e.hp;step(90);o['tree_'+k]=e.hp<h;superTower(t,s)}
+    // the final evolution from the tree sheet, then every evolution and fusion power once
+    S.en=[];S.tw=S.tw.map(()=>null);plantAt(si,['videira'],false,0);let t=S.tw[si];Object.assign(t,{grow:1,lvl:3,branch:'a'});S.mana=MAXM;openTree(si);$('tevo').onclick();o.evolve=t.evo===1&&S.mana<MAXM;closeTree();
+    let ran=0;for(const id in POWER){S.en=[];const g=T('gula',s.x+20);g.y=gy(g.x);T('inveja',s.x+30);const ks=id.split('+');S.tw=S.tw.map(()=>null);plantAt(si,ks,false,0);t=S.tw[si];t.grow=1;t.evo=1;POWER[id](t,s,tmult(t));step(2);ran++}
+    o.powers=ran===Object.keys(EVO).length+FUSIONS.length&&Object.keys(EVO).every(k=>POWER[k])&&FUSIONS.every(f=>POWER[f.a+'+'+f.b]);
+    const fc=mk('hyb',{hyb:['sarca','roma']});o.fusion=info(fc).name==='Fogo do Altar'&&tmult({...t,kinds:['roma','sarca']})>tmult({...t,kinds:['roma','videira']});cardCanvas(fc);
+    showCodex('vizinhas');o.codex=document.querySelectorAll('canvas[data-fusion]').length===FUSIONS.length&&document.querySelectorAll('canvas[data-evo]').length===Object.keys(EVO).length;showCodex('inimigos');
+    for(let i=0;i<60;i++)update(1/60);draw();return JSON.stringify(o)})()`);
+  const o=JSON.parse(r||'{}'),bad=Object.entries(o).filter(([,v])=>!v).map(([k])=>k);check(label+': expansion '+Object.keys(o).length+' tricks',Object.keys(o).length>=40&&!bad.length,bad.join(', ')||r)}
 // a short battle in every world: plant, call the wave, let it run, draw frames
 async function battles(label){
   for(let w=0;w<7;w++){const before=errors.length;
@@ -155,7 +199,7 @@ async function waveShop(label){const before=errors.length;
     return out.join(',')})()`);
   check(label+': portais, loja entre ondas, poderes '+r,errors.length===before&&r==='portais,loja,compra,poderes,pisao',errors.slice(before).join(' | ').slice(0,200))}
 console.log('— new player');await load(true,false);await loopAndScene('new');
-console.log('— player with progress');await js(`Object.assign(META,{intro:1,tut:1,coins:5000});['1-1','1-2','1-3','1-4','2-1','2-4'].forEach(i=>META.done[i]=1);saveMeta();1`);await everyScreen('progress');await farmers('progress');await packs('progress');await pests('progress');await newCards('progress');await battles('progress');await goals('progress');await minis('progress');await audio('progress');await polish('progress');await waveShop('progress');
+console.log('— player with progress');await js(`Object.assign(META,{intro:1,tut:1,coins:5000});['1-1','1-2','1-3','1-4','2-1','2-4'].forEach(i=>META.done[i]=1);saveMeta();1`);await everyScreen('progress');await farmers('progress');await packs('progress');await pests('progress');await newCards('progress');await expansion('progress');await battles('progress');await goals('progress');await minis('progress');await audio('progress');await polish('progress');await waveShop('progress');
 console.log('— embed with gamepad blocked');await load(false,true);await loopAndScene('blocked-pad');
 const fails=checks.filter(c=>!c[1]);console.log(`\n${checks.length-fails.length}/${checks.length} checks passed`+(errors.length?`; ${errors.length} error(s) logged:`:''));
 errors.forEach(e=>console.log('  · '+String(e).split('\n').slice(0,3).join(' / ')));

@@ -93,6 +93,7 @@ function genWave(act,i,kind,ascN,only){
   while(budget>0){
     const k=RNG()<.45?theme:rpick(pool),c=COST[k];
     if(k==='faccoes'){for(let j=0;j<3;j++)L.push([k,.22]);L[L.length-1][1]=1.2}
+    else if(k==='inimizade')L.push([k,.3],[k,rr(.7,1.1)]);
     else L.push([k,rr(.45,1.1)*(c>5?1.8:1)]);
     budget-=c;
   }
@@ -263,3 +264,101 @@ const ITEMS={
   espantalho:{name:'Espantalho',key:'E',price:60,qty:2,desc:'Afasta os voadores por 20s.'},
   lama:{name:'Poça de lama',key:'R',price:30,qty:3,desc:'Inimigos do chão ficam lentos por 15s.'}
 };
+
+// ---------- expansion: ten more works of the flesh, twenty cards, a final evolution for every tree and named fusions
+Object.assign(EN,{
+  idolatria:{name:'Idolatria',hp:13,spd:17,rew:7,dmg:1,fly:0,w:10,h:14,c:'#d9a521',glow:'#ffe36a',weak:'acacia',ai:'seduce',ref:'Gálatas 5:20',desc:'Carrega um ídolo: as árvores por onde passa param de atirar para olhar. Um pisão as liberta.'},
+  inimizade:{name:'Inimizade',hp:9,spd:21,rew:5,dmg:1,fly:0,w:8,h:10,c:'#8a2a4a',glow:'#ff5a8a',weak:'murta',ai:'grudge',ref:'Gálatas 5:20',desc:'Anda em dupla. Se uma cai, a outra jura vingança: cura metade da vida e corre o dobro.'},
+  hipocrisia:{name:'Hipocrisia',hp:12,spd:19,rew:7,dmg:1,fly:0,w:9,h:13,c:'#e8e0d0',glow:'#ffffff',weak:'hissopo',ai:'mask',ref:'Mateus 23:27',desc:'De tempos em tempos põe uma máscara branca: os tiros das árvores a curam. Golpe, pisão e bênçãos arrancam a máscara.'},
+  violencia:{name:'Violência',hp:16,spd:18,rew:8,dmg:2,fly:0,w:11,h:12,c:'#8a1a1a',glow:'#ff3a2a',weak:'salgueiro',ai:'smash',ref:'Gênesis 6:11',desc:'Quebra cercas e pedras num instante e atordoa as árvores por onde passa.'},
+  cobica:{name:'Cobiça',hp:10,spd:22,rew:6,dmg:1,fly:0,w:9,h:11,c:'#2a8a7a',glow:'#7af0d0',weak:'tamareira',ai:'drain',ref:'Êxodo 20:17',desc:'Enquanto está na tela, rouba seu maná aos poucos. Derrotada, devolve o que roubou.'},
+  blasfemia:{name:'Blasfêmia',hp:7,spd:20,rew:7,dmg:1,fly:2,w:10,h:9,c:'#3a1a3a',glow:'#c04ac0',weak:'sicomoro',ai:'curse',ref:'Colossenses 3:8',desc:'Voa alto e deixa cair palavras que calam as árvores embaixo por 2,5 segundos.'},
+  impaciencia:{name:'Impaciência',hp:7,spd:24,rew:5,dmg:1,fly:0,w:8,h:10,c:'#e8a020',glow:'#ffd34a',weak:'figueira',ai:'dash',ref:'Provérbios 14:29',desc:'Não espera: de vez em quando dispara correndo três vezes mais rápido.'},
+  dureza:{name:'Dureza de Coração',hp:18,armor:22,spd:11,rew:10,dmg:2,fly:0,w:13,h:13,c:'#6a6a78',glow:'#c8c8d8',weak:'nogueira',ai:'stone',ref:'Ezequiel 36:26',desc:'Um coração de pedra: casca grossa, e nada a empurra, prende ou deixa lenta.'},
+  incredulidade:{name:'Incredulidade',hp:11,spd:16,rew:7,dmg:1,fly:0,w:9,h:12,c:'#5a6a8a',glow:'#a0b8e0',weak:'mostarda',ai:'doubt',ref:'Hebreus 3:12',desc:'Espalha dúvida: as árvores perto dela atiram 40% mais devagar. O Grão de Mostarda não duvida.'},
+  engano:{name:'Engano',hp:10,spd:22,rew:7,dmg:1,fly:0,w:9,h:12,c:'#7a4ac8',glow:'#c8a0ff',weak:'cedro',ai:'decoy',ref:'Jeremias 17:9',desc:'No primeiro golpe que leva, se divide em ilusões que não fazem mal ao Éden. Qual é a verdadeira?'},
+  ilusao:{name:'Ilusão',hp:1.5,spd:26,rew:0,dmg:0,fly:0,w:9,h:12,c:'#7a4ac8',glow:'#c8a0ff',weak:'cedro',hide:1,desc:'Uma ilusão do Engano.'}
+});
+Object.assign(COST,{idolatria:4,inimizade:4,hipocrisia:4,violencia:5,cobica:3,blasfemia:4,impaciencia:3,dureza:6,incredulidade:4,engano:4});
+WAVE_POOL[0].push('impaciencia');
+WAVE_POOL[1].push('inimizade','violencia','cobica','idolatria');
+WAVE_POOL[2].push('incredulidade','blasfemia','engano','hipocrisia','dureza');
+// the new pests join the adventure beside the ones already met on those levels
+[[5,'impaciencia'],[9,'inimizade'],[10,'violencia'],[13,'cobica'],[14,'idolatria'],[17,'incredulidade'],[19,'blasfemia'],[21,'engano'],[22,'hipocrisia'],[25,'dureza']]
+  .forEach(([n,k])=>PEST_INTRO[n].push(k));
+PEST_ORDER.splice(0,PEST_ORDER.length,...Object.keys(PEST_INTRO).sort((a,b)=>a-b).flatMap(n=>PEST_INTRO[n]));
+
+// six new trees, nine blessings and five parables
+Object.assign(FRUIT,{macieira:'Amor',sicomoro:'Alegria',salgueiro:'Paz',acacia:'Fé',murta:'Benignidade',nogueira:'Domínio'});
+Object.assign(CARDS,{
+  macieira:{type:'semente',name:'Macieira',cost:4,ref:'Cânticos 2:3',desc:'Atira maçãs que quicam e acertam até 3 pragas seguidas.'},
+  sicomoro:{type:'semente',name:'Sicômoro',cost:5,ref:'Lucas 19:4',desc:'Vigia do alto, como Zaqueu: alcança muito longe e dá o dobro de dano nos voadores. Forte contra Blasfêmia.'},
+  salgueiro:{type:'semente',name:'Salgueiro',cost:4,ref:'Isaías 44:4',desc:'Galhos que prendem: a cada 4s segura a praga mais perto por 1,5s. Forte contra Violência.'},
+  acacia:{type:'semente',name:'Acácia',cost:4,ref:'Êxodo 25:10',desc:'Madeira da Arca: espinhos ferem e deixam lento quem passa por baixo, e as vizinhas não são seduzidas. Forte contra Idolatria.'},
+  murta:{type:'semente',name:'Murta',cost:3,ref:'Isaías 55:13',desc:'Perfume que anima: árvores vizinhas dão +25% de dano. Atira folhas. Forte contra Inimizade.'},
+  nogueira:{type:'semente',name:'Nogueira',cost:5,ref:'Cânticos 6:11',desc:'Nozes duras: dano alto e o triplo contra coroas e cascas. Forte contra Dureza de Coração.'},
+  orvalho:{type:'bencao',name:'Orvalho do Hermom',cost:3,ref:'Salmos 133:3',desc:'O orvalho desce sobre o jardim: toda árvore recebe uma rega inteira.'},
+  sal:{type:'bencao',name:'Sal da Terra',cost:2,ref:'Mateus 5:13',desc:'Por 15s as pragas não se curam nem engordam, e todas na tela levam 3 de dano.'},
+  escudo:{type:'bencao',name:'Escudo da Fé',cost:3,ref:'Efésios 6:16',desc:'Por 12s você não se fere nem fica atordoado, e o pisão dá o dobro de dano.'},
+  espada:{type:'bencao',name:'Espada do Espírito',cost:2,ref:'Efésios 6:17',desc:'Por 10s seu golpe alcança o dobro e dá o triplo de dano.'},
+  jubileu:{type:'bencao',name:'Ano do Jubileu',cost:1,ref:'Levítico 25:10',desc:'Troca todas as cartas da mão por novas e dá +2 de maná.'},
+  linguas:{type:'bencao',name:'Línguas de Fogo',cost:4,ref:'Atos 2:3',desc:'Chamas descem sobre as 6 pragas mais fortes da tela: 12 de dano em cada.'},
+  arcoiris:{type:'bencao',name:'Arco da Aliança',cost:4,ref:'Gênesis 9:13',desc:'Por 8s o Éden não perde Vida: a praga que chega volta para o começo do caminho.'},
+  codornizes:{type:'bencao',name:'Codornizes',cost:2,ref:'Êxodo 16:13',desc:'Caem 8 frutos do céu perto de você. Cada um vale maná e enche o cesto.'},
+  harpa:{type:'bencao',name:'Harpa de Davi',cost:3,ref:'1 Samuel 16:23',desc:'Por 12s, cada praga derrotada cura 1 de Vida do Éden (até 5).'},
+  tesouro:{type:'parabola',name:'Tesouro Escondido',cost:0,ref:'Mateus 13:44',desc:'Vende tudo pelo campo: +7 de maná, e a carta sai da bolsa nesta batalha.'},
+  rede:{type:'parabola',name:'A Rede',cost:3,ref:'Mateus 13:47',desc:'Lança uma rede à sua frente: as pragas do chão naquele trecho ficam presas por 3s.'},
+  virgens:{type:'parabola',name:'As Dez Virgens',cost:2,ref:'Mateus 25:4',desc:'Lâmpadas acesas: por 15s a noite some e as árvores dão +30% de dano.'},
+  prodigo:{type:'parabola',name:'Filho Pródigo',cost:2,ref:'Lucas 15:20',desc:'Volta para casa: você vai até o Éden, recupera os corações e o Éden ganha +2 de Vida.'},
+  vinha:{type:'parabola',name:'Trabalhadores da Vinha',cost:3,ref:'Mateus 20:16',desc:'Os últimos serão primeiros: toda árvore de nível 1 ou 2 sobe para o nível 3.'}
+});
+SEED_KEYS.push('macieira','sicomoro','salgueiro','acacia','murta','nogueira');
+POOL.push('macieira','sicomoro','salgueiro','acacia','murta','nogueira','orvalho','sal','escudo','espada','jubileu','linguas','arcoiris','codornizes','harpa','tesouro','rede','virgens','prodigo','vinha');
+Object.assign(STATS,{macieira:{dmg:'3',rng:80,cd:'1,3s'},sicomoro:{dmg:'4',rng:135,cd:'1,6s'},salgueiro:{dmg:'1',rng:65,cd:'4s'},acacia:{dmg:'4',rng:22,cd:'1,5s'},murta:{dmg:'1',rng:65,cd:'1s'},nogueira:{dmg:'7',rng:80,cd:'2,2s'}});
+Object.assign(SHORT,{macieira:'Maçãs que quicam em 3 pragas.',sicomoro:'Longe; dobro de dano nos voadores.',salgueiro:'Segura a praga mais perto.',acacia:'Espinhos ferem quem passa por baixo.',
+  murta:'Vizinhas dão +25% de dano.',nogueira:'Nozes que quebram coroas e cascas.',orvalho:'Toda árvore recebe uma rega.',sal:'Pragas não se curam por 15s. 3 de dano.',
+  escudo:'12s sem se ferir; pisão em dobro.',espada:'Golpe longo e triplo por 10s.',jubileu:'Mão nova e +2 de maná.',linguas:'12 de dano nas 6 pragas mais fortes.',
+  arcoiris:'8s: o Éden não perde Vida.',codornizes:'8 frutos caem perto de você.',harpa:'Pragas derrotadas curam o Éden.',tesouro:'+7 de maná; sai da batalha.',
+  rede:'Prende as pragas à sua frente por 3s.',virgens:'15s sem noite e +30% de dano.',prodigo:'Volta ao Éden: corações e +2 Vida.',vinha:'Árvores pequenas sobem ao nível 3.'});
+PAIRS.push(
+  {a:'macieira',b:'videira',name:'Maçãs e Uvas',desc:'atiram 30% mais rápido',ref:'Cânticos 2:5'},
+  {a:'salgueiro',b:'oliveira',name:'Águas e Azeite',desc:'dão 20% mais dano',ref:'Salmos 1:3'},
+  {a:'murta',b:'lirio',name:'Murta e Lírio',desc:'curam 1 de Vida a cada 15s',ref:'Isaías 55:13'});
+
+// the final evolution: a tree that already chose a branch can become its full form; every few seconds it does something only it does
+const EVO_COST=7;
+const EVO={
+  videira:{name:'Videira Verdadeira',ref:'João 15:1',every:5,desc:'Chove um cacho de uvas em volta.'},
+  roma:{name:'Romã do Sumo Sacerdote',ref:'Êxodo 28:33',every:6,desc:'Três raios de uma vez.'},
+  oliveira:{name:'Oliveira de Zacarias',ref:'Zacarias 4:3',every:6,desc:'Congela por 1,5s quem está perto.'},
+  sarca:{name:'Sarça que Não se Consome',ref:'Êxodo 3:2',every:5,desc:'Explode em fogo: 8 de dano em volta.'},
+  figueira:{name:'Figueira Frutífera',ref:'Lucas 13:9',every:7,desc:'Lança três figos carregados.'},
+  tamareira:{name:'Palmeiras de Elim',ref:'Êxodo 15:27',every:10,desc:'+1 de Vida e +2 de maná.'},
+  amendoeira:{name:'Vara que Floresceu',ref:'Números 17:8',every:8,desc:'Todas as vizinhas atiram na hora.'},
+  lirio:{name:'Lírio dos Vales',ref:'Cânticos 2:1',every:5,desc:'Um sopro grande que empurra e deixa lento.'},
+  mostarda:{name:'Árvore dos Céus',ref:'Mateus 13:32',every:6,desc:'As aves atacam as 3 pragas mais perto.'},
+  hissopo:{name:'Hissopo da Páscoa',ref:'Êxodo 12:22',every:6,desc:'Purifica bem longe, em volta.'},
+  cedro:{name:'Cedro do Templo',ref:'1 Reis 6:15',every:6,desc:'Uma agulha que atravessa a fila inteira: 12 de dano.'},
+  macieira:{name:'Macieira do Amado',ref:'Cânticos 2:3',every:6,desc:'Uma maçã enorme que explode: 14 de dano em área.'},
+  sicomoro:{name:'Sicômoro de Zaqueu',ref:'Lucas 19:6',every:5,desc:'Derruba o voador mais forte: 20 de dano.'},
+  salgueiro:{name:'Salgueiro das Correntes',ref:'Isaías 44:4',every:6,desc:'Prende por 2s todas as pragas perto.'},
+  acacia:{name:'Acácia da Arca',ref:'Êxodo 25:10',every:8,desc:'Protege as vizinhas de tudo por 4s.'},
+  murta:{name:'Murta do Vale',ref:'Zacarias 1:8',every:8,desc:'As vizinhas ganham uma rega.'},
+  nogueira:{name:'Nogueira do Jardim',ref:'Cânticos 6:11',every:6,desc:'Quebra coroas, cascas e espelhos em volta: 8 de dano.'}
+};
+// named fusions: grafting exactly these two seeds makes a tree at full strength (no 80% penalty) with its own power
+const FUSIONS=[
+  {a:'videira',b:'macieira',name:'Pomar da Alegria',ref:'Cânticos 2:5',every:6,desc:'Dá +2 de maná a cada 6s.'},
+  {a:'roma',b:'sarca',name:'Fogo do Altar',ref:'Levítico 6:13',every:5,desc:'Raio de fogo que queima quem está embaixo.'},
+  {a:'oliveira',b:'salgueiro',name:'Águas Tranquilas',ref:'Salmos 23:2',every:6,desc:'Deixa lentas por 3s todas as pragas perto.'},
+  {a:'lirio',b:'murta',name:'Jardim Fechado',ref:'Cânticos 4:12',every:8,desc:'Cura 1 de Vida a cada 8s.'},
+  {a:'cedro',b:'sicomoro',name:'Floresta do Líbano',ref:'1 Reis 7:2',every:5,desc:'Acerta o voador mais longe com 10 de dano.'},
+  {a:'mostarda',b:'acacia',name:'Fé Incorruptível',ref:'Mateus 17:20',every:8,desc:'Protege as vizinhas por 5s.'},
+  {a:'figueira',b:'nogueira',name:'Casca e Fruto',ref:'Mateus 7:17',every:6,desc:'Um figo-noz que quebra a coroa e dá 15 de dano.'},
+  {a:'hissopo',b:'oliveira',name:'Óleo da Purificação',ref:'Levítico 14:6',every:6,desc:'Purifica em volta e cura 1 coração seu.'},
+  {a:'tamareira',b:'macieira',name:'Árvores do Rio',ref:'Ezequiel 47:12',every:10,desc:'+1 de Vida e +1 de maná a cada 10s.'},
+  {a:'amendoeira',b:'nogueira',name:'Vigia do Senhor',ref:'Jeremias 1:11',every:7,desc:'Todas as vizinhas atiram na hora.'},
+  {a:'sarca',b:'acacia',name:'Sarça de Horebe',ref:'Êxodo 3:4',every:5,desc:'Anel de fogo: 6 de dano em volta.'},
+  {a:'roma',b:'macieira',name:'Pomar do Amor',ref:'Cânticos 4:13',every:6,desc:'Raio de amor de 14 de dano na praga mais perto.'}
+];
+const fusionOf=(a,b)=>FUSIONS.find(f=>(f.a===a&&f.b===b)||(f.a===b&&f.b===a))||null;

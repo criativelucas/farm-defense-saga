@@ -8,6 +8,26 @@ const RARITY={videira:'comum',roma:'comum',oliveira:'comum',lirio:'comum',mana:'
   figueira:'rara',tamareira:'rara',mostarda:'rara',talentos:'rara',chuva:'rara',amendoeira:'epica',sarca:'epica',semeador:'epica',jerico:'lendaria',
   vento:'comum',uncao:'rara',nuvem:'epica',estrela:'lendaria',
   paz:'comum',pedra:'comum',luz:'rara',fermento:'rara',hissopo:'rara',fogo:'epica',cedro:'epica',ovelha:'lendaria'};
+// the expansion's twenty cards: all of them can come out of packs
+Object.assign(RARITY,{macieira:'comum',murta:'comum',salgueiro:'rara',acacia:'rara',sicomoro:'epica',nogueira:'epica',
+  orvalho:'comum',jubileu:'comum',espada:'comum',sal:'rara',codornizes:'rara',escudo:'rara',harpa:'epica',linguas:'epica',arcoiris:'lendaria',
+  tesouro:'comum',rede:'rara',virgens:'rara',prodigo:'epica',vinha:'lendaria'});
+Object.assign(ICONS,{
+  orvalho(){r(4,26,24,4,'#3a8a3a');r(4,26,24,1,'#6ac060');for(const[a,b]of[[8,6],[16,10],[24,4],[12,16],[22,15]]){r(a,b,2,3,'#bfe8ff');r(a,b,1,1,'#ffffff');r(a,b+3,2,1,'#7ac0f0')}disc(16,22,3,'#bfe8ff');r(15,20,1,1,'#ffffff')},
+  sal(){for(let j=0;j<10;j++){const w=2+j*1.3;r(16-w,18+j,w*2,1,j%2?'#f4f4ff':'#d8d8e8')}r(14,10,4,6,'#c8c8d8');r(14,10,4,1,'#ffffff');for(let i=0;i<6;i++)r(6+i*4,6+(i%3)*2,1,1,'#ffffff')},
+  escudo(){for(let j=0;j<22;j++){const w=j<12?11:11-(j-12)*1.1;r(16-w,5+j,w*2,1,'#c89a28')}for(let j=2;j<20;j++){const w=j<12?9:9-(j-12)*1.1;r(16-w,5+j,w*2,1,'#2a5bd7')}r(15,9,2,14,'#ffe08a');r(10,13,12,2,'#ffe08a')},
+  espada(){for(let i=0;i<18;i++){r(8+i,22-i,2,2,'#d8d8e8');r(8+i,22-i,1,1,'#ffffff')}r(4,20,9,2,'#c89a28');r(7,17,2,9,'#c89a28');r(3,26,3,3,'#8a5a2a')},
+  jubileu(){for(let i=0;i<16;i++)r(5+i,22-Math.sin(i/5)*8,3,2+(i/6|0),'#d9b07a');r(22,8,5,5,'#e8c890');for(let i=0;i<4;i++)r(8+i*5,27,3,2,i%2?'#9a9aa8':'#c8c8d0')},
+  linguas(){for(let i=0;i<4;i++){const x0=4+i*7;disc(x0+2,26,3,'#e8b08a');r(x0+1,16,3,6,'#ff6a1a');r(x0+2,13,1,5,'#ffd34a');r(x0+2,19,1,2,'#fff6c0')}},
+  arcoiris(){['#e0284a','#ff9a3c','#f7d050','#5fe08a','#5ab8ff','#9b5ae0'].forEach((c,i)=>{const R=14-i*1.6;for(let a=0;a<=30;a++){const an=Math.PI*(1-a/30);r(16+Math.cos(an)*R,26-Math.sin(an)*R,2,2,c)}});r(2,27,28,3,'#5fae4a')},
+  codornizes(){for(const[a,b]of[[4,16],[16,9]]){blob(a+5,b+5,5,3,'#6a4a2a','#a07a4a','#d8b080',a);r(a+9,b+1,3,3,'#a07a4a');r(a+10,b+2,1,1,'#1a0c10');r(a+12,b+3,2,1,'#e0a040')}r(4,28,24,2,'#d9a050')},
+  harpa(){r(8,4,3,24,'#c89a28');r(8,4,16,3,'#c89a28');for(let j=0;j<20;j++)r(24-j*.4,6+j,2,1,'#c89a28');for(let i=0;i<5;i++)r(12+i*2.4,7,1,18-i*3,'#fff6c0');r(6,27,8,2,'#8a5a2a')},
+  tesouro(){r(6,14,20,12,'#8a5a2a');r(6,14,20,2,'#b07a40');r(5,10,22,5,'#a06a30');r(5,10,22,1,'#c89a50');r(15,15,3,4,'#f7c948');for(const[a,b]of[[9,8],[13,7],[19,8],[22,9]])disc(a,b,2,'#f7c948');r(4,26,24,4,'#6a4a2a')},
+  rede(){for(let i=0;i<6;i++){r(4+i*5,6,1,22,'#c8b090');r(4,6+i*4,26,1,'#c8b090')}blob(16,18,5,3,'#4a7aa8','#7ab0e0','#c8e8ff',5);r(21,17,3,3,'#4a7aa8')},
+  virgens(){r(6,20,18,6,'#c9a24a');r(6,20,18,1,'#ffe08a');r(23,18,5,3,'#c9a24a');r(4,24,4,2,'#c9a24a');r(25,12,3,6,'#ff9a3c');r(26,10,1,4,'#ffe36a');for(let i=0;i<5;i++)r(4+i*6,4+(i%2)*3,1,1,'#fff6c0')},
+  prodigo(){for(let j=0;j<8;j++)r(12-j,8+j,j*2+1,1,'#a0603a');r(5,16,15,12,'#d8b080');r(10,20,4,8,'#5a3a2a');disc(24,14,2,'#e8b08a');r(23,16,3,7,'#c8a0d8');r(22,23,2,4,'#5a4030');r(25,23,2,4,'#5a4030');r(3,28,26,2,'#5fae4a')},
+  vinha(){for(let i=0;i<4;i++){r(4+i*7,10,2,18,'#8a5236');blob(5+i*7,10,4,3,'#1a5c36','#2e9c48','#78dc5a',i);r(4+i*7,14,3,3,'#7b2fbf')}disc(25,25,3,'#f7c948');r(24,24,1,1,'#fff6c0');r(2,28,28,2,'#6a4a2a')}
+});
 // art for the cards found only in packs, on the 32x32 icon grid
 Object.assign(ICONS,{
   vento(){for(let i=0;i<5;i++){const y0=6+i*5;for(let x0=2+i%2*3;x0<28;x0+=1)r(x0,y0+Math.sin(x0*.35+i)*1.5,1,1,i%2?'#e8f4ff':'#b8d8f0')}for(let i=0;i<4;i++)r(20+i*2,8+i*6,2,1,'#7ac050')},
@@ -32,7 +52,7 @@ const THEME={Amor:['#3a0a1a','#7a1a2a','#c8402a','#f08a3a','#ffd08a'],Alegria:['
   bencao:['#1e1438','#4a2a6a','#a0602a','#f0b040','#fff0b0'],parabola:['#0e2a34','#1e5a5a','#3a8a7a','#8ac0a0','#e8f0c8'],
   propria:['#2a1030','#5a2058','#a0407a','#e07a8a','#ffd0b0'],hissopo:['#14203a','#2a3a6a','#5a6ab0','#a0a8e8','#e8ecff'],cedro:['#0e1a14','#1e3a2a','#3a6a4a','#7aa070','#d8e8c0'],joio:['#14140a','#2a2a14','#4a4a22','#6a6a30','#9a9a50'],hibrida:['#1a2a40','#3a3a7a','#7a4aa0','#5ab08a','#d0f0b0']};
 // tree bars: damage, range, rhythm, 1 to 5
-const RATE={hissopo:[2,2,2],cedro:[4,5,2],videira:[2,4,4],roma:[5,1,1],oliveira:[1,4,3],sarca:[3,2,5],figueira:[4,5,1],tamareira:[1,3,3],amendoeira:[2,3,4],lirio:[1,3,1],mostarda:[3,5,2]};
+const RATE={macieira:[3,3,3],sicomoro:[3,5,3],salgueiro:[1,3,1],acacia:[3,1,3],murta:[1,3,4],nogueira:[5,3,2],hissopo:[2,2,2],cedro:[4,5,2],videira:[2,4,4],roma:[5,1,1],oliveira:[1,4,3],sarca:[3,2,5],figueira:[4,5,1],tamareira:[1,3,3],amendoeira:[2,3,4],lirio:[1,3,1],mostarda:[3,5,2]};
 const BARS=[['dmg','#f0b030'],['rng','#e85a50'],['cd','#3ab8b0']];
 const cardNo=k=>String(Object.keys(CARDS).indexOf(k)+1).padStart(3,'0');
 const themeOf=(c,I,cat)=>THEME[c.k]||THEME[c.hyb?'hibrida':I.kinds?I.fruits[0]:cat]||THEME.parabola;
@@ -324,7 +344,7 @@ function tendaArt(){const g=hdCtx($('tbg'),480,270,2);C=g;
   C=x;boazArt()}
 // two neighbour trees side by side under a shared light, joined by a golden branch with a heart in the middle
 function pairArtTo(cvs,p){const g=hdCtx(cvs,96,48,3),keep=C;C=g;
-  try{const A=THEME[FRUIT[p.a]],B=THEME[FRUIT[p.b]],gr=g.createLinearGradient(0,0,96,0);gr.addColorStop(0,A[2]);gr.addColorStop(1,B[2]);g.fillStyle=gr;g.fillRect(0,0,96,48);
+  try{const th=k=>THEME[FRUIT[k]]||THEME[k]||THEME.parabola,A=th(p.a),B=th(p.b),gr=g.createLinearGradient(0,0,96,0);gr.addColorStop(0,A[2]);gr.addColorStop(1,B[2]);g.fillStyle=gr;g.fillRect(0,0,96,48);
     const rg=g.createRadialGradient(48,20,2,48,20,44);rg.addColorStop(0,'#fff6c099');rg.addColorStop(1,'#fff6c000');g.fillStyle=rg;g.fillRect(0,0,96,48);
     for(let i=0;i<18;i++)r(hs(i,p.a.length)*96,hs(i,9)*34,1,1,'#ffffff88');
     r(0,41,96,7,'#1e3a22');r(0,41,96,1,'#6ab04a');for(let i=0;i<96;i+=3)r(i,40,1,1,'#4a8a3a');
