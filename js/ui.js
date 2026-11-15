@@ -59,7 +59,7 @@ function updHUD(){
   const ab=$('abilbtn');if(ab){const f=(S.abil||0)/abilCD();ab.style.setProperty('--cd',f);ab.classList.toggle('ready',f<=0)}
   $('fruits').hidden=!sysOn('fruitset');
   const sh=[sysOn('basket')?'Cesto '+S.basket+'/5'+(S.basket>=5?' · pisão de colheita!':''):''];
-  if(S.tw)sh.unshift('Árvores '+treesNow()+'/'+treeCap());
+  {const tc=$('treecap'),n=treesNow(),c=treeCap();tc.textContent='Árvores '+n+'/'+c;tc.classList.toggle('full',n>=c)}
   if(MAPID==='jerico')sh.push(S.fallen?'As muralhas caíram':'Voltas pela torre: '+S.laps+'/7');
   if(S.folk)sh.push(S.folk.saved?'O povo atravessou':'Leve o povo à outra margem');
   if(S.idol)sh.push(S.idol.hp>0?'Ídolo: faltam '+S.idol.hp+' pisões':'Ídolo destruído');
@@ -87,9 +87,9 @@ let tutTree=-1;
 const freeBed=()=>{let b=-1,bd=1e9;MAP.slots.forEach((s,i)=>{if(S.tw[i]||s.y<150||MAP.plats.some(p=>s.x>p.x-6&&s.x<p.x+p.w+6&&p.y<s.y))return;const d=Math.abs(s.x-S.p.x)+(s.x<S.p.x?40:0);if(d<bd){bd=d;b=i}});return b};
 const handIdx=f=>S.hand.findIndex(c=>c&&f(c));
 const TUT=[
-  {id:'walk',keys:['←','→'],txt:'Ande até o canteiro',world:()=>{const i=freeBed();return i<0?null:MAP.slots[i]},done:()=>S.p.moved>30},
+  {id:'walk',keys:['←','→'],txt:'Ande até um bom lugar',world:()=>{const i=freeBed();return i<0?null:MAP.slots[i]},done:()=>S.p.moved>30},
   {id:'jump',keys:['↑'],txt:'Pule',world:()=>({x:S.p.x,y:S.p.y-26}),done:()=>S.p.jumped},
-  {id:'plant',keys:['1'],txt:'Pare no canteiro e plante',world:()=>{const i=freeBed();return i<0?null:MAP.slots[i]},card:()=>handIdx(c=>info(c).kinds)},
+  {id:'plant',keys:['1'],txt:'Pare e plante: vale qualquer chão',world:()=>{const i=freeBed();return i<0?null:MAP.slots[i]},card:()=>handIdx(c=>info(c).kinds)},
   {id:'water',keys:[],txt:'Fique perto: ela é regada e cresce',world:()=>tutTree>=0?{x:MAP.slots[tutTree].x,y:MAP.slots[tutTree].y-22}:null,done:()=>tutTree>=0&&S.tw[tutTree]&&(S.tw[tutTree].water||0)>=1},
   {id:'slam',keys:['↑','↓'],txt:'Pule e caia em cima dela',world:()=>tutTree>=0?{x:MAP.slots[tutTree].x,y:MAP.slots[tutTree].y-34}:null},
   {id:'bless',keys:['2'],txt:'Use a bênção',card:()=>handIdx(c=>catOf(c)==='bencao'),enter:()=>{
@@ -180,7 +180,7 @@ function showTitle(){
       <button class="btn ghost" data-go="daily">Desafio diário${best!=null?' · recorde '+best:''}</button>
       <div class="row"><button class="btn ghost" data-go="codex">Códex</button><button class="btn ghost" data-go="achs">Conquistas ${Object.keys(META.ach).length}/${Object.keys(ACH).length}</button></div>
     </div>
-    <p class="keys">← → andar · ↑ pular · ↓ no ar: pisão · 1 a 4 jogar carta (ou toque na carta e depois no canteiro) · Enter chama a onda · M som</p></div>`);
+    <p class="keys">← → andar · ↑ pular · ↓ no ar: pisão · 1 a 4 jogar carta (ou arraste a carta até onde quer plantar) · Enter chama a onda · M som</p></div>`);
 }
 GO.cont=()=>{const sv=store.get('fds-run',null);if(!sv)return showTitle();RUN=sv.RUN;UID=sv.UID;initAudio();RUN.needDeck?showDeck():showJourney()};
 GO.newrun=()=>showChars();
@@ -322,7 +322,7 @@ function pickCards(title,sub,filter,n,onDone){
     $('skip').onclick=()=>onDone(null);$('go').onclick=()=>onDone(chosen)};render();
 }
 function prune(c){RUN.deck=RUN.deck.filter(k=>k!==c);RUN.coll=RUN.coll.filter(k=>k!==c);RUN.podas++;META.stats.podas++;saveMeta();if(META.stats.podas>=10)unlockAch('poda')}
-function graft(a,b){const h=mk('hyb',{hyb:[a.k,b.k],rare:a.rare||b.rare});[a,b].forEach(c=>{RUN.deck=RUN.deck.filter(k=>k!==c);RUN.coll=RUN.coll.filter(k=>k!==c)});RUN.deck.push(h);RUN.coll.push(h);return h}
+function graft(a,b){const h=mk('hyb',{hyb:[a.k,b.k],rare:a.rare||b.rare});{const F=fusionOf(a.k,b.k);if(F)discover('f',F.a+'+'+F.b)}[a,b].forEach(c=>{RUN.deck=RUN.deck.filter(k=>k!==c);RUN.coll=RUN.coll.filter(k=>k!==c)});RUN.deck.push(h);RUN.coll.push(h);return h}
 const baseSeed=c=>!c.hyb&&CARDS[c.k].type==='semente';
 function podaMany(n,then){const loop=left=>{if(!left||RUN.deck.length<=6)return then();
   pickCards('Podar','Escolha uma carta para sair da bolsa. Ainda pode podar '+left+'. A bolsa precisa de pelo menos 6.',()=>true,1,ch=>{if(!ch)return then();prune(ch[0]);loop(left-1)})};loop(n)}
@@ -502,9 +502,13 @@ function showCodex(tab){
   if(tab==='vizinhas')body=`<div class="ccrules"><span style="--c:#4faa4a">Árvores a até 72 passos se ligam por ramos</span><span style="--c:#e8a020">Frutos diferentes juntos: +10% de dano</span><span style="--c:#9b5ae0">Perto de uma Videira: +25% (João 15:5)</span><span style="--c:#c8403a">A Discórdia corta ramos ao passar por baixo</span></div>
     <div class="grid ccg pairs">${PAIRS.map((p,i)=>ccard({col:FRUIT_COL[FRUIT[p.a]],name:p.name,art:`<canvas width="288" height="144" data-pair="${i}"></canvas>`,body:`<b class="ccsub">${CARDS[p.a].name} + ${CARDS[p.b].name}</b><p>Juntas, ${p.desc}.</p>`,ref:p.ref})).join('')}</div>
     <h3 class="cxh">Fusões</h3><div class="ccrules"><span style="--c:#7a4aa0">No Altar, enxerte estas duas sementes: a árvore nasce com força total e um poder próprio</span></div>
-    <div class="grid ccg pairs">${FUSIONS.map((f,i)=>ccard({col:FRUIT_COL[FRUIT[f.a]]||'#7a4aa0',name:f.name,art:`<canvas width="288" height="144" data-fusion="${i}"></canvas>`,body:`<b class="ccsub">${CARDS[f.a].name} + ${CARDS[f.b].name}</b><p>${f.desc} (a cada ${f.every}s)</p>`,ref:f.ref})).join('')}</div>
+    <p class="help">${FUSIONS.filter(f=>(META.seen.f||{})[f.a+'+'+f.b]).length} de ${FUSIONS.length} fusões descobertas.</p>
+    <div class="grid ccg pairs">${FUSIONS.map((f,i)=>(META.seen.f||{})[f.a+'+'+f.b]?ccard({col:FRUIT_COL[FRUIT[f.a]]||'#7a4aa0',name:f.name,art:`<canvas width="288" height="144" data-fusion="${i}"></canvas>`,body:`<b class="ccsub">${CARDS[f.a].name} + ${CARDS[f.b].name}</b><p>${f.desc} (a cada ${f.every}s)</p>`,ref:f.ref})
+      :ccard({col:'#3a3040',name:'???',cls:'unk',art:'',body:`<b class="ccsub">${CARDS[f.a].name} + ???</b><p>Enxerte para descobrir.</p>`})).join('')}</div>
     <h3 class="cxh">Evoluções</h3><div class="ccrules"><span style="--c:#e8a020">Depois de escolher o galho, toque na árvore e evolua por ${EVO_COST} de maná: +20% de dano e um poder próprio</span></div>
-    <div class="grid ccg">${Object.entries(EVO).map(([k,v])=>ccard({col:FRUIT_COL[FRUIT[k]]||'#5a8a4a',name:v.name,tag:CARDS[k].name,art:`<canvas width="32" height="32" data-evo="${k}"></canvas>`,body:`<p>${v.desc} (a cada ${v.every}s)</p>`,ref:v.ref})).join('')}</div>`;
+    <p class="help">${Object.keys(EVO).filter(k=>(META.seen.v||{})[k]).length} de ${Object.keys(EVO).length} evoluções descobertas.</p>
+    <div class="grid ccg">${Object.entries(EVO).map(([k,v])=>(META.seen.v||{})[k]?ccard({col:FRUIT_COL[FRUIT[k]]||'#5a8a4a',name:v.name,tag:CARDS[k].name,art:`<canvas width="32" height="32" data-evo="${k}"></canvas>`,body:`<p>${v.desc} (a cada ${v.every}s)</p>`,ref:v.ref})
+      :ccard({col:'#3a3040',name:'???',tag:CARDS[k].name,cls:'unk',art:`<canvas width="32" height="32" data-evo="${k}"></canvas>`,body:'<p>Evolua esta árvore numa batalha para descobrir.</p>'})).join('')}</div>`;
   if(tab==='inimigos')body=`<p class="help">Passe o mouse numa carta para ver a praga se mexer.</p><div class="grid ccg">${Object.entries(EN).filter(([,d])=>!d.hide).sort(([a],[b])=>{const o=k=>{const i=PEST_ORDER.indexOf(k);return i<0?99:i};return o(a)-o(b)}).map(([k,d])=>{const seen=META.seen.e[k];
     return seen?ccard({col:d.c,name:d.name,tag:d.boss?'Chefe':d.elite?'Elite':'',art:`<canvas width="48" height="48" data-enemy="${k}" data-anim="${k}"></canvas>`,
       body:`<div class="cattr">${[['Vida',lvlOf(d.hp,[4,8,12,30]),'#ff5a6a'],['Velocidade',lvlOf(d.spd,[12,18,25,33]),'#5ad0ff'],['Dano',lvlOf(d.dmg,[2,3,5,8]),'#ffa040']].map(([l,v,c])=>`<span>${l}</span><i style="--c:${c}">${[1,2,3,4,5].map(n=>`<u class="${n<=v?'on':''}"></u>`).join('')}</i>`).join('')}</div>

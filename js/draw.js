@@ -172,6 +172,8 @@ const RICONS={
   jarro(){r(10,10,12,16,'#b0703a');r(12,6,8,4,'#b0703a');r(11,26,10,2,'#8a5028');r(13,4,6,2,'#f7c948');r(12,12,2,8,'#d09050')},
   paes(){disc(10,20,5,'#d9a050');disc(18,22,5,'#c98a40');disc(24,18,4,'#d9a050');r(4,10,12,4,'#7ac0f0');r(18,8,10,4,'#7ac0f0')},
   trombeta(){for(let i=0;i<14;i++)r(4+i*1.6,22-i*.9,2,1+(i/5|0),'#d9b07a');r(26,6,4,6,'#e8c890');r(4,26,6,4,'#f7c948')},
+  canteiro(){r(4,24,24,4,'#6a3a24');r(4,24,24,1,'#9a6040');for(let i=0;i<4;i++){r(6+i*6,16,1,8,'#5fe08a');r(5+i*6,15,3,2,'#9ff7b8')}r(3,10,26,1,'#e8dcc0');r(3,8,2,5,'#8a5a3a');r(27,8,2,5,'#8a5a3a')},
+  podao(){for(let i=0;i<12;i++)r(6+i,24-i,3,2,'#8a5a3a');for(let i=0;i<9;i++){const a=-.3-i*.2;r(20+Math.cos(a)*7,12+Math.sin(a)*7,2,2,'#d8d8e8')}r(18,10,3,3,'#a8a8b8');r(4,26,4,3,'#6a3a24')},
   lampada(){r(8,18,16,6,'#c9a24a');r(22,16,5,3,'#c9a24a');r(12,10,4,8,'#ff9a3c');r(13,8,2,4,'#ffe36a')}
 };
 function relicIconTo(cvs,k){const g=cvs.getContext('2d');g.clearRect(0,0,32,32);C=g;RICONS[k]();C=x}
@@ -317,7 +319,7 @@ function drawTree(t,s,i){
   if(t.ark>0){x.globalAlpha=.4+Math.sin(S.t*5)*.2;ring(s.x,s.y-14,16,'#f7c948');x.globalAlpha=1}
   // grown and not yet evolved: a bobbing gold arrow says "touch me"
   const evoReady=t.branch&&!t.evo&&EVO[t.kinds[0]];
-  if(((t.lvl||0)>=3&&!t.branch||evoReady)&&t.grow>=1){const ax=s.x+11,ay=s.y-22+Math.round(Math.sin(S.t*5)*2),c=S.mana>=(evoReady?EVO_COST:BRANCH_COST)?'#ffd23a':'#8a8a9a';r(ax-1,ay,3,4,c);r(ax-3,ay,7,1,c);r(ax-2,ay-1,5,1,c);r(ax-1,ay-2,3,1,c);r(ax,ay-3,1,1,c)}
+  if(((t.lvl||0)>=3&&!t.branch||evoReady)&&t.grow>=1){const ax=s.x+11,ay=s.y-22+Math.round(Math.sin(S.t*5)*2),c=S.mana>=(evoReady?evoCost():BRANCH_COST)?'#ffd23a':'#8a8a9a';r(ax-1,ay,3,4,c);r(ax-3,ay,7,1,c);r(ax-2,ay-1,5,1,c);r(ax-1,ay-2,3,1,c);r(ax,ay-3,1,1,c)}
 }
 // enemies leave a quick squash-and-fade instead of vanishing
 function drawCorpses(){for(const f of S.fx){if(f.k!=='corpse')continue;const k=f.t/f.max,e=f.e;x.globalAlpha=1-k;x.save();x.translate(e.x,e.y);x.scale(1+k*.8,Math.max(.05,1-k*.9));x.translate(-e.x,-e.y);
@@ -397,7 +399,7 @@ function draw(){
   drawSea();drawDragPreview();
   if(S.state!=='title')drawGardener(P);
   drawTutWorld();
-  drawProj();drawBeams();drawDrops();drawFruitDrops();drawParts();drawVfx();
+  drawProj();drawBeams();drawDrops();drawFruitDrops();drawParts();drawVfx();if(S.bstage&&S.bstage.fog)drawBossFog();
   for(const e of S.en)if(!(e.dive>0)&&!(S.mini==='escuro'&&!darkVisible(e)))drawIntent(e);
   x.textAlign='center';
   for(const p of S.pops){const k=p.size>8?1+Math.max(0,.14-p.t)*5:1;x.globalAlpha=Math.min(1,(1-p.t/.9)*2);x.save();x.translate(p.x,p.y-p.t*22);x.scale(k,k);

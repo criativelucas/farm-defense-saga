@@ -2,7 +2,7 @@
 let S=null,RUN=null;
 // saved progress is merged over these defaults key by key (nested objects too), so saves from older versions gain new fields
 const META_DEFAULTS={celeiro:store.get('jardim-do-fruto-celeiro',[]),chars:{lavrador:1},ascMax:0,stats:{kills:0,podas:0,runs:0,wins:0},ach:{},tut:0,daily:{},
-  coins:0,char:'lavrador',weapon:'enxada',weapons:{enxada:1},items:{cerca:2,espantalho:1,lama:2},upg:{hearts:0,bag:0,mana:0,treeHearts:0,trees:0},wtier:{},itier:{},done:{},unlocked:['videira','mana'],seen:{c:{},e:{},r:{}},
+  coins:0,char:'lavrador',weapon:'enxada',weapons:{enxada:1},items:{cerca:2,espantalho:1,lama:2},upg:{hearts:0,bag:0,mana:0,treeHearts:0,trees:0},wtier:{},itier:{},done:{},unlocked:['videira','mana'],seen:{c:{},e:{},r:{},f:{},v:{}},
   garden:{pots:[],potsN:8,seeds:{trigo:2,'t:videira':1},adubo:1,spray:3,mel:1,fertil:0,treeSeed:0,tree:{planted:false,lvl:0,xp:0,lastWater:0},lastVisit:0},
   stars:{},talents:{},cardLv:{},copies:{},foil:{},sysSeen:{},dlg:{},endless:{},mg:{},missions:null,intro:0,v:2};
 function fillDefaults(t,d){for(const k in d){const dv=d[k];if(t[k]===undefined||t[k]===null&&dv!==null)t[k]=structuredClone(dv);
@@ -230,7 +230,7 @@ function doSlam(){if(S.bstage)bossStomp(S.p);mission('slam',1);onoma(S.p.x,S.p.y
 // ---------- a garden holds only so many trees: more in later worlds, and more with the Quitanda's "Canteiro extra".
 // With planting free everywhere, the limit is what makes you choose: pull one up, or make the ones you have stronger.
 const treesNow=()=>S.tw.filter(Boolean).length;
-function treeCap(){const up=(META.upg&&META.upg.trees)||0;return(RUN&&RUN.mode==='level'?6+LEVELS[RUN.level].wi+(LEVELS[RUN.level].bossStage?3:0):8+(RUN?RUN.act*2:0))+up}
+function treeCap(){const up=(META.upg&&META.upg.trees)||0;return(RUN&&RUN.mode==='level'?6+LEVELS[RUN.level].wi+(LEVELS[RUN.level].bossStage?3:0):8+(RUN?RUN.act*2:0))+up+(relic('canteiro')?2:0)}
 const slotAt=()=>MAP.slots.findIndex(s=>Math.abs(s.x-S.p.x)<12&&Math.abs(s.y-S.p.y)<3);
 
 // ---------- trees
@@ -250,7 +250,7 @@ const footOf=kinds=>Math.max(...kinds.map(k=>FOOT[k]||12))+(kinds.length>1?2:0);
 // the surface nearest to a world point: an island top or the ground
 function surfaceAt(wx,wy){let best=gy(wx),bd=Math.abs(best-8-wy);for(const p of MAP.plats){if(wx<p.x+3||wx>p.x+p.w-3)continue;const d=Math.abs(p.y-8-wy);if(d<bd){bd=d;best=p.y}}return best}
 // why a tree cannot stand here, or '' when it can
-function plantCheck(x0,y0,kinds){if(x0<58)return'perto demais do Éden';if(x0>MAP.ww-46)return'perto demais do portal';
+function plantCheck(x0,y0,kinds){if(treesNow()>=treeCap())return'jardim cheio: '+treeCap()+' árvores';if(x0<58)return'perto demais do Éden';if(x0>MAP.ww-46)return'perto demais do portal';
   const onPl=MAP.plats.some(p=>Math.abs(p.y-y0)<1.5&&x0>=p.x&&x0<=p.x+p.w);
   if(!onPl&&(inWater(x0)||MAP.sea&&x0>=MAP.sea[0]&&x0<MAP.sea[1]))return'na água não cresce';
   if(!onPl&&Math.abs(gy(x0)-y0)>3)return'precisa de chão firme';
@@ -266,6 +266,7 @@ function plantAt(si,kinds,rare,delay=.6,plus=false){
   const s=MAP.slots[si];
   if(S.tw[si])burst(s.x,s.y-10,10,['#7a5a3a','#5fe08a'],50,200,.5);
   S.tw[si]={kinds,cd:{},dcd:0,grow:-delay,t:0,pulse:0,soil:s.soil,rare,plus,age:0,lvl:0,joio:false,stun:0,charge:0,heal:0,awake:20,fruitT:rnd(0,6),mods:null,ark:0,seduced:false,sleep:false};
+  if(kinds.length>1){const F=fusionOf(kinds[0],kinds[1]);if(F)discover('f',F.a+'+'+F.b)}
   sfx('card');pop(s.x,s.y-30,...SOIL_MSG[s.soil]);mission('plant',1);
   tutEvent('plant',si);
 }
@@ -721,6 +722,10 @@ const POWER={
   acacia(t,s){pwTrees(s,80).forEach(([o])=>o.ark=Math.max(o.ark||0,4));S.fx.push({k:'ring',x:s.x,y:s.y-14,r:4,max:80,t:0,c:'#f7c948'})},
   murta(t,s){pwTrees(s,80).forEach(([o,q])=>water(o,q,1))},
   nogueira(t,s,m){const L=pwNear(s,90);if(!L.length)return false;L.forEach(e=>{breakShell(e);damage(e,8*m,'nogueira')});shake(5)},
+  carvalho(t,s){const L=S.en.filter(e=>e.hp>0&&!EN[e.k].fly&&Math.abs(e.x-s.x)<50);if(!L.length)return false;L.forEach(e=>e.frz=Math.max(e.frz,EN[e.k].boss?.6:2));S.fx.push({k:'ring',x:s.x,y:s.y-8,r:4,max:50,t:0,c:'#8ac060'})},
+  escol(t,s,m){const L=pwNear(s,130).slice(0,3);if(!L.length)return false;L.forEach(e=>lob(s.x,s.y-22,e,'cluster',9*m,'escol',.7))},
+  'carvalho+oliveira'(t,s){const L=S.en.filter(e=>e.hp>0&&!EN[e.k].fly&&Math.abs(e.x-s.x)<50);if(!L.length)return false;L.forEach(e=>e.frz=Math.max(e.frz,EN[e.k].boss?.5:1.5));S.fx.push({k:'ring',x:s.x,y:s.y-8,r:4,max:50,t:0,c:'#9fe8ff'})},
+  'escol+videira'(t,s,m){S.mana=Math.min(MAXM,S.mana+2);const e=nearest(s.x,s.y-16,120);if(e)lob(s.x,s.y-22,e,'cluster',9*m,'escol',.7)},
   'videira+macieira'(t,s){S.mana=Math.min(MAXM,S.mana+2);pop(s.x,s.y-30,'+2 maná','#c58cff')},
   'roma+sarca'(t,s,m){if(!pwNear(s,40).length)return false;beam(s.x,18,12*m)},
   'oliveira+salgueiro'(t,s){const L=pwNear(s,90);if(!L.length)return false;L.forEach(e=>e.slow=Math.max(e.slow,3));S.fx.push({k:'ring',x:s.x,y:s.y-10,r:4,max:90,t:0,c:'#9fe8ff'})},

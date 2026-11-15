@@ -417,3 +417,23 @@ POOL.push('carvalho','escol','carruagem','multiplica','maos','lazaro','sol','dil
 Object.assign(STATS,{carvalho:{dmg:'2/s',rng:45,cd:'sempre'},escol:{dmg:'8',rng:105,cd:'2,5s'}});
 Object.assign(SHORT,{carvalho:'Sombra que deixa lento e fere.',escol:'Cachos enormes que estouram em área.',carruagem:'16 de dano em tudo à sua frente.',multiplica:'+1 de maná por árvore (até 8).',
   maos:'Árvores com +60% de dano por 12s.',lazaro:'Éden recupera metade da Vida perdida.',sol:'Pragas paradas por 5s.',diluvio:'18 de dano no chão e arrasta tudo.',anjo:'Derrota a praga mais forte.',ceifa:'Ceifa as pragas quase vencidas.'});
+
+// ---------- polish round: the two newest trees get their full form and a fusion, two relics and three achievements
+// tie into free planting, evolutions and boss stages, and three boss stages play by a different mode
+EVO.carvalho={name:'Carvalho de Justiça',ref:'Isaías 61:3',every:6,desc:'Prende por 2s as pragas debaixo da sombra.'};
+EVO.escol={name:'Fruto da Terra Prometida',ref:'Números 13:27',every:7,desc:'Chovem três cachos enormes.'};
+FUSIONS.push({a:'carvalho',b:'oliveira',name:'Sombra e Azeite',ref:'Oseias 14:6',every:6,desc:'Congela por 1,5s quem está debaixo da sombra.'},
+  {a:'escol',b:'videira',name:'Terra que Mana Leite e Mel',ref:'Números 13:27',every:6,desc:'+2 de maná e um cacho enorme na praga mais perto.'});
+Object.assign(RELICS,{canteiro:{name:'Cordel de Medir',ref:'Zacarias 2:1',desc:'O jardim comporta 2 árvores a mais.'},
+  podao:{name:'Podão do Vinhateiro',ref:'Isaías 18:5',desc:'A evolução final das árvores custa 4 de maná em vez de 7.'}});
+const evoCost=()=>relic('podao')?4:EVO_COST;
+Object.assign(ACH,{ileso:{name:'Nenhum mal te sucederá',ref:'Salmos 91:10',desc:'Vença uma fase de chefe sem o Éden perder Vida.'},
+  enxertador:{name:'Enxertado na oliveira',ref:'Romanos 11:17',desc:'Descubra todas as fusões.'},
+  pleno:{name:'Plantada junto às águas',ref:'Salmos 1:3',desc:'Evolua todas as árvores até a forma final.'}});
+// fusions and evolutions are discovered by making them; the Codex shows the rest as still unknown
+function discover(kind,id){const s=META.seen;s[kind]=s[kind]||{};if(s[kind][id])return;s[kind][id]=1;saveMeta();
+  if(kind==='f'&&FUSIONS.every(f=>s.f[f.a+'+'+f.b]))unlockAch('enxertador');if(kind==='v'&&Object.keys(EVO).every(k=>s.v[k]))unlockAch('pleno')}
+// boss stage modes: Goliath and the calf are fought with a garden already planted and a cart of blessings only; Nimrod hides in fog
+Object.assign(BSTAGE[1],{mode:'Jardim plantado: só bênçãos na carroça',pre:['videira','roma','oliveira','cedro'],belt:['pedras','pedra','jerico','chuva','vento','escudo','espada','regar']});
+Object.assign(BSTAGE[3],{mode:'Jardim plantado: só bênçãos na carroça',pre:['sarca','sarca','acacia','hissopo'],belt:['fogo','linguas','luz','carruagem','sal','paz','chuva','regar']});
+Object.assign(BSTAGE[4],{mode:'Neblina: só se vê perto de você',fog:1});

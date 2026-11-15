@@ -197,7 +197,7 @@ function paintFG(desert){const mk=(w,h,fn)=>{const c=mkHD(w,h),B=layerBuf(c,'#00
 const SCN_CACHE=new Map();
 function paintScene(lw,day){const key=MAPID+(day?':d':':n'),hit=SCN_CACHE.get(key);
   if(hit){[SKY,FAR,MID,NEAR]=hit.c;Object.assign(MAP,hit.meta);return}
-  const desert=!MAP.pal.grass,mood=['getsemani','abismo'].includes(MAPID)?'night':(MAPID==='tumulo'||MAPID==='ressurreicao')?'dawn':day?'day':'dusk';
+  const desert=!MAP.pal.grass,mood=['getsemani','abismo'].includes(MAPID)?'night':(MAPID==='tumulo'||MAPID==='ressurreicao')?'dawn':day?'day':'night';// night levels wear the cold night sky, not the warm dusk
   const sky=mood==='day'&&desert?SKIES.desert:SKIES[mood],haze=sky[sky.length-2];
   MAP.midFires=[];MAP.falls=[];MAP.smokes=[];MAP.mood=mood;
   SKY=mkHD(W+1,H);FAR=mkHD(lw(PAR[0]),H);MID=mkHD(lw(PAR[1]),H);NEAR=mkHD(lw(PAR[2]),H);

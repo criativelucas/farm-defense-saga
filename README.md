@@ -20,6 +20,9 @@ Ferramentas e barreiras têm quatro feitios: madeira, bronze, ferro e ouro (`MAT
 
 O relevo de cada fase ganha morros, vales e pequenos degraus de pedra por cima do desenho feito à mão, além de ilhotas extras em alturas diferentes. Nas fases de noite o escuro é azul profundo, com lanternas de chama azul pelo caminho, musgo e pragas com contorno de luz.
 
+## Códex que se descobre
+Fusões e evoluções aparecem como "???" no Códex até serem feitas numa batalha ou no Altar. Há conquistas para descobrir todas.
+
 ## Fases de chefe
 Cada mundo termina numa fase X-5 só do chefe, que abre depois da X-4 e libera o mundo seguinte. Fases já vencidas continuam abertas. Nela não há bolsa nem maná: uma carroça traz cartas escolhidas para aquele chefe, um cronômetro corre (quando zera, o chefe avança em fúria) e cada chefe tem uma regra própria para ser derrotado:
 
@@ -32,6 +35,8 @@ Cada mundo termina numa fase X-5 só do chefe, que abre depois da X-4 e libera o
 | 5-5 | Ninrode | aprende cada golpe: misture árvores diferentes |
 | 6-5 | Leviatã | escamas fechadas; pisão no anzol quando ele passar perto |
 | 7-5 | A Sombra da Morte | só sente perto das lâmpadas acesas com pisões; as três juntas a fazem recuar |
+
+Três fases jogam em outro modo: na de Golias e na do Bezerro o jardim já começa plantado e a carroça só traz bênçãos; a de Ninrode é na neblina, e só se vê perto do lavrador. Setas na tela mostram onde agir (cabeça da Serpente depois do bote, pedras, anzol, lâmpadas apagadas), e na fúria cada chefe ganha um ataque a mais.
 
 Os dados ficam em `BSTAGE` (`js/content.js`) e a lógica em `js/bosses.js`. Os chefes são desenhados 1,5x maiores (`BOSS_SCALE`).
 

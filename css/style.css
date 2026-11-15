@@ -1148,3 +1148,7 @@ body.cb #hpfill{background:linear-gradient(#9ad8ff,#3a8ad8)!important}
 @keyframes scdrop{from{opacity:0;transform:translateY(-.6em)}}
 @keyframes scsp{0%{opacity:1;transform:none}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.2)}}
 @media (prefers-reduced-motion:reduce){.showcase .scrays,.showcase .sccard,.showcase .sccard::after,.showcase .scsp{animation:none}.showcase .scsp{display:none}}
+
+/* how many trees the garden holds, beside the hand */
+.treecap{align-self:center;margin-left:.6em;padding:.25em .7em;font-weight:700;font-size:.85em;white-space:nowrap;color:#d8ffb0;background:#0c0614cc;box-shadow:0 0 0 2px #2a1206}
+.treecap.full{color:#ffb060;animation:rareglow 1.6s ease-in-out infinite}

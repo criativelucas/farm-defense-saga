@@ -213,7 +213,7 @@ function showWorld(sel){
   // one card per level: number, sky, what is special about it, who is new, the stars won and the prize of the first win
   const card=l=>{const open=levelOpen(l.n),done=META.done[l.id],unl=UNLOCK_ORDER[l.n],nu=(PEST_INTRO[l.n]||[]),isNext=next&&next.n===l.n;
     const chips=[l.boss?`<span class="lc boss"><canvas width="48" height="48" data-enemy="${l.boss}"></canvas>${EN[l.boss].name}</span>`:'',
-      l.rule?`<span class="lc rule">${RULES[l.rule].name}</span>`:'',l.goal?`<span class="lc goal">${GOALS[l.goal].name}</span>`:'',l.bossStage?`<span class="lc goal">⏱ ${BSTAGE[l.wi].time}s · ${BSTAGE[l.wi].rule}</span>`:'',
+      l.rule?`<span class="lc rule">${RULES[l.rule].name}</span>`:'',l.goal?`<span class="lc goal">${GOALS[l.goal].name}</span>`:'',l.bossStage?`<span class="lc goal">⏱ ${BSTAGE[l.wi].time}s · ${BSTAGE[l.wi].rule}</span>`+(BSTAGE[l.wi].mode?`<span class="lc rule">${BSTAGE[l.wi].mode.split(':')[0]}</span>`:''):'',
       ...nu.map(k=>`<span class="lc new"><canvas width="48" height="48" data-enemy="${k}"></canvas>Nova: ${EN[k].name}</span>`)].join('');
     const prize=done?`<span class="lprize got">✓</span>`:unl&&!META.unlocked.includes(unl)?`<span class="lprize card" title="Carta: ${CARDS[unl].name}"><canvas width="${MINI_W*CK}" height="${MINI_H*CK}" data-mini-unl="${unl}"></canvas></span>`:`<span class="lprize coin"><canvas width="12" height="12" class="coin"></canvas></span>`;
     return`<button type="button" class="lvcard ${l.night?'night':'day'} ${done?'done':''} ${isNext?'next':''} ${open?'':'locked'}" data-l="${l.n}" ${open?'':'disabled'}>
@@ -274,6 +274,7 @@ function levelWon(){
   const L=LEVELS[RUN.level],first=!META.done[L.id],treeBonus=1+(META.garden.tree.lvl||0)*.05;
   const D=diffNow(),reward=Math.round((first?60+L.n*20:30+L.n*5)*treeBonus*D.coin),picked=Math.round(S.coins*treeBonus);
   META.coins+=reward+picked;META.done[L.id]=1;const stars=Math.min(D.stars,RUN.hp>=18?3:RUN.hp>=10?2:1);if(RUN.diff==='dificil'){META.crown=META.crown||{};META.crown[L.id]=1}META.stars=META.stars||{};const newBest=stars>(META.stars[L.id]||0);META.stars[L.id]=Math.max(stars,META.stars[L.id]||0);
+  if(L.bossStage&&RUN.hp>=RUN.maxhp)unlockAch('ileso');
   let card=null;const unl=UNLOCK_ORDER[L.n];if(first&&unl&&!META.unlocked.includes(unl)){META.unlocked.push(unl);card=mk(unl)}if(first&&L.boss)META.gifts=(META.gifts||0)+1;
   saveMeta();MUS.mode='calm';mission('win',1);if(stars===3)mission('star3',1);
   // every win leaves a seedling of a tree you know in the greenhouse

@@ -131,6 +131,8 @@ async function expansion(label){
     let ran=0;for(const id in POWER){S.en=[];const g=T('gula',s.x+20);g.y=gy(g.x);T('inveja',s.x+30);const ks=id.split('+');S.tw=S.tw.map(()=>null);plantAt(si,ks,false,0);t=S.tw[si];t.grow=1;t.evo=1;POWER[id](t,s,tmult(t));step(2);ran++}
     o.powers=ran===Object.keys(EVO).length+FUSIONS.length&&Object.keys(EVO).every(k=>POWER[k])&&FUSIONS.every(f=>POWER[f.a+'+'+f.b]);
     const fc=mk('hyb',{hyb:['sarca','roma']});o.fusion=info(fc).name==='Fogo do Altar'&&tmult({...t,kinds:['roma','sarca']})>tmult({...t,kinds:['roma','videira']});cardCanvas(fc);
+    META.seen.f={};META.seen.v={};showCodex('vizinhas');o.hidden=document.querySelectorAll('canvas[data-fusion]').length===0;plantAt(si,['roma','sarca'],false,0);o.found=!!META.seen.f['roma+sarca'];
+    FUSIONS.forEach(f=>discover('f',f.a+'+'+f.b));Object.keys(EVO).forEach(k=>discover('v',k));o.achs=!!META.ach.enxertador&&!!META.ach.pleno;
     showCodex('vizinhas');o.codex=document.querySelectorAll('canvas[data-fusion]').length===FUSIONS.length&&document.querySelectorAll('canvas[data-evo]').length===Object.keys(EVO).length;showCodex('inimigos');
     for(let i=0;i<60;i++)update(1/60);draw();return JSON.stringify(o)})()`);
   const o=JSON.parse(r||'{}'),bad=Object.entries(o).filter(([,v])=>!v).map(([k])=>k);check(label+': expansion '+Object.keys(o).length+' tricks',Object.keys(o).length>=40&&!bad.length,bad.join(', ')||r)}
@@ -155,6 +157,9 @@ async function bossStages(label){
       // bring it down: the stage is won and the next button leads to the next world
       draw();damage(e,1e9);for(let i=0;i<400&&S.state==='wave';i++)step(1);ok=ok&&S.state==='victory';if(wi===0){levelWon();o.next=$('next')&&(()=>{$('next').onclick();return RUN.level===4})()}
       res.push(wi+':'+(ok?'ok':'bad'))}
+    // modes: Goliath's stage starts with a planted garden and a cart of blessings; Nimrod's is in fog; the relics change the limits
+    startLevel(bossStageOf(1).n);o.planted=S.tw.filter(Boolean).length===4&&BSTAGE[1].belt.every(k=>CARDS[k].type==='bencao');startLevel(bossStageOf(4).n);o.fog=!!S.bstage.fog;draw();
+    const c0=treeCap();RUN.relics.push('canteiro','podao');o.relics=treeCap()===c0+2&&evoCost()===4;RUN.relics.length=0;['canteiro','podao'].forEach(k=>relicIconTo(document.createElement('canvas'),k));
     o.stages=res.every(x=>x.endsWith('ok'));o.res=res.join(',');
     return JSON.stringify(o)})()`);
   const o=JSON.parse(r||'{}'),bad=Object.entries(o).filter(([k,v])=>!v&&k!=='res').map(([k])=>k);check(label+': fases de chefe '+(o.res||''),Object.keys(o).length>=4&&!bad.length,bad.join(', ')||r)}

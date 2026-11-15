@@ -5,7 +5,10 @@ function bossStageStart(L){const B=BSTAGE[L.wi];
   S.hand=[null,null,null,null,null];S.draw=[];S.convT=.5;RUN.handSize=5;renderHand();
   if(B.boss==='leviata')S.bs.hook={x:Math.round(MAP.ww*.55)};
   if(B.boss==='sombra')S.bs.lamps=[.28,.5,.72].map(f=>({x:Math.round(MAP.ww*f),lit:0}));
-  banner('Fase do chefe · '+B.ref,B.rule);toast(EN[B.boss].name+': '+B.rule,B.tip)}
+  // a garden already planted for the stages that bring only blessings: the beds nearest home, grown and ready
+  if(B.pre){const beds=MAP.slots.map((s,i)=>[s,i]).filter(([s])=>!s.free&&s.soil!=='pedra'&&Math.abs(s.y-gy(s.x))<2).sort((a,b)=>a[0].x-b[0].x);
+    B.pre.forEach((k,j)=>{if(!beds[j])return;const i=beds[j][1];plantAt(i,[k],false,0);Object.assign(S.tw[i],{grow:1,lvl:1,water:1})})}
+  banner('Fase do chefe · '+B.ref,B.rule);toast(EN[B.boss].name+': '+B.rule,B.tip);if(B.mode)toast('Modo da fase',B.mode)}
 
 function bossStageUpdate(dt){const B=S.bstage,Z=S.bs;
   // the seed cart: free cards from this boss's own list, mana always full
@@ -19,6 +22,13 @@ function bossStageUpdate(dt){const B=S.bstage,Z=S.bs;
   // escorts from this world keep coming while the boss lives
   Z.escT-=dt;if(Z.escT<=0){Z.escT=e.ph2?5.5:7.5;const pool=levelPool(BSTAGE.indexOf(B)*4+3);spawn(rpick(pool));S.total++}
   const P=S.p;
+  // furious, every boss gains one more attack of its own (Goliath shakes the ground, Nimrod shoots the trees: see below and bossAIx)
+  if(e.ph2&&!(e.dive>0)){Z.p2=(Z.p2??4)-dt;if(Z.p2<=0){Z.p2=9;const ahead=(rad,n)=>MAP.slots.map((s,i)=>[s,S.tw[i],i]).filter(([s,t])=>t&&t.grow>=1&&!(t.ark>0)&&Math.abs(s.x-e.x)<rad).sort((a,b)=>Math.abs(a[0].x-e.x)-Math.abs(b[0].x-e.x)).slice(0,n);
+      if(e.k==='serpente')ahead(130,1).forEach(([s,t])=>{t.joio=true;S.fx.push({k:'zap',x1:e.x-EN.serpente.w*.42,y1:e.y-24,x2:s.x,y2:s.y-12,t:0,max:.4});pop(s.x,s.y-34,'envenenada! um pisão limpa','#9ff05a',8);burst(s.x,s.y-10,12,['#9ff05a','#2f7a2f'],50,120,.6)});
+      if(e.k==='farao'){e.x-=36;for(const f of S.fences)if(Math.abs(f.x-e.x)<44)f.hp=0;shake(8);sfx('horn');pop(e.x,e.y-EN.farao.h-8,'os carros avançam!','#5a8aff',9);burst(e.x+20,e.y-4,16,['#e8c890','#c9a070'],90,120,.5)}
+      if(e.k==='bezerro')ahead(150,2).forEach(([s,t,i])=>{if(acaciaGuard(i))return;t.seduced=true;pop(s.x,s.y-34,'ofuscada pelo ouro: pisão liberta','#ffe36a',8)});
+      if(e.k==='leviata'){shake(8);sfx('splash');S.fx.push({k:'ring',x:e.x,y:e.y-6,r:4,max:110,t:0,c:'#5af0c0'});ahead(110,9).forEach(([s,t])=>{t.stun=Math.max(t.stun,2);pop(s.x,s.y-30,'a cauda varreu','#5af0c0',7)});if(Math.abs(P.x-e.x)<80&&!(S.shieldT>0)){P.stun=.6;P.vx=-160;P.vy=-120;P.on=false}}
+      if(e.k==='sombra'){const l=Z.lamps.find(l=>l.lit>0);if(l){l.lit=0;pop(l.x,gy(l.x)-40,'a Sombra apagou a lâmpada','#a080ff',8);sfx('wind')}}}}
   if(B.boss==='golias'){
     // smooth stones from the brook (1 Sm 17:40): walk over one and it flies at Goliath's forehead
     Z.stoneT-=dt;if(Z.stoneT<=0&&Z.stones.length<3){Z.stoneT=8;const x0=clamp(rnd(S.cam+30,Math.min(e.x-50,S.cam+W-40)),20,MAP.ww-20);Z.stones.push({x:x0,t:0});pop(x0,gy(x0)-14,'pedra lisa','#d0d0d8',8)}
@@ -65,7 +75,15 @@ function bossHud(){const Z=S.bs,B=S.bstage;if(!Z)return'';const e=Z.boss,m=Math.
   return B.rule+' · ⏱ '+m+':'+s+(B.boss==='golias'?' · pedras: '+S.pstones:'')+(B.boss==='sombra'?' · lâmpadas '+Z.lamps.filter(l=>l.lit>0).length+'/3':'')}
 
 // stones in the brook, the golden hook, the lamps on their posts
-function drawBossStage(){const Z=S.bs;if(!Z)return;
+// a bobbing arrow with a word over the thing the rule is about: the head when it is down, a stone, the hook, a dark lamp
+function bossArrow(ax,ay,txt,c='#ffe36a'){const y=ay+Math.round(Math.sin(S.t*6)*2);r(ax-3,y,7,2,'#1a0c10');r(ax-2,y+2,5,1,'#1a0c10');r(ax-1,y+3,3,1,'#1a0c10');r(ax-1,y-4,3,4,'#1a0c10');
+  r(ax-.5,y-3.5,2,4,c);r(ax-2.5,y,6,1,c);r(ax-1.5,y+1,4,1,c);r(ax-.5,y+2,2,1,c);if(txt){x.font='700 6px "Pixelify Sans", monospace';x.textAlign='center';x.lineJoin='round';x.lineWidth=2;x.strokeStyle='#1a0806';x.strokeText(txt,ax,y-6);x.fillStyle=c;x.fillText(txt,ax,y-6)}}
+function drawBossFog(){const P=S.p,c0=S.cam-4,c1=S.cam+W+4;x.fillStyle='#b8b0c8';for(let u=c0;u<c1;u+=4){const d=Math.abs(u+2-P.x),a=clamp((d-70)/50,0,1)*.88;if(a<=0)continue;x.globalAlpha=a*(.92+.08*Math.sin(S.t*1.3+u*.05));x.fillRect(u,20,4,H)}x.globalAlpha=1}
+function drawBossStage(){const Z=S.bs;if(!Z)return;{const e=Z.boss;if(e&&e.hp>0&&live()){
+    if(e.k==='serpente'&&e.headDown>0)bossArrow(e.x-EN.serpente.w*.42,e.y-34,'pisão na cabeça!');
+    for(const s of Z.stones)bossArrow(s.x,gy(s.x)-14,'pedra');
+    if(Z.hook&&!(e.dive>0)&&Math.abs(e.x-Z.hook.x)<60&&!(e.hooked>0))bossArrow(Z.hook.x,gy(Z.hook.x)-44,'pisão no anzol!');
+    for(const l of Z.lamps)if(!l.lit)bossArrow(l.x,gy(l.x)-46,'acenda','#ffe9a0')}}
   for(const s of Z.stones){const y=gy(s.x)-2+Math.round(Math.sin(s.t*4)),f=(S.t*6|0)%2;disc(s.x,y,2.5,'#9a9aa8');r(s.x-1,y-2,2,1,'#e0e0e8');if(f){r(s.x+3,y-5,1,1,'#ffffff');r(s.x-4,y-4,1,1,'#ffffff')}}
   if(Z.hook){const hx=Z.hook.x,gyy=gy(hx),sw=Math.round(Math.sin(S.t*2)*2),hy=gyy-26;for(let y=0;y<hy;y+=2)r(hx+Math.round(sw*y/hy),y,1,1,'#c8b090');
     r(hx+sw-1,hy,3,6,'#f7c948');r(hx+sw-3,hy+5,3,2,'#f7c948');r(hx+sw-3,hy+3,1,2,'#f7c948');r(hx+sw,hy,1,1,'#fff6c0');

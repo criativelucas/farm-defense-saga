@@ -47,14 +47,14 @@ function openTree(si){const t=S.tw[si],s=MAP.slots[si];if(!t)return closeTree();
     ${fu?`<p class="tbr">Fusão · ${fu.name}: ${fu.desc}</p>`:''}
     ${t.branch?`<p class="tbr">${br[t.branch==='a'?0:1]}: ${t.branch==='a'?'+70% de dano':'+50% de velocidade e +30% de alcance'}</p>`+
       (!ev?'':t.evo?`<p class="tbr">${ev.name}: +20% de dano. ${ev.desc} (a cada ${ev.every}s)</p>`
-        :`<div class="tbtns"><button class="btn sm" id="tevo">Evoluir: ${ev.name}<small>${ev.desc} · ${EVO_COST} maná</small></button></div>`):
+        :`<div class="tbtns"><button class="btn sm" id="tevo">Evoluir: ${ev.name}<small>${ev.desc} · ${evoCost()} maná</small></button></div>`):
       (t.lvl||0)>=3?`<div class="tbtns"><button class="btn sm" data-br="a">${br[0]}<small>+70% dano · ${BRANCH_COST} maná</small></button><button class="btn sm" data-br="b">${br[1]}<small>mais rápida e longe · ${BRANCH_COST} maná</small></button></div>`
       :`<p class="tbr dim">No nível 4 ela pode evoluir. Regue e sobreviva às ondas.</p>`}
     <button class="btn ghost sm" id="tup">Arrancar · +${refund} maná</button>`;
   el.hidden=false;
   $('tclose').onclick=closeTree;
-  if($('tevo'))$('tevo').onclick=()=>{if(S.mana<EVO_COST){sfx('no');pop(s.x,s.y-30,'falta maná','#c9a99a');return}
-    S.mana-=EVO_COST;t.evo=1;t.pulse=1;t.pw={};sfx('super');flash(.3,'255,240,180');vfx('holy',s.x,0);vfx('sparkle',s.x,s.y-30,{s:5});S.fx.push({k:'ring',x:s.x,y:s.y-14,r:2,max:40,t:0,c:'#f7c948'});
+  if($('tevo'))$('tevo').onclick=()=>{if(S.mana<evoCost()){sfx('no');pop(s.x,s.y-30,'falta maná','#c9a99a');return}
+    S.mana-=evoCost();t.evo=1;discover('v',k);t.pulse=1;t.pw={};sfx('super');flash(.3,'255,240,180');vfx('holy',s.x,0);vfx('sparkle',s.x,s.y-30,{s:5});S.fx.push({k:'ring',x:s.x,y:s.y-14,r:2,max:40,t:0,c:'#f7c948'});
     pop(s.x,s.y-44,ev.name+'!','#f7c948',10);banner('Evolução',ev.name+' · '+ev.ref);mission('evolve',1);openTree(si)};
   $('tup').onclick=()=>{S.tw[si]=null;S.mana=Math.min(MAXM,S.mana+refund);vfx('puff',s.x,s.y-4,{n:6,c:'#8a5a3a'});burst(s.x,s.y-6,12,['#6a3a24','#5fe08a'],60,200,.5);sfx('plant');pop(s.x,s.y-24,'arrancada · +'+refund+' maná','#c58cff');closeTree()};
   el.querySelectorAll('[data-br]').forEach(b=>b.onclick=()=>{if(S.mana<BRANCH_COST){sfx('no');pop(s.x,s.y-30,'falta maná','#c9a99a');return}
